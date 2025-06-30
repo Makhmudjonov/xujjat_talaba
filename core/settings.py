@@ -15,7 +15,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# AUTH_USER_MODEL = 'apps.CustomAdminUser'
+AUTH_USER_MODEL = 'apps.CustomAdminUser'
 
 
 # settings.py
@@ -42,17 +42,20 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'corsheaders',
-    "simple_history",
+    'simple_history',
     'drf_yasg',
     'rest_framework',
-    'apps',
+    'rest_framework.authtoken',  # 💡 Mana bu qatorni qo‘shing
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'apps',
+    'komissiya',
 ]
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -67,7 +70,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000','http://192.168.137.120:3000']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000','http://192.168.137.120:3000','http://localhost:8000']
 
 ROOT_URLCONF = 'core.urls'
 

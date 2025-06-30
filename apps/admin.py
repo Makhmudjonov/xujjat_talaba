@@ -1,10 +1,11 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
-from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import UserAdmin # Import UserAdmin directly
 
-
-
-from apps.models import Application, ContractInfo, CustomAdminUser, Direction, Faculty, GPARecord, Score, Section, Student
+from apps.models import (
+    Application, ContractInfo, CustomAdminUser, Direction, Faculty,
+    GPARecord, Score, Section, Student, # Make sure CustomAdminUser is imported
+)
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
@@ -38,9 +39,27 @@ class ContractInfoAdmin(admin.ModelAdmin):
     list_display = ("student", "contract_number", "edu_year", "contract_sum", "debit", "credit")
     search_fields = ("student__full_name", "contract_number")
 
+# Register your CustomAdminUser with its custom admin class
+# Use @admin.register(CustomAdminUser) or admin.site.register(CustomAdminUser, CustomAdminUserAdmin)
+# Do NOT use @admin.register(User)
+@admin.register(CustomAdminUser) # <--- Corrected this line
+class CustomAdminUserAdmin(UserAdmin): # <--- Inherit from UserAdmin directly
+    # These are default UserAdmin fields; you can customize them.
+    # If you have custom fields in CustomAdminUser, you'll need to add them here.
+    fieldsets = UserAdmin.fieldsets + (
+        ('Custom Fields', {'fields': ('sections', 'directions', 'faculties', 'levels', 'limit_by_course', 'allow_all_students')}),
+    )
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        ('Custom Fields', {'fields': ('sections', 'directions', 'faculties', 'levels', 'limit_by_course', 'allow_all_students')}),
+    )
+    list_display = UserAdmin.list_display + ('limit_by_course', 'allow_all_students') # Add custom fields to list display
+    filter_horizontal = ('groups', 'user_permissions', 'sections', 'directions', 'faculties', 'levels') # Make many-to-many fields easier to manage
+
+
 admin.site.register(Section)
 admin.site.register(Direction)
 admin.site.register(Application, SimpleHistoryAdmin)
 admin.site.register(Score, SimpleHistoryAdmin)
-# admin.site.register(CustomAdminUser)
-admin.site.register(CustomAdminUser, UserAdmin)
+
+# Remove this line, as CustomAdminUser is already registered with @admin.register
+# admin.site.register(CustomAdminUser, UserAdmin)
