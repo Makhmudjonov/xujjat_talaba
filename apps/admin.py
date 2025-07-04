@@ -3,8 +3,8 @@ from simple_history.admin import SimpleHistoryAdmin
 from django.contrib.auth.admin import UserAdmin # Import UserAdmin directly
 
 from apps.models import (
-    Application, ContractInfo, CustomAdminUser, Direction, Faculty,
-    GPARecord, Score, Section, Student, # Make sure CustomAdminUser is imported
+    Application, ApplicationItem, ApplicationType, ContractInfo, CustomAdminUser, Direction, Faculty,
+    GPARecord, Score, Section, SpecialApplicationStudent, Student, # Make sure CustomAdminUser is imported
 )
 
 @admin.register(Student)
@@ -61,5 +61,32 @@ admin.site.register(Direction)
 admin.site.register(Application, SimpleHistoryAdmin)
 admin.site.register(Score, SimpleHistoryAdmin)
 
-# Remove this line, as CustomAdminUser is already registered with @admin.register
-# admin.site.register(CustomAdminUser, UserAdmin)
+@admin.register(ApplicationType)
+class ApplicationTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'min_gpa')
+    # list_filter = ('access_type',)
+
+
+@admin.register(SpecialApplicationStudent)
+class SpecialApplicationStudentAdmin(admin.ModelAdmin):
+    list_display = ('hemis_id', 'application_type', 'student')
+    search_fields = ('hemis_id',)
+    list_filter = ('application_type',)
+
+# @admin.register(Student)
+# class StudentAdmin(admin.ModelAdmin):
+#     list_display = ('hemis_id', 'last_name', 'first_name', 'gpa')
+#     search_fields = ('hemis_id', 'last_name')
+
+
+@admin.register(ApplicationItem)
+class ApplicationItemAdmin(admin.ModelAdmin):
+    list_display = ("id", "get_student_name", "get_level", "direction")
+
+    def get_student_name(self, obj):
+        return obj.application.student.full_name
+    get_student_name.short_description = "Talaba"
+
+    def get_level(self, obj):
+        return obj.application.student.level.name
+    get_level.short_description = "Bosqich (Level)"

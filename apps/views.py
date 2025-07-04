@@ -1,13 +1,14 @@
 # apps/views.py
 from datetime import datetime
 import json
+from django.forms import ValidationError
 import requests
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils.dateparse import parse_date
 
-from rest_framework import status, viewsets, permissions
+from rest_framework import status, viewsets, permissions, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -17,11 +18,11 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from .models import (
-    Faculty, Level, Student, ContractInfo, GPARecord,
+    ApplicationItem, ApplicationType, Faculty, Level, Student, ContractInfo, GPARecord,
     Section, Direction, Application, ApplicationFile, Score, CustomAdminUser
 )
 from .serializers import (
-    StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
+    ApplicationItemAdminSerializer, ApplicationItemSerializer, ApplicationTypeSerializer, StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
     ApplicationCreateSerializer, DirectionSerializer, ApplicationSerializer,
     ApplicationFileSerializer, ScoreSerializer, CustomAdminUserSerializer, SubmitMultipleApplicationsSerializer
 )
@@ -377,3 +378,97 @@ class AdminApplicationListAPIView(APIView):
 
         serializer = ApplicationSerializer(applications, many=True)
         return Response(serializer.data)
+    
+class StudentApplicationTypeListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        student = request.user.student  # Login bo‘lgan foydalanuvchi
+
+        application_types = ApplicationType.objects.all()
+        serializer = ApplicationTypeSerializer(application_types, many=True, context={'student': student})
+        return Response(serializer.data)
+    
+class ApplicationItemViewSet(viewsets.ModelViewSet):
+    queryset = ApplicationItem.objects.all()
+    serializer_class = ApplicationItemSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if hasattr(user, 'student'):
+            return ApplicationItem.objects.filter(application__student__user=user)
+        return ApplicationItem.objects.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        student = getattr(user, 'student', None)
+        if not student:
+            raise ValidationError("Faqat studentlar ariza topshirishi mumkin.")
+
+        direction = serializer.validated_data.get('direction')
+        section = direction.section if direction else None
+
+        application_type_id = self.request.data.get('application_type_id')
+        if not application_type_id:
+            raise ValidationError("application_type_id talab qilinadi.")
+
+        # Application obyektini topamiz yoki yaratamiz
+        application, created = Application.objects.get_or_create(
+            student=student,
+            application_type_id=application_type_id,
+            defaults={'status': 'pending', 'section': section}
+        )
+
+        # Endi ApplicationItem ni saqlaymiz
+        item = serializer.save(application=application, section=section)
+
+
+
+class ApplicationItemAdminViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = ApplicationItem.objects.select_related(
+        'application__student', 'direction', 'section'
+    ).prefetch_related('files', 'score')
+    serializer_class = ApplicationItemAdminSerializer
+    permission_classes = [permissions.IsAuthenticated]  # superuser yoki role tekshirish qo‘shing
+
+    def get_queryset(self):
+        user = self.request.user
+
+        # Masalan, agar kichik admin bo‘lsa, faqat o‘zining yo‘nalishidagi formalarni ko‘rsin
+        if user.role == 'kichik_admin':
+            return self.queryset.filter(direction__in=user.directions.all())
+
+        return self.queryset
+    
+
+
+class StudentApplicationViewSet(viewsets.ModelViewSet):
+    queryset = Application.objects.all()
+    serializer_class = ApplicationCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_queryset(self):
+        return self.queryset.filter(student=self.request.user.student)
+
+    def create(self, request, *args, **kwargs):
+        # ❗️ Har doim terminalga chiqaradi
+        print("─── RAW request.data:", request.data)
+        print("─── RAW request.FILES:", request.FILES)
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        # Bu faqat validatsiya o‘tgach keladi
+        print("📦 VALIDATED POST:", self.request.POST)
+        print("📦 VALIDATED FILES:", self.request.FILES)
+        serializer.save(student=self.request.user.student)
+
+
+class ApplicationCreateView(generics.CreateAPIView):
+    serializer_class = ApplicationCreateSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def perform_create(self, serializer):
+        serializer.save(student=self.request.user.student)

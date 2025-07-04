@@ -1,6 +1,8 @@
 from rest_framework import serializers
+
+from komissiya.serializers import StudentSerializer
 from .models import (
-    Level, Section, Direction, Application, ApplicationFile,
+    ApplicationItem, ApplicationType, Level, Section, Direction, Application, ApplicationFile,
     Score, CustomAdminUser, Student, GPARecord
 )
 
@@ -25,17 +27,29 @@ class DirectionMiniSerializer(serializers.ModelSerializer):
 
 # --- 5. Application Fayllari ---
 class ApplicationFileSerializer(serializers.ModelSerializer):
-    file_url = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField(read_only=True)
+    
 
     class Meta:
         model = ApplicationFile
-        fields = ['id', 'file_url', 'comment', 'section']
+        fields = ['id', 'file', 'file_url', 'comment', 'section']
+        extra_kwargs = {
+            'file': {'required': False, 'allow_null': True},
+            'comment': {'required': False, 'allow_blank': True},
+            'section': {'required': False, 'allow_null': True},
+        }
 
     def get_file_url(self, obj):
         request = self.context.get('request')
         if obj.file and request:
             return request.build_absolute_uri(obj.file.url)
         return None
+
+
+class ScoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Score
+        fields = ['id', 'value', 'note', 'scored_at']
 
 class SectionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -105,8 +119,13 @@ class ApplicationFileInlineSerializer(serializers.ModelSerializer):
 class ApplicationCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Application
-        fields = ['id', 'direction', 'submitted_at', 'status']
-        read_only_fields = ['id', 'submitted_at', 'status']
+        fields = ['direction', 'section', 'comment', 'application_type']
+
+    def validate(self, attrs):
+        student = self.context['request'].user.student
+        if Application.objects.filter(student=student).exists():
+            raise serializers.ValidationError("Siz allaqachon bir marta ariza topshirgansiz.")
+        return attrs
 
 
 
@@ -161,3 +180,139 @@ class StudentAccountSerializer(serializers.ModelSerializer):
             "image", "gender", "birth_date", "address", "university", "faculty_name",
             "group", "level_name", "gpa_records"
         ]
+
+
+class ApplicationTypeSerializer(serializers.ModelSerializer):
+    can_apply = serializers.SerializerMethodField()
+    reason = serializers.SerializerMethodField()
+    student_gpa = serializers.SerializerMethodField()
+    student_level = serializers.SerializerMethodField()
+    allowed_levels = serializers.SlugRelatedField(
+        many=True,
+        read_only=True,
+        slug_field='name'
+    )
+
+    class Meta:
+        model = ApplicationType
+        fields = [
+            'id', 'name', 'subtitle', 'image', 'min_gpa',
+            'access_type', 'allowed_levels',
+            'can_apply', 'reason', 'student_gpa', 'student_level'
+        ]
+
+    def get_student_gpa(self, obj):
+        student = self.context.get('student')
+        return float(student.gpa or 0)
+
+    def get_student_level(self, obj):
+        student = self.context.get('student')
+        # Bu sizning modelga bog‘liq, agar `student.level.name` bo‘lsa:
+        return student.level.name if student.level else None
+
+    def get_can_apply(self, obj):
+        student = self.context.get('student')
+        return self._check_eligibility(student, obj)[0]
+
+    def get_reason(self, obj):
+        student = self.context.get('student')
+        return self._check_eligibility(student, obj)[1]
+
+    def _check_eligibility(self, student, appl_type):
+        gpa = float(student.gpa or 0)
+        if appl_type.min_gpa and gpa < appl_type.min_gpa:
+            return False, f"GPA talab qilinadi: {appl_type.min_gpa} dan yuqori"
+
+        if appl_type.access_type == 'universal':
+            return True, None
+
+        elif appl_type.access_type == 'min_gpa':
+            return True, None
+
+        elif appl_type.access_type == 'disabled_only':
+            if not student.is_disabled:
+                return False, "Faqat nogiron talabalar uchun"
+
+        elif appl_type.access_type == 'special_list':
+            if not appl_type.special_students.filter(student=student).exists():
+                return False, "Faqat maxsus ro‘yxatdagi talabalar uchun"
+
+        return True, None
+
+
+class ApplicationItemSerializer(serializers.ModelSerializer):
+    student_name = serializers.CharField(source='application.student.user.get_full_name', read_only=True)
+    direction_name = serializers.CharField(source='direction.name', read_only=True)
+    # files = ApplicationFileSerializer(many=True, required=False)
+
+    class Meta:
+        model = ApplicationItem
+        fields = [
+            'id', 'application', 'title', 'student_comment',
+            'reviewer_comment', 'file', 'direction',
+            'student_name', 'direction_name'
+        ]
+        read_only_fields = ['reviewer_comment']
+
+class ApplicationItemAdminSerializer(serializers.ModelSerializer):
+    direction = DirectionSerializer()
+    section = SectionSerializer()
+    files = ApplicationFileSerializer(many=True, read_only=True)
+    score = ScoreSerializer(read_only=True)
+    student = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ApplicationItem
+        fields = ['id', 'student', 'direction', 'section', 'files', 'score']
+
+    def get_student(self, obj):
+        return StudentSerializer(obj.application.student).data
+
+
+class ApplicationFileCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ApplicationFile
+        fields = ['file', 'comment', 'section']
+
+class ApplicationItemCreateSerializer(serializers.ModelSerializer):
+    files = ApplicationFileCreateSerializer(many=True, required=False)
+    direction = serializers.PrimaryKeyRelatedField(queryset=Direction.objects.all())
+
+    class Meta:
+        model = ApplicationItem
+        fields = ['direction', 'student_comment', 'files']
+
+    def validate(self, data):
+        direction = data.get('direction')
+        files = data.get('files', [])
+
+        # EHTIYOT SHAKLI: direction instance ekanligini tekshiramiz
+        if isinstance(direction, Direction):
+            if direction.require_file and not files:
+                raise serializers.ValidationError({
+                    'files': 'Ushbu yo‘nalish uchun fayl yuklash majburiy.'
+                })
+        return data
+
+
+
+
+class ApplicationCreateSerializer(serializers.ModelSerializer):
+    items = ApplicationItemCreateSerializer(many=True)
+
+    class Meta:
+        model = Application
+        fields = ['application_type', 'comment', 'items']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        application = Application.objects.create(student=self.context['request'].user.student, **validated_data)
+
+        for item_data in items_data:
+            files_data = item_data.pop('files', [])
+            item = ApplicationItem.objects.create(application=application, **item_data)
+
+            for file_data in files_data:
+                ApplicationFile.objects.create(application_item=item, **file_data)
+
+        return application

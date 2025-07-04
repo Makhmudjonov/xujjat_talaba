@@ -54,6 +54,11 @@ class Student(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
 
+    @property
+    def gpa(self):
+        latest = self.gpa_records.order_by('-created_at').first()
+        return latest.gpa if latest else None
+
     def __str__(self):
         return self.full_name
 
@@ -100,7 +105,7 @@ class ContractInfo(models.Model):
 # COMPETITION STRUCTURE
 # ---------------------------
 class Section(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -120,6 +125,26 @@ class Direction(models.Model):
 # ---------------------------
 # APPLICATION & EVALUATION
 # ---------------------------
+class ApplicationType(models.Model):
+    ACCESS_CHOICES = [
+        ('universal', 'Hamma talabalar uchun'),
+        ('min_gpa', 'GPA talab'),
+        ('special_list', 'Faqat maxsus ro‘yxatdagi talabalar'),
+    ]
+
+    key = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
+    subtitle = models.CharField(max_length=255, blank=True, null=True)
+    image = models.ImageField(upload_to='application_types/', blank=True, null=True)
+
+    min_gpa = models.FloatField(blank=True, null=True)
+    allowed_levels = models.ManyToManyField(Level, blank=True)
+    access_type = models.CharField(max_length=20, choices=ACCESS_CHOICES, default='universal')
+
+    def __str__(self):
+        return self.name
+
+
 class Application(models.Model):
     STATUS_PENDING  = 'pending'
     STATUS_REVIEWED = 'reviewed'
@@ -139,10 +164,11 @@ class Application(models.Model):
     comment = models.TextField(blank=True, null=True)
     status    = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_PENDING)
     submitted_at = models.DateTimeField(auto_now_add=True)  # yoki shunga o‘xshash
+    application_type = models.ForeignKey(ApplicationType, on_delete=models.CASCADE, related_name='applications')
 
 
     class Meta:
-        unique_together = ('student', 'direction')   # <- 1 yo‘nalish‑1 student
+        unique_together = ('student', 'application_type')  # ✅ faqat 1 marta topshiradi
 
 
 
@@ -164,7 +190,16 @@ def application_file_upload_path(instance, filename):
         new_filename
     )
 
-# ... (modellar) ...
+class ApplicationItem(models.Model):
+    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='items')
+    title = models.CharField(max_length=255)
+    student_comment = models.TextField(blank=True, null=True)
+    reviewer_comment = models.TextField(blank=True, null=True)
+    file = models.FileField(upload_to='application_items/', blank=True, null=True)
+    direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='application_items')
+
+    def __str__(self):
+        return f"{self.title} - {self.application.student.user.get_full_name()}"
 
 class ApplicationFile(models.Model):
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='files')
@@ -178,7 +213,7 @@ class ApplicationFile(models.Model):
 
 
 class Score(models.Model):
-    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="scores")
+    item = models.OneToOneField(ApplicationItem, on_delete=models.CASCADE, related_name='score')
     reviewer = models.ForeignKey("CustomAdminUser", on_delete=models.SET_NULL, null=True)
     value = models.FloatField()
     note = models.TextField(blank=True)
@@ -187,11 +222,12 @@ class Score(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['application'], name='unique_score_per_application')
+            models.UniqueConstraint(fields=['item'], name='unique_score_per_application_item')
         ]
 
     def __str__(self):
-        return f"Application #{self.application.id} - {self.value} ball"
+        return f"Application #{self.item.application.id} - {self.value} ball"
+
 
 
 class CustomAdminUser(AbstractUser):
@@ -207,6 +243,7 @@ class CustomAdminUser(AbstractUser):
     directions = models.ManyToManyField(Direction, blank=True, related_name='admins')
     faculties = models.ManyToManyField(Faculty, blank=True, related_name='admins')
     levels = models.ManyToManyField(Level, blank=True, related_name='admins')
+    
 
     limit_by_course = models.BooleanField(default=False)
     allow_all_students = models.BooleanField(default=False)
@@ -230,3 +267,33 @@ class CustomAdminUser(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.get_full_name()})"
 
+
+
+
+class SpecialApplicationStudent(models.Model):
+    """
+    Aynan shu ApplicationType uchun ariza berishi mumkin bo‘lgan talaba
+    (HEMIS ID bo‘yicha).
+    """
+    application_type = models.ForeignKey(
+        ApplicationType,
+        on_delete=models.CASCADE,
+        related_name='special_students'
+    )
+    hemis_id = models.CharField(max_length=20)
+
+    # Agar Student obyekti bazada bo‘lsa, bog‘lab qo‘yish qulay bo‘ladi
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.SET_NULL,
+        blank=True, null=True,
+        help_text="Opsional: Student modeli bilan bog‘lash"
+    )
+
+    class Meta:
+        unique_together = ('application_type', 'hemis_id')
+        verbose_name = "Maxsus talaba"
+        verbose_name_plural = "Maxsus talabalar"
+
+    def __str__(self):
+        return f"{self.hemis_id} → {self.application_type}"

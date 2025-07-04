@@ -1,12 +1,16 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from django.utils import timezone
 
-from apps.models import Application, Faculty, Level, Score, Student
+from apps.models import (
+    Application, ApplicationItem, Score, Faculty, Level, Student, Direction, Section
+)
 from .models import KomissiyaMember
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
 
 class KomissiyaLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -29,16 +33,11 @@ class KomissiyaLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Komissiya a'zosi emas")
 
         refresh = RefreshToken.for_user(user)
-        access = str(refresh.access_token)
-
-        # Saqlaymiz, keyin SerializerMethodField ishlatamiz
         self._user = user
         self._komissiya = komissiya
-        self._access = access
-        self._refresh = str(refresh)
 
         return {
-            'access': access,
+            'access': str(refresh.access_token),
             'refresh': str(refresh),
         }
 
@@ -65,52 +64,6 @@ class KomissiyaLoginSerializer(serializers.Serializer):
         }
 
 
-
-class ApplicationSerializer(serializers.ModelSerializer):
-    score = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Application
-        fields = ["id", "direction", "comment", "status", "score"]
-
-    def get_score(self, obj):
-        score = obj.scores.first()
-        return score.value if score else None
-
-
-class ScoreSerializer(serializers.ModelSerializer):
-    MIN_VALUE = 0
-    MAX_VALUE = 10
-
-    class Meta:
-        model = Score
-        fields = ["id", "application", "value", "note", "scored_at"]
-        read_only_fields = ["id", "application", "scored_at"]
-        ref_name = "KomissiyaScore"
-
-    def validate_value(self, value):
-        if not (self.MIN_VALUE <= value <= self.MAX_VALUE):
-            raise serializers.ValidationError(
-                f"Ball {self.MIN_VALUE}–{self.MAX_VALUE} oralig‘ida bo‘lishi kerak."
-            )
-        return value
-
-    def validate(self, data):
-        application = self.context.get("application")
-        if Score.objects.filter(application=application).exists():
-            raise serializers.ValidationError("Bu ariza allaqachon baholangan.")
-        return data
-
-    def create(self, validated_data):
-        application = self.context.get("application")
-        reviewer = self.context["request"].user
-        return Score.objects.create(
-            application=application,
-            reviewer=reviewer,
-            **validated_data
-        )
-
-
 class LevelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Level
@@ -130,3 +83,46 @@ class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = ['id', 'full_name', 'faculty', 'level', 'group', 'email', 'phone']
+
+
+class ScoreSerializer(serializers.ModelSerializer):
+    MIN_VALUE = 0
+    MAX_VALUE = 10
+
+    class Meta:
+        model = Score
+        fields = ["id", "item", "value", "note", "scored_at"]
+        read_only_fields = ["id", "item", "scored_at"]
+        ref_name = "KomissiyaScore"
+
+    def validate_value(self, value):
+        if not (self.MIN_VALUE <= value <= self.MAX_VALUE):
+            raise serializers.ValidationError(
+                f"Ball {self.MIN_VALUE}–{self.MAX_VALUE} oralig‘ida bo‘lishi kerak."
+            )
+        return value
+
+    def validate(self, data):
+        item = self.context.get("item")
+        if Score.objects.filter(item=item).exists():
+            raise serializers.ValidationError("Bu forma allaqachon baholangan.")
+        return data
+
+    def create(self, validated_data):
+        item = self.context.get("item")
+        reviewer = self.context["request"].user
+        return Score.objects.create(
+            item=item,
+            reviewer=reviewer,
+            **validated_data
+        )
+
+
+class ApplicationItemSerializer(serializers.ModelSerializer):
+    direction_name = serializers.CharField(source="direction.name", read_only=True)
+    section_name = serializers.CharField(source="section.name", read_only=True)
+    score = ScoreSerializer(read_only=True)
+
+    class Meta:
+        model = ApplicationItem
+        fields = ["id", "direction", "direction_name", "section", "section_name", "comment", "score"]
