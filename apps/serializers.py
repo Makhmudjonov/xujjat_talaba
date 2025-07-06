@@ -62,16 +62,23 @@ class ScoreSerializer(serializers.ModelSerializer):
         fields = "__all__"
         ref_name = "AppScore"  # yoki 'ScoreInApp'
 
+class SectionMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = Section
+        fields = ["id", "name"]
+
+
 class DirectionSerializer(serializers.ModelSerializer):
-    section = SectionSerializer(read_only=True)
+    section = SectionMiniSerializer(read_only=True)
 
     class Meta:
-        model = Direction
-        fields = ['id', 'name', 'require_file', 'min_score', 'max_score', 'section']
+        model  = Direction
+        fields = ["id", "name", "require_file", "min_score", "max_score", "section"]
 
 class ApplicationSerializer(serializers.ModelSerializer):
     direction = DirectionSerializer(read_only=True)
     scores = ScoreSerializer(many=True, read_only=True)  # OneToOne munosabat bo'lsa ishlaydi
+    # application_items = ApplicationItemSerializer(many=True, read_only=True)
     
     files = ApplicationFileSerializer(many=True, read_only=True)
     comment = serializers.CharField()  # Agar modelda mavjud bo'lsa
@@ -281,6 +288,7 @@ class ApplicationItemCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationItem
         fields = ['direction', 'student_comment', 'files']
+        ref_name = 'AppItemCreate'  # Qo‘shildi
 
     def validate(self, data):
         direction = data.get('direction')
@@ -316,3 +324,4 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
                 ApplicationFile.objects.create(application_item=item, **file_data)
 
         return application
+    

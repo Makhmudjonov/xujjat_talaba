@@ -159,7 +159,7 @@ class Application(models.Model):
     ]
 
     student   = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='applications')
-    direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='applications')
+    # direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='applications')
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='applications')
     comment = models.TextField(blank=True, null=True)
     status    = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_PENDING)
@@ -167,43 +167,53 @@ class Application(models.Model):
     application_type = models.ForeignKey(ApplicationType, on_delete=models.CASCADE, related_name='applications')
 
 
-    class Meta:
-        unique_together = ('student', 'application_type')  # ✅ faqat 1 marta topshiradi
+    # class Meta:
+    #     unique_together = ('student', 'application_type')  # ✅ faqat 1 marta topshiradi
 
 
 
 def application_file_upload_path(instance, filename):
-    # Bu funksiya avvalgi javobda berilgan kodga o'xshash bo'ladi
+    # Determine section safely
+    section = None
+    try:
+        section = instance.section
+    except Exception:
+        pass
+    if not section and getattr(instance, 'section_id', None):
+        from .models import Section
+        try:
+            section = Section.objects.get(pk=instance.section_id)
+        except Section.DoesNotExist:
+            section = None
+
     full_name_slug = instance.application.student.full_name.replace(" ", "_").replace(".", "").lower()
-    section_name_slug = instance.section.name.replace(" ", "_").lower()
-    direction_name_slug = instance.application.direction.name.replace(" ", "_").lower()
-    student_id_number = instance.application.student.student_id_number
+    section_name_slug = section.name.replace(" ", "_").lower() if section else ""
+    student_id = instance.application.student.student_id_number
 
     base, ext = os.path.splitext(filename)
-    new_filename = f"{student_id_number}-{base}{ext}"
+    new_filename = f"{student_id}-{base}{ext}"
 
     return os.path.join(
         'applications',
         full_name_slug,
         section_name_slug,
-        direction_name_slug,
         new_filename
     )
 
 class ApplicationItem(models.Model):
-    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='items')
-    title = models.CharField(max_length=255)
-    student_comment = models.TextField(blank=True, null=True)
+    application      = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='items')
+    direction        = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='application_items')
+    title            = models.CharField(max_length=255)
+    student_comment  = models.TextField(blank=True, null=True)
     reviewer_comment = models.TextField(blank=True, null=True)
-    file = models.FileField(upload_to='application_items/', blank=True, null=True)
-    direction = models.ForeignKey(Direction, on_delete=models.CASCADE, related_name='application_items')
+    file             = models.FileField(upload_to='application_items/', blank=True, null=True)
 
-    def __str__(self):
-        return f"{self.title} - {self.application.student.user.get_full_name()}"
+    class Meta:
+        unique_together = ('application', 'direction')
 
 class ApplicationFile(models.Model):
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='files')
-    file = models.FileField(upload_to=application_file_upload_path) # <-- Shu yerda o'zgartirish
+    file = models.FileField(upload_to=application_file_upload_path)  # ✅ Fayl yuklash yo‘li
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='application_files')
     comment = models.TextField(blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
