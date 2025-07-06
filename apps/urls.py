@@ -17,6 +17,9 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 # DefaultRouter yordamida ViewSet'lar uchun avtomatik URL'lar yaratamiz
 router = DefaultRouter()
 # router.register(r'directions', DirectionViewSet)
@@ -71,3 +74,6 @@ urlpatterns = [
     # Yuqorida router orqali ro'yxatdan o'tkazilgan ViewSet'lar uchun barcha URL'larni o'z ichiga oladi
     path('', include(router.urls)),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
