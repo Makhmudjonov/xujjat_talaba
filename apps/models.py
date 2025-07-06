@@ -179,6 +179,7 @@ def application_file_upload_path(instance, filename):
         section = instance.section
     except Exception:
         pass
+
     if not section and getattr(instance, 'section_id', None):
         from .models import Section
         try:
@@ -186,9 +187,18 @@ def application_file_upload_path(instance, filename):
         except Section.DoesNotExist:
             section = None
 
-    full_name_slug = instance.application.student.full_name.replace(" ", "_").replace(".", "").lower()
+    # ✅ Aslida application bu yerda item orqali olinadi
+    application = getattr(instance, 'item', None)
+    student = application.application.student if application else None
+
+    if student:
+        full_name_slug = student.full_name.replace(" ", "_").replace(".", "").lower()
+        student_id = student.student_id_number
+    else:
+        full_name_slug = "unknown_user"
+        student_id = "unknown"
+
     section_name_slug = section.name.replace(" ", "_").lower() if section else ""
-    student_id = instance.application.student.student_id_number
 
     base, ext = os.path.splitext(filename)
     new_filename = f"{student_id}-{base}{ext}"
@@ -212,14 +222,17 @@ class ApplicationItem(models.Model):
         unique_together = ('application', 'direction')
 
 class ApplicationFile(models.Model):
-    application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='files')
+    item = models.ForeignKey(ApplicationItem, on_delete=models.CASCADE, related_name='files')
     file = models.FileField(upload_to=application_file_upload_path)  # ✅ Fayl yuklash yo‘li
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='application_files')
     comment = models.TextField(blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    # application_item = models.ForeignKey(
+    #     ApplicationItem, on_delete=models.CASCADE, related_name="application_files"
+    # )
 
     def __str__(self):
-        return f"File for {self.application} - {self.section.name}"
+        return f"File for  - {self.section.name}"
 
 
 class Score(models.Model):
@@ -238,7 +251,18 @@ class Score(models.Model):
     def __str__(self):
         return f"Application #{self.item.application.id} - {self.value} ball"
 
+class Roles:
+    STUDENT = "student"
+    ADMIN = "admin"
+    DEKAN = "dekan"
+    KICHIK_ADMIN = "kichik_admin"
 
+    CHOICES = (
+        (STUDENT, "Student"),
+        (ADMIN, "Admin"),
+        (DEKAN, "Dekan"),
+        (KICHIK_ADMIN, "Kichik Admin"),
+    )
 
 class CustomAdminUser(AbstractUser):
 
@@ -253,10 +277,26 @@ class CustomAdminUser(AbstractUser):
     directions = models.ManyToManyField(Direction, blank=True, related_name='admins')
     faculties = models.ManyToManyField(Faculty, blank=True, related_name='admins')
     levels = models.ManyToManyField(Level, blank=True, related_name='admins')
+    can_score = models.BooleanField(default=True, help_text="Agar true bo‘lsa, admin baho qo‘yishi mumkin.")
     
 
     limit_by_course = models.BooleanField(default=False)
     allow_all_students = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'username'
+
+    # users/models.py (yoki qayerda bo‘lsa)
+    def has_access_to(self, direction):
+        if self.allow_all_students:
+            return True
+
+        return (
+            self.directions.filter(id=direction.id).exists()
+            or self.sections.filter(id=direction.section_id).exists()
+     )
+
+
+
 
     # ✅ Override groups va user_permissions uchun related_name beramiz
     groups = models.ManyToManyField(
@@ -307,3 +347,5 @@ class SpecialApplicationStudent(models.Model):
 
     def __str__(self):
         return f"{self.hemis_id} → {self.application_type}"
+    
+

@@ -111,11 +111,17 @@ class ScoreSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         item = self.context.get("item")
         reviewer = self.context["request"].user
+
+        # reviewer va item ni validated_data dan olib tashlaymiz, agar mavjud bo‘lsa
+        validated_data.pop("item", None)
+        validated_data.pop("reviewer", None)
+
         return Score.objects.create(
             item=item,
             reviewer=reviewer,
             **validated_data
         )
+
 
 
 class ApplicationItemSerializer(serializers.ModelSerializer):

@@ -7,6 +7,14 @@ import requests
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils.dateparse import parse_date
+from django.core.exceptions import PermissionDenied
+
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
+
+from rest_framework.authentication import TokenAuthentication
+
+
 
 from django.shortcuts import get_object_or_404
 
@@ -15,23 +23,28 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+
+from apps.pagenation import CustomPagination
 
 from .models import (
     ApplicationItem, ApplicationType, Faculty, Level, Student, ContractInfo, GPARecord,
     Section, Direction, Application, ApplicationFile, Score, CustomAdminUser
 )
 from .serializers import (
-    ApplicationItemAdminSerializer, ApplicationItemSerializer, ApplicationTypeSerializer, StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
+    AdminLoginSerializer, AdminUserSerializer, ApplicationDetailSerializer, ApplicationFullSerializer, ApplicationItemAdminSerializer, ApplicationItemSerializer, ApplicationTypeSerializer, ScoreCreateSerializer, StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
     ApplicationCreateSerializer, DirectionSerializer, ApplicationSerializer,
-    ApplicationFileSerializer, ScoreSerializer, CustomAdminUserSerializer, SubmitMultipleApplicationsSerializer
+    ApplicationFileSerializer, ScoreSerializer, SubmitMultipleApplicationsSerializer
 )
 from .permissions import (
     IsStudentAndOwnerOrReadOnlyPending,
-    IsDirectionReviewerOrReadOnly,
-)
+    IsDirectionReviewerOrReadOnly,)
+
+from rest_framework.permissions import IsAdminUser
+
 from .utils import get_tokens_for_student
 
 
@@ -131,6 +144,60 @@ class StudentLoginAPIView(APIView):
                 student.group = d["group"]["name"]
                 student.level = level
                 student.save()
+        
+        # 7️⃣  GPA list
+            gpa_r = requests.get(
+                "https://student.tma.uz/rest/v1/education/gpa-list",
+                headers={"Authorization": f"Bearer {hemis_token}"},
+                timeout=15,
+            )
+            if gpa_r.status_code == 200:
+                for it in gpa_r.json().get("data", []):
+                    GPARecord.objects.update_or_create(
+                        student=student,
+                        education_year=it["educationYear"]["name"],
+                        level=it["level"]["name"],
+                        defaults={
+                            "gpa": it["gpa"],
+                            "credit_sum": float(it["credit_sum"]),
+                            "subjects": it["subjects"],
+                            "debt_subjects": it["debt_subjects"],
+                            "can_transfer": it["can_transfer"],
+                            "method": it["method"],
+                            "created_at": datetime.fromtimestamp(it["created_at"]),
+                        },
+                    )
+
+            # 8️⃣  Contract
+            c_r = requests.get(
+                "https://student.tma.uz/rest/v1/student/contract",
+                headers={"Authorization": f"Bearer {hemis_token}"},
+                timeout=15,
+            )
+            if c_r.status_code == 200 and c_r.json().get("data"):
+                cd = c_r.json()["data"]
+                ContractInfo.objects.update_or_create(
+                    student=student,
+                    defaults={
+                        "contract_number": cd["contractNumber"],
+                        "contract_date": datetime.strptime(
+                            cd["contractDate"], "%d.%m.%Y"
+                        ).date(),
+                        "edu_organization": cd["eduOrganization"],
+                        "edu_speciality": cd["eduSpeciality"],
+                        "edu_period": cd["eduPeriod"],
+                        "edu_year": cd["eduYear"],
+                        "edu_type": cd["eduType"],
+                        "edu_form": cd["eduForm"],
+                        "edu_course": cd["eduCourse"],
+                        "contract_type": cd["eduContractType"],
+                        "pdf_link": cd["pdfLink"],
+                        "contract_sum": cd["eduContractSum"],
+                        "gpa": cd["gpa"],
+                        "debit": cd.get("debit"),
+                        "credit": cd.get("credit"),
+                    },
+                )
 
         except Exception as exc:
             return Response({"detail": str(exc)}, 500)
@@ -342,7 +409,7 @@ class StudentApplicationViewSet(viewsets.ViewSet):
                     upload = request.FILES.get(f"files_{i}_{j}")
                     if upload:
                         ApplicationFile.objects.create(
-                            application=application,
+                            item=app_item,
                             file=upload,
                             section_id=f.get("section"),
                             comment=f.get("comment", "")
@@ -352,3 +419,184 @@ class StudentApplicationViewSet(viewsets.ViewSet):
             {"detail": "Ariza muvaffaqiyatli yaratildi."},
             status=status.HTTP_201_CREATED
         )
+
+class NewApplicationsAPIView(generics.ListAPIView):
+    """
+    **Admin** yoki komissiya uchun:
+    Yangi (yoki istalgan) arizalar toʻliq tarkib bilan.
+    """
+    serializer_class   = ApplicationFullSerializer
+    permission_classes = [permissions.IsAuthenticated]  # kerak bo‘lsa IsAdminUser
+    pagination_class   = None  # pagination xohlasangiz DRF’ning standard klasini qo‘ying
+
+    def get_queryset(self):
+        """
+        Faqat ko‘rib chiqilmagan (‘pending’) arizalarni qaytarish.
+        Agar hammasi kerak bo‘lsa, filterni o‘chirib tashlang.
+        """
+        return (
+            Application.objects
+            .filter(status=Application.STATUS_PENDING)
+            .select_related("application_type", "section", "student")
+            .prefetch_related(
+                "items__direction",
+                "items__score",
+                "items__files",
+            )
+            .order_by("-submitted_at")
+        )
+
+    # Swagger’ga chiroyli ko‘rinishi uchun
+    @swagger_auto_schema(operation_summary="Yangi kelgan arizalar ro‘yxati (to‘liq)")
+    def get(self, *args, **kwargs):
+        return super().get(*args, **kwargs)
+    
+class ScoreCreateAPIView(CreateAPIView):
+    serializer_class = ScoreCreateSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        user = self.request.user
+
+        # Agar foydalanuvchi faqat ko‘ruvchi bo‘lsa
+        if user.role == "dekan":
+            raise PermissionDenied("Sizning rolingiz faqat ko‘rish uchun mo‘ljallangan.")
+
+        item = serializer.validated_data["item"]
+
+        # Access tekshiruvi (section/direction/faculty asosida)
+        if not user.has_access_to(item.direction):
+            raise PermissionDenied("Siz bu yo‘nalishga baho qo‘yolmaysiz.")
+
+        # Score ni saqlash
+        score = serializer.save(reviewer=user)
+
+        # Application statusini yangilash
+        application = item.application
+        application.status = "accepted"
+        application.save()
+    
+    @swagger_auto_schema(
+        operation_summary="Admin tomonidan ApplicationItem ga baho qo‘yish",
+        request_body=ScoreCreateSerializer
+    )
+    def post(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+    
+
+class ApplicationListAPIView(ListAPIView):
+    serializer_class = ApplicationFullSerializer
+    permission_classes = [IsAuthenticated, IsAdminUser]
+    pagination_class = CustomPagination
+
+    def get_queryset(self):
+        user = self.request.user
+
+        qs = Application.objects.prefetch_related(
+            "items__direction__section",
+            "items__files",
+            "items__score",
+            "student__faculty",
+            "student__level",
+        ).select_related("application_type", "student")
+
+        if user.faculties.exists():
+            qs = qs.filter(student__faculty__in=user.faculties.all())
+
+        if user.levels.exists():
+            qs = qs.filter(student__level__in=user.levels.all())
+
+        if user.directions.exists():
+            qs = qs.filter(items__direction__in=user.directions.all())
+
+        # Agar query paramda status bo‘lsa
+        status = self.request.query_params.get("status")
+        if status:
+            qs = qs.filter(status=status)
+
+        return qs.distinct()
+    
+    @swagger_auto_schema(
+    operation_summary="Adminlar uchun applicationlar ro‘yxati",
+    manual_parameters=[
+        openapi.Parameter("status", openapi.IN_QUERY, description="Filter by status (pending, accepted, rejected)", type=openapi.TYPE_STRING),
+        ]
+    )
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+    
+
+
+class AdminLoginAPIView(APIView):
+    permission_classes = []        # login uchun token talab qilinmaydi
+
+    @swagger_auto_schema(
+        operation_description="Admin/kichik‑admin/dekan uchun JWT login",
+        request_body=AdminLoginSerializer,
+        responses={
+            200: openapi.Response(
+                description="Muvaffaqiyatli login",
+                examples={
+                    "application/json": {
+                        "access":  "eyJh... (JWT access)",
+                        "refresh": "eyJh... (JWT refresh)",
+                        "user": {
+                            "id": 1,
+                            "username": "admin",
+                            "full_name": "Super Admin"
+                        },
+                        "role": "admin",
+                        "faculties": ["Davolash"],
+                        "sections":  ["1‑bo'lim"],
+                        "directions": ["Terapevtik profil"],
+                        "levels": ["Bakalavr 3‑kurs"],
+                        "allow_all_students": False,
+                        "limit_by_course":     True
+                    }
+                }
+            ),
+            400: "Login yoki parol noto‘g‘ri / Admin emas",
+        },
+    )
+    def post(self, request):
+        ser = AdminLoginSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+
+        user: CustomAdminUser = ser.validated_data["user"]
+
+        return Response({
+            "access":  ser.validated_data["access"],
+            "refresh": ser.validated_data["refresh"],
+            "user": {
+                "id":        user.id,
+                "username":  user.username,
+                "full_name": user.get_full_name(),
+            },
+            "role": user.role,
+            # Many‑to‑many maydonlar – string ro‘yxatga aylantiramiz
+            "faculties":  [f.name       for f in user.faculties.all()],
+            "sections":   [s.name       for s in user.sections.all()],
+            "directions": [d.name       for d in user.directions.all()],
+            "levels":     [l.name       for l in user.levels.all()],
+            "allow_all_students": user.allow_all_students,
+            "limit_by_course":    user.limit_by_course,
+        })
+    
+
+class AdminUserListAPIView(ListAPIView):
+    queryset = CustomAdminUser.objects.exclude(role='student')
+    serializer_class = AdminUserSerializer
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+
+class ApplicationRetrieveView(RetrieveAPIView):
+    queryset = Application.objects.prefetch_related(
+        "items__files", "items__score", "items__direction", "student__faculty", "student__level"
+    ).select_related("application_type", "student")
+    serializer_class = ApplicationDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+
+
+
+

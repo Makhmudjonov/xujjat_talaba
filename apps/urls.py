@@ -1,8 +1,13 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
+    AdminLoginAPIView,
+    AdminUserListAPIView,
     ApplicationItemViewSet,
+    ApplicationListAPIView,
+    ApplicationRetrieveView,
     DirectionViewSet,
+    ScoreCreateAPIView,
     StudentAccountAPIView,
     StudentApplicationTypeListAPIView,
     StudentApplicationViewSet,
@@ -28,7 +33,7 @@ router.register(r'student/application-items', ApplicationItemViewSet, basename='
 # router.register(r'application-items', ApplicationItemViewSet, basename='application-item')
 
 router.register(r"directions", DirectionViewSet, basename="direction")
-router.register("student/applications", StudentApplicationViewSet, basename="student-applications")
+router.register("student/applications", StudentApplicationViewSet, basename="student-applications")\
 
 
 
@@ -54,6 +59,13 @@ urlpatterns = [
     path('student/application-types/', StudentApplicationTypeListAPIView.as_view(), name='student-application-types'),
     # path('student/application-types/', StudentApplicationTypeListAPIView.as_view(), name='student-application-types'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh uchun
+    path("admin/score/create/", ScoreCreateAPIView.as_view(), name="score-create"),
+    path("admin/applications/", ApplicationListAPIView.as_view(), name="admin-application-list"),
+    path("admin/login/", AdminLoginAPIView.as_view(), name="admin-login"),
+
+    path('admin-users/', AdminUserListAPIView.as_view(), name='admin-user-list'),
+
+    path('admin/applications/<int:pk>/', ApplicationRetrieveView.as_view(), name='admin-application-detail'),
 
     
     # Yuqorida router orqali ro'yxatdan o'tkazilgan ViewSet'lar uchun barcha URL'larni o'z ichiga oladi
