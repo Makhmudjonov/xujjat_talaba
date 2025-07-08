@@ -129,13 +129,12 @@ class DirectionSerializer(serializers.ModelSerializer):
         elif obj.type == "test":
             return "test"
         return "file"
-
-
+    
 
     def get_gpa(self, obj):
         student = self.context.get("student")
         if obj.name.lower().startswith("gpa") or "gpa" in obj.name.lower():
-            return student.gpa if student else None
+            return student.get_latest_gpa() if student else None
         return None
 
     def get_score(self, obj):

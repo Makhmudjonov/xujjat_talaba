@@ -370,6 +370,8 @@ class ApplicationItemViewSet(viewsets.ModelViewSet):
 class DirectionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = DirectionSerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Direction.objects.all().order_by("id")
+
 
     def get_queryset(self):
         qs = Direction.objects.select_related("section", "test").all()
@@ -384,7 +386,7 @@ class DirectionViewSet(viewsets.ReadOnlyModelViewSet):
             ).values_list('direction_id', flat=True)
             qs = qs.exclude(id__in=applied_dirs)
 
-        return qs.order_by('section__name', 'name')
+        return qs.order_by("id")
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

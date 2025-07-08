@@ -54,10 +54,11 @@ class Student(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
 
-    @property
-    def gpa(self):
-        latest = self.gpa_records.order_by('-created_at').first()
+    def get_latest_gpa(self):
+        latest = self.gpa_records.order_by("-education_year").first()
         return latest.gpa if latest else None
+
+
 
     def __str__(self):
         return self.full_name
