@@ -427,3 +427,12 @@ class Answer(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     selected_option = models.ForeignKey(Option, on_delete=models.CASCADE)
     is_correct = models.BooleanField()
+
+
+class OdobAxloqStudent(models.Model):
+    sabab = models.CharField(max_length=500)
+    hemis_id = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f"{self.hemis_id} ({self.sabab})"
+

@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin # Import UserAdmin directly
 
 from apps.models import (
     Answer, Application, ApplicationFile, ApplicationItem, ApplicationType, ContractInfo, CustomAdminUser, Direction, Faculty,
-    GPARecord, Option, Question, Score, Section, SpecialApplicationStudent, Student, Test, TestSession, # Make sure CustomAdminUser is imported
+    GPARecord, OdobAxloqStudent, Option, Question, Score, Section, SpecialApplicationStudent, Student, Test, TestSession, # Make sure CustomAdminUser is imported
 )
 
 @admin.register(Student)
@@ -193,3 +193,10 @@ class TestSessionAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related("student", "test")
+
+
+@admin.register(OdobAxloqStudent)
+class OdobAxloqStudentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'hemis_id', 'sabab')
+    search_fields = ('hemis_id',)
+    list_filter = ('sabab',)

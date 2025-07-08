@@ -7,6 +7,8 @@ from django.forms import ValidationError
 import requests
 
 from django.utils.timezone import now
+from rest_framework.viewsets import GenericViewSet
+from rest_framework.mixins import RetrieveModelMixin
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -35,7 +37,7 @@ from drf_yasg.utils import swagger_auto_schema
 from apps.pagenation import CustomPagination
 
 from .models import (
-    Answer, ApplicationItem, ApplicationType, Faculty, Level, Question, Student, ContractInfo, GPARecord,
+    Answer, ApplicationItem, ApplicationType, Faculty, Level, OdobAxloqStudent, Question, Student, ContractInfo, GPARecord,
     Section, Direction, Application, ApplicationFile, Score, CustomAdminUser, Test, TestSession, Option
 )
 from .serializers import (
@@ -304,15 +306,23 @@ class StudentApplicationTypeListAPIView(APIView):
 
     def get(self, request):
         student = request.user.student
-        # Grab IDs of types this student has already applied to
+
+        # Odob-axloq ro‘yxatidan tekshirish
+        record = OdobAxloqStudent.objects.filter(hemis_id=student.student_id_number).first()
+        if record:
+            return Response(
+                {"detail": f"{record.sabab}"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Talabaning allaqachon topshirgan ariza turlarini olish
         applied_type_ids = Application.objects.filter(student=student) \
                                               .values_list('application_type_id', flat=True)
 
+        # Agar mavjud bo‘lsa — faqat topshirilgan turlarni qaytaramiz
         if applied_type_ids:
-            # Return only those types they've applied for
             application_types = ApplicationType.objects.filter(id__in=applied_type_ids)
         else:
-            # Return all types if none applied yet
             application_types = ApplicationType.objects.all()
 
         serializer = ApplicationTypeSerializer(
@@ -967,4 +977,18 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_serializer_context(self):
         return {"request": self.request}
+
+    def list(self, request, *args, **kwargs):
+        student = request.user.student
+
+        # Odob-axloq ro‘yxatidan tekshirish
+        record = OdobAxloqStudent.objects.filter(hemis_id=student.student_id_number).first()
+        if record:
+            return Response(
+                {"detail": f"{record.sabab}"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        return super().list(request, *args, **kwargs)
+        
 
