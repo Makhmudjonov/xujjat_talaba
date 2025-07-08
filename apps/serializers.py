@@ -1,9 +1,13 @@
+import json
+import random
 from rest_framework import serializers
+from django.core.exceptions import ObjectDoesNotExist
+
 
 from komissiya.serializers import StudentSerializer
 from .models import (
-    ApplicationItem, ApplicationType, Level, Section, Direction, Application, ApplicationFile,
-    Score, CustomAdminUser, Student, GPARecord
+    ApplicationItem, ApplicationType, Level, Question, Section, Direction, Application, ApplicationFile,
+    Score, CustomAdminUser, Student, GPARecord, Test, TestSession, Option
 )
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -104,23 +108,107 @@ class SectionMiniSerializer(serializers.ModelSerializer):
 
 
 class DirectionSerializer(serializers.ModelSerializer):
-    section = SectionMiniSerializer(read_only=True)
+    type = serializers.SerializerMethodField()
+    gpa = serializers.SerializerMethodField()
+    score = serializers.SerializerMethodField()
+    test_result = serializers.SerializerMethodField()
 
     class Meta:
-        model  = Direction
-        fields = ["id", "name", "require_file", "min_score", "max_score", "section"]
+        model = Direction
+        fields = [
+            'id', 'name', 'type', 'require_file',
+            'gpa', 'score', 'test_result',
+            'min_score', 'max_score', 'section'
+        ]
+
+    def get_type(self, obj):
+        if obj.test:
+            return "test"
+        return "score"
+
+    def get_gpa(self, obj):
+        student = self.context.get("student")
+        if obj.name.lower().startswith("gpa") or "gpa" in obj.name.lower():
+            return student.gpa if student else None
+        return None
+
+    def get_score(self, obj):
+        student = self.context.get("student")
+        if not student:
+            return None
+
+        # Bu yerda ApplicationItem modeliga to‘g‘ridan to‘g‘ri murojaat qilinadi
+        item = ApplicationItem.objects.filter(
+            direction=obj,
+            application__student=student
+        ).first()
+
+        if item and item.score_set.exists():
+            return item.score_set.first().value
+        return None
+
+    def get_test_result(self, obj):
+        student = self.context.get("student")
+        if obj.test and student:
+            session = TestSession.objects.filter(student=student, test=obj.test).first()
+            return session.score if session else None
+        return None
+
+class ApplicationItemSerializer(serializers.ModelSerializer):
+    files = ApplicationFileSerializer(many=True, read_only=True)  # related_name='files' ga mos
+
+    file = serializers.FileField(required=False, allow_null=True)
+    gpa = serializers.FloatField(required=False, allow_null=True)
+    test_result = serializers.FloatField(required=False, allow_null=True)
+
+    class Meta:
+        model = ApplicationItem
+        fields = [
+            "id", "application", "direction", "title", "student_comment",
+            "reviewer_comment", "file", "gpa", "test_result", "files"
+        ]
+
+    def create(self, validated_data):
+        gpa = validated_data.pop("gpa", None)
+        test_result = validated_data.pop("test_result", None)
+
+        direction = validated_data.get("direction")
+
+        if direction:
+            if hasattr(direction, "type"):
+                if direction.type == "gpa":
+                    validated_data["gpa"] = gpa
+                elif direction.type == "test":
+                    validated_data["test_result"] = test_result
+            else:
+                validated_data["gpa"] = gpa
+                validated_data["test_result"] = test_result
+
+        return super().create(validated_data)
+
 
 class ApplicationSerializer(serializers.ModelSerializer):
-    direction = DirectionSerializer(read_only=True)
-    scores = ScoreSerializer(many=True, read_only=True)  # OneToOne munosabat bo'lsa ishlaydi
-    # application_items = ApplicationItemSerializer(many=True, read_only=True)
-    
-    files = ApplicationFileSerializer(many=True, read_only=True)
-    comment = serializers.CharField()  # Agar modelda mavjud bo'lsa
+    items = ApplicationItemSerializer(many=True)
 
     class Meta:
         model = Application
-        fields = ['id', 'student', 'direction', 'submitted_at', 'status', 'comment', 'scores', 'files']
+        fields = ['id', 'student', 'application_type', 'submitted_at', 'status', 'comment', 'items']
+
+    def create(self, validated_data):
+        items_data = validated_data.pop("items", [])
+        request = self.context.get("request")
+
+        application = Application.objects.create(**validated_data)
+
+        for item_data in items_data:
+            files_data = item_data.pop("files", [])
+            item = ApplicationItem.objects.create(application=application, **item_data)
+
+            for file in files_data:
+                ApplicationFile.objects.create(item=item, comment=file.get("comment", ""), section_id=file["section"])
+
+        return application
+
 
 class ApplicationNestedSerializer(serializers.ModelSerializer):
     files = ApplicationFileSerializer(many=True, read_only=True)
@@ -274,23 +362,6 @@ class ApplicationTypeSerializer(serializers.ModelSerializer):
         return True, None
 
 
-class ApplicationItemSerializer(serializers.ModelSerializer):
-    student_name = serializers.CharField(source='application.student.user.get_full_name', read_only=True)
-    direction_name = serializers.CharField(source='direction.name', read_only=True)
-    # files = ApplicationFileSerializer(many=True, required=False)
-    score = ScoreSerializer(read_only=True)
-    files = ApplicationFileSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = ApplicationItem
-        fields = [
-            'id', 'application', 'title', 'student_comment',
-            'reviewer_comment', 'file', 'direction',
-            'student_name', 'direction_name',
-            'score', 'files'
-        ]
-        read_only_fields = ['reviewer_comment']
-
 class ApplicationItemAdminSerializer(serializers.ModelSerializer):
     direction = DirectionSerializer()
     section = SectionSerializer()
@@ -336,24 +407,50 @@ class ApplicationItemCreateSerializer(serializers.ModelSerializer):
 
 
 class ApplicationCreateSerializer(serializers.ModelSerializer):
-    items = ApplicationItemCreateSerializer(many=True)
+    items = ApplicationItemSerializer(many=True)
 
     class Meta:
         model = Application
         fields = ['application_type', 'comment', 'items']
 
     def create(self, validated_data):
-        items_data = validated_data.pop('items')
-        application = Application.objects.create(student=self.context['request'].user.student, **validated_data)
+        request = self.context["request"]
+        student = request.user.student
+        admin_user = request.user  # reviewer bo‘ladi
+
+        items_data = validated_data.pop("items")
+        application = Application.objects.create(
+            student=student,
+            **validated_data
+        )
 
         for item_data in items_data:
-            files_data = item_data.pop('files', [])
-            item = ApplicationItem.objects.create(application=application, **item_data)
+            files_data = item_data.pop("files", [])
+            gpa = item_data.pop("gpa", None)
+            test_result = item_data.pop("test_result", None)
 
+            direction = item_data["direction"]
+            item = ApplicationItem.objects.create(
+                application=application,
+                title=direction.name,
+                **item_data
+            )
+
+            # ✅ GPA yoki Test bo‘lsa, Score yozamiz
+            score_value = gpa if gpa is not None else test_result
+            if score_value is not None:
+                Score.objects.create(
+                    item=item,
+                    reviewer=admin_user,
+                    value=score_value
+                )
+
+            # ✅ Fayllar saqlanadi (kerak bo‘lsa)
             for file_data in files_data:
-                ApplicationFile.objects.create(application_item=item, **file_data)
+                ApplicationFile.objects.create(item=item, **file_data)
 
         return application
+
     
 
 class ApplicationFileShortSerializer(serializers.ModelSerializer):
@@ -515,3 +612,113 @@ class ApplicationDetailSerializer(serializers.ModelSerializer):
 
         return ApplicationItemFullSerializer(items, many=True, context=self.context).data
 
+
+
+#TEST SAVOLLARI UCHUN SERIALIZER
+
+class StartTestSerializer(serializers.Serializer):
+    test_id = serializers.IntegerField()
+
+class OptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Option
+        fields = ["id", "label", "text"]
+
+
+class QuestionSerializer(serializers.ModelSerializer):
+    options = OptionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Question
+        fields = ['id', 'text', 'options']
+
+    def get_options(self, obj):
+        return [{"id": opt.id, "text": opt.text} for opt in obj.answeroption_set.all()]
+
+class AnswerSubmitSerializer(serializers.Serializer):
+    question_id = serializers.IntegerField()
+    selected_option_id = serializers.IntegerField()
+
+class TestResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TestSession
+        fields = [
+            'id',
+            'started_at',
+            'finished_at',
+            'score',
+            'correct_answers',
+            'total_questions',
+        ]
+
+
+class QuizUploadSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=255)
+    levels = serializers.CharField()            # JSON array satr ko‘rinishida keladi
+    file = serializers.FileField()
+
+    def validate_levels(self, value: str):
+        try:
+            level_ids = json.loads(value)       # "[1,2]" → [1, 2]
+            assert isinstance(level_ids, list)
+        except Exception:
+            raise serializers.ValidationError("levels must be JSON array, masalan: [1,2]")
+        missing = [pk for pk in level_ids if not Level.objects.filter(id=pk).exists()]
+        if missing:
+            raise serializers.ValidationError(f"Level ID topilmadi: {missing}")
+        return level_ids
+
+class TestSerializer(serializers.ModelSerializer):
+    total_questions = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+    result = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Test
+        fields = [
+            "id", "title", "start_time", "question_count",
+            "total_questions", "time_limit", "created_at",
+            "status", "result"
+        ]
+
+    def get_total_questions(self, obj):
+        return obj.questions.count()
+
+    def get_status(self, obj):
+        request = self.context.get("request")
+        student = getattr(request.user, "student", None)
+        if not student:
+            return "unknown"
+
+        has_session = obj.testsession_set.filter(student=student).exists()
+        return "ishlangan" if has_session else "ishlanmagan"
+
+    def get_result(self, obj):
+        request = self.context.get("request")
+        student = getattr(request.user, "student", None)
+        if not student:
+            return None
+
+        session = obj.testsession_set.filter(student=student).first()
+        if session and session.score is not None:
+            return {
+                "score": session.score,
+                "correct": session.correct_answers,
+                "total": session.total_questions
+            }
+        return None
+
+
+
+class RandomizedQuestionSerializer(serializers.ModelSerializer):
+    options = serializers.SerializerMethodField()
+
+    class Meta:
+        model  = Question
+        fields = ("id", "text", "options")
+
+    def get_options(self, obj):
+        opts = list(obj.options.all())          # related_name="options"
+        random.shuffle(opts)                    # variantlar aralashadi
+        return OptionSerializer(opts, many=True).data
+    

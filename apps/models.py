@@ -112,14 +112,37 @@ class Section(models.Model):
 
 
 class Direction(models.Model):
-    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="directions")
+    DIRECTION_TYPE_CHOICES = [
+        ("file", "File"),
+        ("test", "Test"),
+        ("gpa", "GPA"),
+    ]
+
+    section = models.ForeignKey("Section", on_delete=models.CASCADE, related_name="directions")
     name = models.CharField(max_length=255)
-    require_file = models.BooleanField(default=True)
+    direction_type = models.CharField(max_length=10, choices=DIRECTION_TYPE_CHOICES, default="file")
+    require_file = models.BooleanField(default=True)  # faqat `file` uchun
+    test = models.ForeignKey("Test", null=True, blank=True, on_delete=models.SET_NULL)
     min_score = models.FloatField(default=0)
     max_score = models.FloatField(default=10)
+    type = models.CharField(max_length=10, choices=DIRECTION_TYPE_CHOICES, default='file')
 
     def __str__(self):
         return f"{self.section.name} / {self.name}"
+
+    def get_score(self, obj):
+        student = self.context.get("student")
+        if not student:
+            return None
+
+        item = ApplicationItem.objects.filter(
+            direction=obj,
+            application__student=student
+        ).first()
+
+        if item and item.score_set.exists():
+            return item.score_set.first().value
+        return None
 
 
 # ---------------------------
@@ -217,6 +240,8 @@ class ApplicationItem(models.Model):
     student_comment  = models.TextField(blank=True, null=True)
     reviewer_comment = models.TextField(blank=True, null=True)
     file             = models.FileField(upload_to='application_items/', blank=True, null=True)
+    gpa              = models.FloatField(blank=True, null=True)
+    test_result      = models.FloatField(blank=True, null=True)  # or IntegerField if needed
 
     class Meta:
         unique_together = ('application', 'direction')
@@ -349,3 +374,56 @@ class SpecialApplicationStudent(models.Model):
         return f"{self.hemis_id} → {self.application_type}"
     
 
+#TEST SINOVLARI UCHUN MODELLAR
+# models.py
+
+class Test(models.Model):
+    title = models.CharField(max_length=255)
+    question_count = models.IntegerField(default=25)
+    time_limit = models.IntegerField(help_text="daqiqada")  # Masalan, 30 daqiqa
+    levels = models.ManyToManyField(Level, related_name="tests")   # 🆕
+    start_time = models.DateTimeField(null=True, blank=True)  # 🆕 Yangi qo‘shildi
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+
+class Question(models.Model):
+    test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='questions')
+    text = models.TextField()
+    correct_option = models.CharField(max_length=1)  # "A", "B", "C", "D"
+    
+
+class Option(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='options')
+    label = models.CharField(max_length=1)  # "A", "B", "C", "D"
+    text = models.TextField()
+    is_correct = models.BooleanField(default=False)
+
+class TestSession(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    test = models.ForeignKey(Test, on_delete=models.CASCADE)
+    started_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    score = models.FloatField(null=True, blank=True)
+    correct_answers = models.IntegerField(null=True, blank=True)
+    total_questions = models.IntegerField(null=True, blank=True)
+    questions = models.ManyToManyField(Question, blank=True)
+
+    def is_expired(self):
+        if self.finished_at:
+            return False
+        end_time = self.started_at + timezone.timedelta(minutes=self.test.time_limit)
+        return timezone.now() >= end_time
+    
+
+    class Meta:
+        unique_together = ("student", "test")  # 🚨 Bu yerda cheklov
+
+
+class Answer(models.Model):
+    session = models.ForeignKey(TestSession, on_delete=models.CASCADE, related_name="answers")
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    selected_option = models.ForeignKey(Option, on_delete=models.CASCADE)
+    is_correct = models.BooleanField()

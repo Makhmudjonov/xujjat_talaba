@@ -3,8 +3,8 @@ from simple_history.admin import SimpleHistoryAdmin
 from django.contrib.auth.admin import UserAdmin # Import UserAdmin directly
 
 from apps.models import (
-    Application, ApplicationFile, ApplicationItem, ApplicationType, ContractInfo, CustomAdminUser, Direction, Faculty,
-    GPARecord, Score, Section, SpecialApplicationStudent, Student, # Make sure CustomAdminUser is imported
+    Answer, Application, ApplicationFile, ApplicationItem, ApplicationType, ContractInfo, CustomAdminUser, Direction, Faculty,
+    GPARecord, Option, Question, Score, Section, SpecialApplicationStudent, Student, Test, TestSession, # Make sure CustomAdminUser is imported
 )
 
 @admin.register(Student)
@@ -140,3 +140,56 @@ class ApplicationFileAdmin(admin.ModelAdmin):
     def get_application(self, obj):
         return obj.application_item.application
     get_application.short_description = "Application"
+
+
+
+#test admin
+class AnswerInline(admin.TabularInline):
+    model = Answer
+    extra = 2  # Nechta bo‘sh javob chiqarilsin
+
+
+@admin.register(Answer)
+class AnswerAdmin(admin.ModelAdmin):
+    list_display = ('id', 'question', 'is_correct')
+    list_filter = ('is_correct',)
+
+class OptionInline(admin.TabularInline):
+    model = Option
+    extra = 4  # savolga default 4 javob varianti ko‘rsatiladi
+
+class QuestionAdmin(admin.ModelAdmin):
+    inlines = [OptionInline]
+    list_display = ('text',)
+
+admin.site.register(Question, QuestionAdmin)
+
+@admin.register(Option)
+class OptionAdmin(admin.ModelAdmin):
+    list_display = ('question', 'label', 'text', 'is_correct')
+    list_filter = ('is_correct',)
+
+
+@admin.register(Test)
+class TestAdmin(admin.ModelAdmin):
+    list_display = ("title", "question_count", "time_limit", "start_time", "created_at")  # 🆕 start_time qo‘shildi
+    search_fields = ("title",)
+    list_filter = ("created_at", "levels", "start_time")  # 🆕
+    filter_horizontal = ("levels",)
+
+    fieldsets = (
+        (None, {
+            "fields": ("title", "question_count", "time_limit", "start_time", "levels")  # 🆕
+        }),
+    )
+
+
+@admin.register(TestSession)
+class TestSessionAdmin(admin.ModelAdmin):
+    list_display = ("id", "student", "test", "started_at", "finished_at", "score")
+    list_filter = ("test", "student")
+    search_fields = ("student__full_name", "student__hemis_id", "test__title")
+    readonly_fields = ("started_at", "finished_at", "score", "correct_answers", "total_questions")
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("student", "test")

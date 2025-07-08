@@ -7,11 +7,17 @@ from .views import (
     ApplicationListAPIView,
     ApplicationRetrieveView,
     DirectionViewSet,
+    FinishTestAPIView,
+    GetNextQuestionAPIView,
+    QuizUploadAPIView,
     ScoreCreateAPIView,
+    StartTestAPIView,
     StudentAccountAPIView,
     StudentApplicationTypeListAPIView,
     StudentApplicationViewSet,
-    StudentLoginAPIView
+    StudentLoginAPIView,
+    SubmitAnswerAPIView,
+    TestViewSet
 )
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
@@ -36,11 +42,8 @@ router.register(r'student/application-items', ApplicationItemViewSet, basename='
 # router.register(r'application-items', ApplicationItemViewSet, basename='application-item')
 
 router.register(r"directions", DirectionViewSet, basename="direction")
-router.register("student/applications", StudentApplicationViewSet, basename="student-applications")\
-
-
-
-
+router.register("student/applications", StudentApplicationViewSet, basename="student-applications")
+router.register(r'tests', TestViewSet, basename='test')
 
 
 
@@ -70,6 +73,14 @@ urlpatterns = [
 
     path('admin/applications/<int:pk>/', ApplicationRetrieveView.as_view(), name='admin-application-detail'),
 
+    #test path
+    path('test/start/', StartTestAPIView.as_view(), name='start-test'),
+    path('test/<int:session_id>/next/', GetNextQuestionAPIView.as_view(), name='next-question'),
+    path('test/<int:session_id>/answer/', SubmitAnswerAPIView.as_view(), name='submit-answer'),
+    path('test/<int:session_id>/finish/', FinishTestAPIView.as_view(), name='finish-test'),
+    # path('test/<int:session_id>/result/', TestResultAPIView.as_view(), name='test-result'),
+
+    path("admin/tests/upload/", QuizUploadAPIView.as_view(), name="quiz-upload"),
     
     # Yuqorida router orqali ro'yxatdan o'tkazilgan ViewSet'lar uchun barcha URL'larni o'z ichiga oladi
     path('', include(router.urls)),

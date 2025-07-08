@@ -1,8 +1,12 @@
 # apps/views.py
 from datetime import datetime
+from django.utils import timezone
 import json
+import random
 from django.forms import ValidationError
 import requests
+
+from django.utils.timezone import now
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -18,7 +22,7 @@ from rest_framework.authentication import TokenAuthentication
 
 from django.shortcuts import get_object_or_404
 
-from rest_framework import status, viewsets, permissions, generics
+from rest_framework import status, viewsets, permissions, generics,parsers
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -31,13 +35,13 @@ from drf_yasg.utils import swagger_auto_schema
 from apps.pagenation import CustomPagination
 
 from .models import (
-    ApplicationItem, ApplicationType, Faculty, Level, Student, ContractInfo, GPARecord,
-    Section, Direction, Application, ApplicationFile, Score, CustomAdminUser
+    Answer, ApplicationItem, ApplicationType, Faculty, Level, Question, Student, ContractInfo, GPARecord,
+    Section, Direction, Application, ApplicationFile, Score, CustomAdminUser, Test, TestSession, Option
 )
 from .serializers import (
-    AdminLoginSerializer, AdminUserSerializer, ApplicationDetailSerializer, ApplicationFullSerializer, ApplicationItemAdminSerializer, ApplicationItemSerializer, ApplicationTypeSerializer, ScoreCreateSerializer, StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
+    AdminLoginSerializer, AdminUserSerializer, AnswerSubmitSerializer, ApplicationDetailSerializer, ApplicationFullSerializer, ApplicationItemAdminSerializer, ApplicationItemSerializer, ApplicationTypeSerializer, QuestionSerializer, QuizUploadSerializer, RandomizedQuestionSerializer, ScoreCreateSerializer, StartTestSerializer, StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
     ApplicationCreateSerializer, DirectionSerializer, ApplicationSerializer,
-    ApplicationFileSerializer, ScoreSerializer, SubmitMultipleApplicationsSerializer
+    ApplicationFileSerializer, ScoreSerializer, SubmitMultipleApplicationsSerializer, TestResultSerializer, TestSerializer
 )
 from .permissions import (
     IsStudentAndOwnerOrReadOnlyPending,
@@ -257,6 +261,23 @@ class ApplicationItemViewSet(viewsets.ModelViewSet):
 
         serializer.save(application=application, section=section)
 
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        student = getattr(request.user, 'student', None)
+
+        if instance.application.student != student:
+            return Response({"detail": "Bu yo'nalishni taxrirlashga ruxsat yo'q."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        comment = request.data.get('student_comment')
+        if comment is not None:
+            instance.student_comment = comment
+            instance.save()
+            return Response(self.get_serializer(instance).data)
+
+        return Response({"detail": "Hech qanday o'zgarish kiritilmagan."},
+                        status=status.HTTP_400_BAD_REQUEST)
+
 
 class StudentApplicationTypeListAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -287,6 +308,11 @@ class ApplicationItemViewSet(viewsets.ModelViewSet):
     serializer_class = ApplicationItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
+
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, 'student'):
@@ -312,35 +338,35 @@ class ApplicationItemViewSet(viewsets.ModelViewSet):
         serializer.save(application=application, section=section)
 
 class DirectionViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class   = DirectionSerializer
+    serializer_class = DirectionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        qs = Direction.objects.select_related("section").all()
+        qs = Direction.objects.select_related("section", "test").all()
         user = self.request.user
         student = getattr(user, 'student', None)
         app_type_id = self.request.query_params.get("application_type_id")
 
         if student and app_type_id:
-            # Ushbu turdagi arizalarda allaqachon qo‘shilgan yo‘nalishlarni olish
             applied_dirs = ApplicationItem.objects.filter(
                 application__student=student,
                 application__application_type_id=app_type_id
             ).values_list('direction_id', flat=True)
-            # Ularni siyosatdan chiqaramiz
             qs = qs.exclude(id__in=applied_dirs)
 
         return qs.order_by('section__name', 'name')
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['student'] = getattr(self.request.user, 'student', None)
+        return context
+
     
 class StudentApplicationViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes    = [MultiPartParser, FormParser]
+    parser_classes     = [MultiPartParser, FormParser]
 
-    def list(self, request):
-        student = request.user.student
-        qs = Application.objects.filter(student=student)
-        serializer = ApplicationSerializer(qs, many=True)
-        return Response(serializer.data)
+    # ... list() o‘zgarishsiz ...
 
     def create(self, request):
         student = getattr(request.user, 'student', None)
@@ -348,9 +374,9 @@ class StudentApplicationViewSet(viewsets.ViewSet):
             return Response({"detail": "Talaba topilmadi."},
                             status=status.HTTP_400_BAD_REQUEST)
 
+        # --- boshlang‘ich tekshiruvlar (o‘zgarishsiz) ---
         data = request.data
 
-        # 1) application_type
         try:
             app_type_id = int(data.get("application_type"))
             app_type = get_object_or_404(ApplicationType, id=app_type_id)
@@ -358,7 +384,6 @@ class StudentApplicationViewSet(viewsets.ViewSet):
             return Response({"detail": "Invalid application_type."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # 2) parse items JSON
         try:
             items = json.loads(data.get("items", "[]"))
         except json.JSONDecodeError:
@@ -369,7 +394,7 @@ class StudentApplicationViewSet(viewsets.ViewSet):
             return Response({"detail": "Kamida bitta yo‘nalish bo‘lishi kerak."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # 3) Prevent duplicate **direction** within this type
+        # --- duplikat tekshiruv (o‘zgarishsiz) ---
         for idx, it in enumerate(items):
             dir_id = it.get("direction")
             if not dir_id:
@@ -378,47 +403,68 @@ class StudentApplicationViewSet(viewsets.ViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             if ApplicationItem.objects.filter(
-                    application__student=student,
-                    application__application_type=app_type,
-                    direction_id=dir_id
-               ).exists():
+                application__student=student,
+                application__application_type=app_type,
+                direction_id=dir_id
+            ).exists():
                 return Response(
                     {"detail": f"{idx+1}-yo‘nalish ({dir_id}) bo‘yicha allaqachon ariza topshirgansiz."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        # 4) Create atomically
+        # --------------- ASOSIY QISM ---------------
         with transaction.atomic():
             first_dir = get_object_or_404(Direction, id=items[0]["direction"])
             application = Application.objects.create(
-                student=student,
-                application_type=app_type,
-                comment=data.get("comment", ""),
-                section=first_dir.section,
+                student   = student,
+                application_type = app_type,
+                comment   = data.get("comment", ""),
+                section   = first_dir.section,
             )
 
             for i, it in enumerate(items):
                 dir_obj = get_object_or_404(Direction, id=it["direction"])
+
+                # string → float xavfsiz konvert (qiymat yo‘q bo‘lsa None qoladi)
+                gpa_val         = it.get("gpa")
+                test_result_val = it.get("test_result")
+
+                gpa_float         = float(gpa_val)         if gpa_val         not in [None, ""] else None
+                test_result_float = float(test_result_val) if test_result_val not in [None, ""] else None
+
+                # --- ApplicationItem ni gpa / test_result bilan yaratamiz ---
                 app_item = ApplicationItem.objects.create(
-                    application=application,
-                    title=dir_obj.name,
-                    direction=dir_obj,
-                    student_comment=it.get("student_comment", "")
+                    application      = application,
+                    title            = dir_obj.name,
+                    direction        = dir_obj,
+                    student_comment  = it.get("student_comment", ""),
+                    gpa              = gpa_float,
+                    test_result      = test_result_float,
                 )
+
+                # --- Fayl (agar bo‘lsa) ---
                 for j, f in enumerate(it.get("files", [])):
                     upload = request.FILES.get(f"files_{i}_{j}")
                     if upload:
                         ApplicationFile.objects.create(
-                            item=app_item,
-                            file=upload,
-                            section_id=f.get("section"),
-                            comment=f.get("comment", "")
+                            item     = app_item,
+                            file     = upload,
+                            section_id = f.get("section"),
+                            comment  = f.get("comment", "")
                         )
+
+                # --- Score jadvali (ixtiyoriy) ---
+                if dir_obj.type == "score" and gpa_float is not None:
+                    Score.objects.create(item=app_item, reviewer=request.user, value=gpa_float)
+
+                elif dir_obj.type == "test" and test_result_float is not None:
+                    Score.objects.create(item=app_item, reviewer=request.user, value=test_result_float)
 
         return Response(
             {"detail": "Ariza muvaffaqiyatli yaratildi."},
             status=status.HTTP_201_CREATED
         )
+
 
 class NewApplicationsAPIView(generics.ListAPIView):
     """
@@ -599,4 +645,303 @@ class ApplicationRetrieveView(RetrieveAPIView):
 
 
 
+
+#TEST SAVOLLARI UCHUN VIEW
+
+class StartTestAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(request_body=openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["test_id"],
+        properties={"test_id": openapi.Schema(type=openapi.TYPE_INTEGER)}
+    ))
+    def post(self, request):
+        test_id = request.data.get("test_id")
+        test = get_object_or_404(Test, id=test_id)
+
+        try:
+            student = request.user.student
+        except Exception as e:
+            return Response({"detail": f"Student topilmadi: {str(e)}"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Kurs bo‘yicha tekshiruv
+        if not test.levels.filter(id=student.level_id).exists():
+            return Response({"detail": "Bu test sizning kursingiz uchun emas."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        # 🛑 Avvalgi session borligini tekshirish
+        existing_session = TestSession.objects.filter(test=test, student=student).first()
+        if existing_session:
+            first_q = existing_session.questions.first()
+            first_data = RandomizedQuestionSerializer(first_q).data if first_q else None
+            return Response({
+                "detail": "Siz bu testni allaqachon boshlagansiz.",
+                "session_id": existing_session.id,
+                "duration": test.time_limit,
+                "first_question": first_data,
+                "total_questions": existing_session.questions.count(),
+                "resume": True
+            })
+
+        # Test vaqti boshlanishidan oldin bo‘lsa
+        if test.start_time and now() < test.start_time:
+            return Response({"detail": f"Test {test.start_time.strftime('%Y-%m-%d %H:%M')} dan keyin boshlanadi."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        # Yangi test session va random savollar
+        questions = list(test.questions.all())
+        random.shuffle(questions)
+        selected = questions[:test.question_count]
+
+        session = TestSession.objects.create(student=student, test=test)
+        session.questions.set(selected)
+
+        first_q = selected[0] if selected else None
+        first_data = RandomizedQuestionSerializer(first_q).data if first_q else None
+
+        return Response({
+            "session_id": session.id,
+            "duration": test.time_limit,
+            "first_question": first_data,
+            "total_questions": len(selected),
+            "resume": False
+        })
+
+
+
+
+
+
+
+class GetNextQuestionAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Keyingi savolni olish",
+        manual_parameters=[
+            openapi.Parameter('session_id', openapi.IN_PATH,
+                              description="Test session ID", type=openapi.TYPE_INTEGER)
+        ],
+        responses={200: RandomizedQuestionSerializer()}
+    )
+    def get(self, request, session_id):
+        session = get_object_or_404(TestSession, id=session_id, student=request.user.student)
+
+        # ✅ Vaqt tugaganini tekshir
+        if session.finished_at is None:
+            end_time = session.started_at + timezone.timedelta(minutes=session.test.time_limit)
+            if timezone.now() >= end_time:
+                self.finish_session(session)
+                return Response({"detail": "Test vaqti tugadi. Yakunlandi."}, status=200)
+
+        # ❓ Javob berilgan savollar
+        answered_ids = session.answers.values_list("question_id", flat=True)
+
+        # 🎯 Keyingi savolni random tanlash
+        question = (session.questions
+                    .exclude(id__in=answered_ids)
+                    .order_by('?')
+                    .first())
+
+        if not question:
+            self.finish_session(session)
+            return Response({"detail": "Test yakunlangan"}, status=200)
+
+        return Response(RandomizedQuestionSerializer(question).data)
+
+    def finish_session(self, session):
+        answers = session.answers.all()
+        correct = answers.filter(is_correct=True).count()
+        total = session.questions.count()
+
+        session.finished_at = timezone.now()
+        session.correct_answers = correct
+        session.total_questions = total
+        session.score = round((correct / total) * 100, 2) if total else 0
+        session.save()
+
+
+
+class SubmitAnswerAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Savolga javob yuborish",
+        manual_parameters=[
+            openapi.Parameter('session_id', openapi.IN_PATH, description="Test session ID", type=openapi.TYPE_INTEGER)
+        ],
+        request_body=AnswerSubmitSerializer,
+        responses={200: openapi.Response("Success", schema=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={"detail": openapi.Schema(type=openapi.TYPE_STRING)}
+        ))}
+    )
+    def post(self, request, session_id):
+        session = get_object_or_404(TestSession, id=session_id, student=request.user.student)
+
+        # ✅ Vaqt tugaganini tekshir
+        end_time = session.started_at + timezone.timedelta(minutes=session.test.time_limit)
+        if timezone.now() >= end_time or session.finished_at is not None:
+            return Response(
+                {"detail": "Test vaqti tugagan. Javob yuborib bo‘lmaydi."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        ser = AnswerSubmitSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+
+        question = get_object_or_404(Question, id=ser.validated_data["question_id"])
+        selected_option = get_object_or_404(Option, id=ser.validated_data["selected_option_id"])
+
+        # 🔁 Avvalgi javobni tekshirib, qayta yozishni oldini olamiz (agar kerak bo‘lsa)
+        if Answer.objects.filter(session=session, question=question).exists():
+            return Response(
+                {"detail": "Bu savolga allaqachon javob berilgan."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        Answer.objects.create(
+            session=session,
+            question=question,
+            selected_option=selected_option,
+            is_correct=selected_option.is_correct
+        )
+
+        return Response({"detail": "Javob qabul qilindi"})
+
+
+class FinishTestAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        operation_summary="Testni yakunlash va natijani olish",
+        manual_parameters=[
+            openapi.Parameter('session_id', openapi.IN_PATH, description="Test session ID", type=openapi.TYPE_INTEGER)
+        ],
+        responses={200: TestResultSerializer()}
+    )
+    def post(self, request, session_id):
+        session = get_object_or_404(TestSession, id=session_id, student=request.user.student)
+        answers = session.answers.all()
+        correct = answers.filter(is_correct=True).count()
+        total = session.questions.count()
+
+        # 🛡️ Noldan bo‘linishni oldini olish
+        if total == 0:
+            score = 0
+        else:
+            score = round((correct / total) * 100, 2)
+
+        session.finished_at = timezone.now()
+        session.score = score
+        session.correct_answers = correct
+        session.total_questions = total
+        session.save()
+
+        return Response(TestResultSerializer(session).data)
+    
+
+
+
+class QuizUploadAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated, permissions.IsAdminUser]        # yoki IsAdminUser
+    parser_classes = [parsers.MultiPartParser, parsers.FormParser]
+
+    # ----- Swagger hujjati -----
+    @swagger_auto_schema(
+        operation_summary="TXT test faylini yuklash (Level bo‘yicha)",
+        manual_parameters=[
+            openapi.Parameter("title",  openapi.IN_FORM, required=True, type=openapi.TYPE_STRING,
+                              description="Test nomi"),
+            openapi.Parameter("levels", openapi.IN_FORM, required=True, type=openapi.TYPE_STRING,
+                              description="Level ID lar JSON array ko‘rinishida: [1,2]"),
+            openapi.Parameter("file",   openapi.IN_FORM, required=True, type=openapi.TYPE_FILE,
+                              format="binary", description="Shablonli TXT fayl"),
+        ],
+        responses={
+            200: openapi.Response("OK", examples={"application/json": {"imported": 25, "test_id": 7}}),
+            400: openapi.Response("Xatolar", examples={"application/json": {
+                "errors": [{"line": 4, "detail": "Variant '+' bilan boshlanishi kerak"}]}})
+        },
+    )
+    def post(self, request):
+        ser = QuizUploadSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+
+        title      = ser.validated_data["title"]
+        level_ids  = ser.validated_data["levels"]     # allaqachon list
+        txt_lines  = ser.validated_data["file"].read().decode("utf-8").splitlines()
+
+        # --- Test yaratish ---
+        test = Test.objects.create(
+            title=title,
+            question_count=0,
+            time_limit=30,
+            created_at=datetime.now()
+        )
+        test.levels.set(level_ids)
+
+        # --- Faylni bloklarga ajratish va tekshirish ---
+        errors, blocks, buf = [], [], []
+        for idx, raw in enumerate(txt_lines, start=1):
+            line = raw.strip()
+            if not line:
+                if buf:
+                    blocks.append(buf)
+                    buf = []
+                continue
+            buf.append((idx, line))
+        if buf:
+            blocks.append(buf)
+
+        parsed = []
+        for block in blocks:
+            first_ln, first_line = block[0]
+            if not first_line.startswith("#"):
+                errors.append({"line": first_ln, "detail": "Savol '# ' bilan boshlanishi kerak"})
+                continue
+
+            q_text = first_line[1:].strip()
+            opts, has_plus = [], False
+            for ln, opt in block[1:]:
+                if not (opt.startswith("+") or opt.startswith("-")):
+                    errors.append({"line": ln, "detail": "Variant '+' yoki '-' bilan boshlanishi kerak"})
+                    break
+                text = opt[1:].strip()
+                is_correct = opt.startswith("+")
+                has_plus |= is_correct
+                opts.append((text, is_correct))
+            else:
+                if not has_plus:
+                    errors.append({"line": first_ln, "detail": "Kamida bitta + javob bo‘lishi shart"})
+                else:
+                    parsed.append((q_text, opts))
+
+        if errors:
+            test.delete()
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        # --- DB ga import ---
+        with transaction.atomic():
+            for q_text, opts in parsed:
+                q = Question.objects.create(test=test, text=q_text)
+                Option.objects.bulk_create(
+                    [Option(question=q, text=t, is_correct=flag) for t, flag in opts]
+                )
+
+        test.question_count = len(parsed)
+        test.save()
+
+        return Response({"imported": len(parsed), "test_id": test.id}, status=status.HTTP_200_OK)
+    
+
+class TestViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Test.objects.all().order_by('-created_at')
+    serializer_class = TestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_serializer_context(self):
+        return {"request": self.request}
 
