@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -75,7 +77,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000','http://192.168.137.120:3000','http://localhost:8000']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000','http://192.168.137.120:3000','http://localhost:8000', 'https://tanlov.medsfera.uz']
 
 ROOT_URLCONF = 'core.urls'
 

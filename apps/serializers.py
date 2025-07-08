@@ -37,6 +37,7 @@ class ApplicationFileSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField(read_only=True)
     application_id = serializers.SerializerMethodField(read_only=True)
     application_title = serializers.SerializerMethodField(read_only=True)
+    
 
     class Meta:
         model = ApplicationFile
@@ -56,10 +57,11 @@ class ApplicationFileSerializer(serializers.ModelSerializer):
         }
 
     def get_file_url(self, obj):
-        request = self.context.get('request')
+        request = self.context.get('request')  # bu yerda request kerak
         if obj.file and request:
             return request.build_absolute_uri(obj.file.url)
         return None
+
 
     def get_application_id(self, obj):
         return obj.item.application.id if obj.item and obj.item.application else None
@@ -155,11 +157,7 @@ class DirectionSerializer(serializers.ModelSerializer):
         return None
 
 class ApplicationItemSerializer(serializers.ModelSerializer):
-    files = ApplicationFileSerializer(many=True, read_only=True)  # related_name='files' ga mos
-
-    file = serializers.FileField(required=False, allow_null=True)
-    gpa = serializers.FloatField(required=False, allow_null=True)
-    test_result = serializers.FloatField(required=False, allow_null=True)
+    files = ApplicationFileSerializer(many=True, read_only=True)
 
     class Meta:
         model = ApplicationItem
@@ -167,6 +165,7 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
             "id", "application", "direction", "title", "student_comment",
             "reviewer_comment", "file", "gpa", "test_result", "files"
         ]
+
 
     def create(self, validated_data):
         gpa = validated_data.pop("gpa", None)
@@ -244,18 +243,6 @@ class ApplicationFileInlineSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApplicationFile
         fields = ['section', 'comment']
-
-
-# class ApplicationCreateSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Application
-#         fields = ['direction', 'section', 'comment', 'application_type']
-
-#     def validate(self, attrs):
-#         student = self.context['request'].user.student
-#         if Application.objects.filter(student=student).exists():
-#             raise serializers.ValidationError("Siz allaqachon bir marta ariza topshirgansiz.")
-#         return attrs
 
 
 # --- 10. Level ---
@@ -407,7 +394,7 @@ class ApplicationItemCreateSerializer(serializers.ModelSerializer):
 
 
 class ApplicationCreateSerializer(serializers.ModelSerializer):
-    items = ApplicationItemSerializer(many=True)
+    items = ApplicationItemCreateSerializer(many=True)
 
     class Meta:
         model = Application
@@ -416,15 +403,12 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context["request"]
         student = request.user.student
-        admin_user = request.user  # reviewer bo‘ladi
+        admin_user = request.user
 
         items_data = validated_data.pop("items")
-        application = Application.objects.create(
-            student=student,
-            **validated_data
-        )
+        application = Application.objects.create(student=student, **validated_data)
 
-        for item_data in items_data:
+        for idx, item_data in enumerate(items_data):
             files_data = item_data.pop("files", [])
             gpa = item_data.pop("gpa", None)
             test_result = item_data.pop("test_result", None)
@@ -436,21 +420,25 @@ class ApplicationCreateSerializer(serializers.ModelSerializer):
                 **item_data
             )
 
-            # ✅ GPA yoki Test bo‘lsa, Score yozamiz
+            # score
             score_value = gpa if gpa is not None else test_result
             if score_value is not None:
-                Score.objects.create(
-                    item=item,
-                    reviewer=admin_user,
-                    value=score_value
-                )
+                Score.objects.create(item=item, reviewer=admin_user, value=score_value)
 
-            # ✅ Fayllar saqlanadi (kerak bo‘lsa)
-            for file_data in files_data:
-                ApplicationFile.objects.create(item=item, **file_data)
+            # Fayl olish: `files_0_0`, `files_1_0`, ...
+            for f_idx in range(5):
+                file_key = f"files_{idx}_{f_idx}"
+                uploaded_file = request.FILES.get(file_key)
+                if uploaded_file:
+                    ApplicationFile.objects.create(
+                        item=item,
+                        file=uploaded_file,
+                        comment="",
+                        section=files_data[f_idx]["section"] if f_idx < len(files_data) else None,
+                    )
+
 
         return application
-
     
 
 class ApplicationFileShortSerializer(serializers.ModelSerializer):

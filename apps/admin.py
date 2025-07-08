@@ -136,10 +136,10 @@ class CustomAdminUserAdmin(UserAdmin):
 class ApplicationFileAdmin(admin.ModelAdmin):
     list_display = ('id', 'get_application', 'comment')
 
-
     def get_application(self, obj):
-        return obj.application_item.application
+        return obj.item.application
     get_application.short_description = "Application"
+
 
 
 

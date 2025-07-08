@@ -259,7 +259,27 @@ class ApplicationItemViewSet(viewsets.ModelViewSet):
             defaults={'status': 'pending', 'section': section}
         )
 
-        serializer.save(application=application, section=section)
+        app_item = serializer.save(application=application, section=section)
+
+        # Fayllarni JSON formatda olish
+        files_json = self.request.data.get('files')
+        if files_json:
+            try:
+                import json
+                files_data = json.loads(files_json)
+            except Exception:
+                files_data = []
+
+            for j, file_meta in enumerate(files_data):
+                upload = self.request.FILES.get(f"files_{i}_{j}")
+                if upload:
+                    ApplicationFile.objects.create(
+                        item=app_item,
+                        file=upload,
+                        section_id=file_meta.get('section'),
+                        comment=file_meta.get('comment', '')
+                    )
+
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -365,6 +385,8 @@ class DirectionViewSet(viewsets.ReadOnlyModelViewSet):
 class StudentApplicationViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
     parser_classes     = [MultiPartParser, FormParser]
+    
+    
 
     # ... list() o‘zgarishsiz ...
 
@@ -447,11 +469,12 @@ class StudentApplicationViewSet(viewsets.ViewSet):
                     upload = request.FILES.get(f"files_{i}_{j}")
                     if upload:
                         ApplicationFile.objects.create(
-                            item     = app_item,
-                            file     = upload,
-                            section_id = f.get("section"),
-                            comment  = f.get("comment", "")
+                            item=app_item,
+                            file=upload,
+                            section_id=f.get("section"),
+                            comment=f.get("comment", "")
                         )
+
 
                 # --- Score jadvali (ixtiyoriy) ---
                 if dir_obj.type == "score" and gpa_float is not None:
@@ -899,9 +922,9 @@ class QuizUploadAPIView(APIView):
         parsed = []
         for block in blocks:
             first_ln, first_line = block[0]
-            if not first_line.startswith("#"):
-                errors.append({"line": first_ln, "detail": "Savol '# ' bilan boshlanishi kerak"})
-                continue
+            # if not first_line.startswith("#"):
+            #     errors.append({"line": first_ln, "detail": "Savol '# ' bilan boshlanishi kerak"})
+            #     continue
 
             q_text = first_line[1:].strip()
             opts, has_plus = [], False
