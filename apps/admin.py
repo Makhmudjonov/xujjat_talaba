@@ -4,7 +4,7 @@ from django.contrib.auth.admin import UserAdmin # Import UserAdmin directly
 
 from apps.models import (
     Answer, Application, ApplicationFile, ApplicationItem, ApplicationType, ContractInfo, CustomAdminUser, Direction, Faculty,
-    GPARecord, OdobAxloqStudent, Option, Question, Score, Section, SpecialApplicationStudent, Student, Test, TestSession, # Make sure CustomAdminUser is imported
+    GPARecord, Level, OdobAxloqStudent, Option, Question, Score, Section, SpecialApplicationStudent, Student, Test, TestSession, # Make sure CustomAdminUser is imported
 )
 
 @admin.register(Student)
@@ -200,3 +200,10 @@ class OdobAxloqStudentAdmin(admin.ModelAdmin):
     list_display = ('id', 'hemis_id', 'sabab')
     search_fields = ('hemis_id',)
     list_filter = ('sabab',)
+
+
+
+@admin.register(Level)
+class LevelAdmin(admin.ModelAdmin):
+    list_display = ('id', 'code', 'name')
+    search_fields = ('code', 'name')
