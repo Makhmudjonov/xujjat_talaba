@@ -124,9 +124,13 @@ class DirectionSerializer(serializers.ModelSerializer):
         ]
 
     def get_type(self, obj):
-        if obj.test:
+        if obj.type == "gpa":
+            return "score"
+        elif obj.type == "test":
             return "test"
-        return "score"
+        return "file"
+
+
 
     def get_gpa(self, obj):
         student = self.context.get("student")
