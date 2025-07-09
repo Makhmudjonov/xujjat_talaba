@@ -60,12 +60,34 @@ User = get_user_model()  # faqat bir marta
 # ────────────────────────────────────────────────────────────
 #  STUDENT LOGIN
 # ────────────────────────────────────────────────────────────
+
+UNIVERSITY_API_CONFIG = {
+    "tma": {
+        "base_url": "https://student.tma.uz/rest/v1",
+    },
+    "sampi": {
+        "base_url": "https://student.tashpmi.uz/rest/v1",
+    },
+    "stom": {
+        "base_url": "https://student.tsdi.uz/rest/v1",
+    },
+}
+
+
+
 class StudentLoginAPIView(APIView):
     permission_classes = [AllowAny]
 
     @swagger_auto_schema(
-        request_body=StudentLoginSerializer,
-        operation_description="HEMIS orqali student login qilish",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=["login", "password", "university"],
+            properties={
+                "login": openapi.Schema(type=openapi.TYPE_STRING),
+                "password": openapi.Schema(type=openapi.TYPE_STRING),
+                "university": openapi.Schema(type=openapi.TYPE_STRING, enum=["tma", "urdu", "qfdu"]),
+            },
+        ),
         responses={
             200: openapi.Response(
                 description="Login successful",
@@ -83,25 +105,38 @@ class StudentLoginAPIView(APIView):
         },
     )
     def post(self, request):
-        ser = StudentLoginSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
-        login, password = ser.validated_data.values()
+        login = request.data.get("login")
+        password = request.data.get("password")
+        university = request.data.get("university")
 
-        # HEMIS logini
-        auth_r = requests.post(
-            "https://student.tma.uz/rest/v1/auth/login",
-            json={"login": login, "password": password},
-            headers={"accept": "application/json"},
-            timeout=15,
-        )
+        if not login or not password or not university:
+            return Response({"detail": "Ma'lumotlar to‘liq emas"}, status=400)
+
+        config = UNIVERSITY_API_CONFIG.get(university)
+        if not config:
+            return Response({"detail": "Noto‘g‘ri universitet tanlandi"}, status=400)
+
+        base_url = config["base_url"]
+
+        # 1. Login qilish
+        try:
+            auth_r = requests.post(
+                f"{base_url}/auth/login",
+                json={"login": login, "password": password},
+                headers={"accept": "application/json"},
+                timeout=15,
+            )
+        except Exception:
+            return Response({"detail": "HEMIS bilan bog‘lanib bo‘lmadi"}, 502)
+
         if auth_r.status_code != 200:
             return Response({"detail": "Login yoki parol noto‘g‘ri"}, 401)
 
         hemis_token = auth_r.json()["data"]["token"]
 
-        # Profil
+        # 2. Profil olish
         me_r = requests.get(
-            "https://student.tma.uz/rest/v1/account/me",
+            f"{base_url}/account/me",
             headers={"Authorization": f"Bearer {hemis_token}"},
             timeout=15,
         )
@@ -115,7 +150,7 @@ class StudentLoginAPIView(APIView):
                 User = get_user_model()
                 user, created = User.objects.get_or_create(
                     username=d["student_id_number"],
-                    defaults={"first_name": d["full_name"], "role": "student"}
+                    defaults={"first_name": d["full_name"], "role": "student"},
                 )
                 if created:
                     user.set_unusable_password()
@@ -133,7 +168,7 @@ class StudentLoginAPIView(APIView):
 
                 student, _ = Student.objects.get_or_create(
                     user=user,
-                    defaults={"student_id_number": d["student_id_number"]}
+                    defaults={"student_id_number": d["student_id_number"]},
                 )
 
                 student.user = user
@@ -145,65 +180,63 @@ class StudentLoginAPIView(APIView):
                 student.gender = d["gender"]["name"]
                 student.birth_date = datetime.fromtimestamp(d["birth_date"]).date()
                 student.address = d.get("address") or ""
-                student.university = d.get("university")
+                student.university = d['university']  # tanlangan nom saqlanadi
                 student.faculty = faculty
                 student.group = d["group"]["name"]
                 student.level = level
                 student.save()
-        
-        # 7️⃣  GPA list
-            gpa_r = requests.get(
-                "https://student.tma.uz/rest/v1/education/gpa-list",
-                headers={"Authorization": f"Bearer {hemis_token}"},
-                timeout=15,
-            )
-            if gpa_r.status_code == 200:
-                for it in gpa_r.json().get("data", []):
-                    GPARecord.objects.update_or_create(
+
+                # GPA list
+                gpa_r = requests.get(
+                    f"{base_url}/education/gpa-list",
+                    headers={"Authorization": f"Bearer {hemis_token}"},
+                    timeout=15,
+                )
+                if gpa_r.status_code == 200:
+                    for it in gpa_r.json().get("data", []):
+                        GPARecord.objects.update_or_create(
+                            student=student,
+                            education_year=it["educationYear"]["name"],
+                            level=it["level"]["name"],
+                            defaults={
+                                "gpa": it["gpa"],
+                                "credit_sum": float(it["credit_sum"]),
+                                "subjects": it["subjects"],
+                                "debt_subjects": it["debt_subjects"],
+                                "can_transfer": it["can_transfer"],
+                                "method": it["method"],
+                                "created_at": datetime.fromtimestamp(it["created_at"]),
+                            },
+                        )
+
+                # Contract info
+                c_r = requests.get(
+                    f"{base_url}/student/contract",
+                    headers={"Authorization": f"Bearer {hemis_token}"},
+                    timeout=15,
+                )
+                if c_r.status_code == 200 and c_r.json().get("data"):
+                    cd = c_r.json()["data"]
+                    ContractInfo.objects.update_or_create(
                         student=student,
-                        education_year=it["educationYear"]["name"],
-                        level=it["level"]["name"],
                         defaults={
-                            "gpa": it["gpa"],
-                            "credit_sum": float(it["credit_sum"]),
-                            "subjects": it["subjects"],
-                            "debt_subjects": it["debt_subjects"],
-                            "can_transfer": it["can_transfer"],
-                            "method": it["method"],
-                            "created_at": datetime.fromtimestamp(it["created_at"]),
+                            "contract_number": cd["contractNumber"],
+                            "contract_date": datetime.strptime(cd["contractDate"], "%d.%m.%Y").date(),
+                            "edu_organization": cd["eduOrganization"],
+                            "edu_speciality": cd["eduSpeciality"],
+                            "edu_period": cd["eduPeriod"],
+                            "edu_year": cd["eduYear"],
+                            "edu_type": cd["eduType"],
+                            "edu_form": cd["eduForm"],
+                            "edu_course": cd["eduCourse"],
+                            "contract_type": cd["eduContractType"],
+                            "pdf_link": cd["pdfLink"],
+                            "contract_sum": cd["eduContractSum"],
+                            "gpa": cd["gpa"],
+                            "debit": cd.get("debit"),
+                            "credit": cd.get("credit"),
                         },
                     )
-
-            # 8️⃣  Contract
-            c_r = requests.get(
-                "https://student.tma.uz/rest/v1/student/contract",
-                headers={"Authorization": f"Bearer {hemis_token}"},
-                timeout=15,
-            )
-            if c_r.status_code == 200 and c_r.json().get("data"):
-                cd = c_r.json()["data"]
-                ContractInfo.objects.update_or_create(
-                    student=student,
-                    defaults={
-                        "contract_number": cd["contractNumber"],
-                        "contract_date": datetime.strptime(
-                            cd["contractDate"], "%d.%m.%Y"
-                        ).date(),
-                        "edu_organization": cd["eduOrganization"],
-                        "edu_speciality": cd["eduSpeciality"],
-                        "edu_period": cd["eduPeriod"],
-                        "edu_year": cd["eduYear"],
-                        "edu_type": cd["eduType"],
-                        "edu_form": cd["eduForm"],
-                        "edu_course": cd["eduCourse"],
-                        "contract_type": cd["eduContractType"],
-                        "pdf_link": cd["pdfLink"],
-                        "contract_sum": cd["eduContractSum"],
-                        "gpa": cd["gpa"],
-                        "debit": cd.get("debit"),
-                        "credit": cd.get("credit"),
-                    },
-                )
 
         except Exception as exc:
             return Response({"detail": str(exc)}, 500)
@@ -218,6 +251,7 @@ class StudentLoginAPIView(APIView):
             },
             200,
         )
+
 
 
 class StudentAccountAPIView(APIView):
