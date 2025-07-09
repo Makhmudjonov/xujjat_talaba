@@ -5,7 +5,7 @@ from drf_yasg import openapi
 from requests import request
 from rest_framework.pagination import PageNumberPagination
 
-from apps.models import Application, Level
+from apps.models import Application, Level, Score
 from apps.serializers import ApplicationSerializer
 from komissiya.models import KomissiyaMember
 from .serializers import KomissiyaLoginSerializer, ScoreSerializer
@@ -129,6 +129,7 @@ class KomissiyaApplicationView(ListAPIView):
     
 
 class ApplicationScoreCreateAPIView(CreateAPIView):
+    queryset = Score.objects.all()
     serializer_class = ScoreSerializer
     permission_classes = [IsAuthenticated, IsKomissiyaMember]
 

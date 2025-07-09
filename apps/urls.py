@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
+    AdminAccountAPIView,
     AdminLoginAPIView,
     AdminUserListAPIView,
     ApplicationItemViewSet,
@@ -17,7 +18,8 @@ from .views import (
     StudentApplicationViewSet,
     StudentLoginAPIView,
     SubmitAnswerAPIView,
-    TestViewSet
+    TestViewSet,
+    ApplicationFileUpdateAPIView
 )
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
@@ -70,10 +72,11 @@ urlpatterns = [
     path("admin/login/", AdminLoginAPIView.as_view(), name="admin-login"),
 
     path('admin-users/', AdminUserListAPIView.as_view(), name='admin-user-list'),
-
+    path("admin/account/", AdminAccountAPIView.as_view(), name="admin-account"),
     path('admin/applications/<int:pk>/', ApplicationRetrieveView.as_view(), name='admin-application-detail'),
 
-    #test path
+    path('student/files/<int:pk>/', ApplicationFileUpdateAPIView.as_view()),
+
     path('test/start/', StartTestAPIView.as_view(), name='start-test'),
     path('test/<int:session_id>/next/', GetNextQuestionAPIView.as_view(), name='next-question'),
     path('test/<int:session_id>/answer/', SubmitAnswerAPIView.as_view(), name='submit-answer'),
@@ -81,6 +84,8 @@ urlpatterns = [
     # path('test/<int:session_id>/result/', TestResultAPIView.as_view(), name='test-result'),
 
     path("admin/tests/upload/", QuizUploadAPIView.as_view(), name="quiz-upload"),
+
+    
     
     # Yuqorida router orqali ro'yxatdan o'tkazilgan ViewSet'lar uchun barcha URL'larni o'z ichiga oladi
     path('', include(router.urls)),

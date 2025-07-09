@@ -37,7 +37,6 @@ class ApplicationFileSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField(read_only=True)
     application_id = serializers.SerializerMethodField(read_only=True)
     application_title = serializers.SerializerMethodField(read_only=True)
-    
 
     class Meta:
         model = ApplicationFile
@@ -47,8 +46,8 @@ class ApplicationFileSerializer(serializers.ModelSerializer):
             'file_url',
             'comment',
             'section',
-            'application_id',      # ✅ qo‘shildi
-            'application_title',   # ✅ qo‘shildi
+            'application_id',
+            'application_title',
         ]
         extra_kwargs = {
             'file': {'required': False, 'allow_null': True},
@@ -57,18 +56,16 @@ class ApplicationFileSerializer(serializers.ModelSerializer):
         }
 
     def get_file_url(self, obj):
-        request = self.context.get('request')  # bu yerda request kerak
+        request = self.context.get('request')
         if obj.file and request:
             return request.build_absolute_uri(obj.file.url)
         return None
-
 
     def get_application_id(self, obj):
         return obj.item.application.id if obj.item and obj.item.application else None
 
     def get_application_title(self, obj):
         return obj.item.application.application_type.name if obj.item and obj.item.application else None
-
 
 
 class ScoreSerializer(serializers.ModelSerializer):
@@ -713,3 +710,20 @@ class RandomizedQuestionSerializer(serializers.ModelSerializer):
         random.shuffle(opts)                    # variantlar aralashadi
         return OptionSerializer(opts, many=True).data
     
+class CustomAdminUserSerializer(serializers.ModelSerializer):
+    sections = serializers.StringRelatedField(many=True)
+    faculties = serializers.StringRelatedField(many=True)
+    directions = serializers.StringRelatedField(many=True)
+    levels = serializers.StringRelatedField(many=True)
+    university1 = serializers.StringRelatedField()
+
+    class Meta:
+        model = CustomAdminUser
+        fields = [
+            'id', 'username', 'first_name', 'last_name', 'email',
+            'role', 'is_active', 'is_staff', 'can_score',
+            'sections', 'faculties', 'directions', 'levels', 'university1',
+            'allow_all_students', 'limit_by_course'
+        ]
+
+        

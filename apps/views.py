@@ -6,6 +6,8 @@ import random
 from django.forms import ValidationError
 import requests
 
+from rest_framework.decorators import action
+
 from django.utils.timezone import now
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import RetrieveModelMixin
@@ -38,10 +40,10 @@ from apps.pagenation import CustomPagination
 
 from .models import (
     Answer, ApplicationItem, ApplicationType, Faculty, Level, OdobAxloqStudent, Question, Student, ContractInfo, GPARecord,
-    Section, Direction, Application, ApplicationFile, Score, CustomAdminUser, Test, TestSession, Option
+    Section, Direction, Application, ApplicationFile, Score, CustomAdminUser, Test, TestSession, Option, University
 )
 from .serializers import (
-    AdminLoginSerializer, AdminUserSerializer, AnswerSubmitSerializer, ApplicationDetailSerializer, ApplicationFullSerializer, ApplicationItemAdminSerializer, ApplicationItemSerializer, ApplicationTypeSerializer, QuestionSerializer, QuizUploadSerializer, RandomizedQuestionSerializer, ScoreCreateSerializer, StartTestSerializer, StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
+    AdminLoginSerializer, AdminUserSerializer, AnswerSubmitSerializer, ApplicationDetailSerializer, ApplicationFullSerializer, ApplicationItemAdminSerializer, ApplicationItemSerializer, ApplicationTypeSerializer, CustomAdminUserSerializer, QuestionSerializer, QuizUploadSerializer, RandomizedQuestionSerializer, ScoreCreateSerializer, StartTestSerializer, StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
     ApplicationCreateSerializer, DirectionSerializer, ApplicationSerializer,
     ApplicationFileSerializer, ScoreSerializer, SubmitMultipleApplicationsSerializer, TestResultSerializer, TestSerializer
 )
@@ -152,6 +154,11 @@ class StudentLoginAPIView(APIView):
                     username=d["student_id_number"],
                     defaults={"first_name": d["full_name"], "role": "student"},
                 )
+
+                univer, _ = University.objects.get_or_create(
+                    name=d["university"]
+                )
+                
                 if created:
                     user.set_unusable_password()
                     user.save()
@@ -160,6 +167,8 @@ class StudentLoginAPIView(APIView):
                     hemis_id=d["faculty"]["id"],
                     defaults={"name": d["faculty"]["name"], "code": d["faculty"]["code"]},
                 )
+
+                
 
                 level, _ = Level.objects.get_or_create(
                     code=d["level"]["code"],
@@ -181,6 +190,7 @@ class StudentLoginAPIView(APIView):
                 student.birth_date = datetime.fromtimestamp(d["birth_date"]).date()
                 student.address = d.get("address") or ""
                 student.university = d['university']  # tanlangan nom saqlanadi
+                student.university1 = univer  # tanlangan nom saqlanadi
                 student.faculty = faculty
                 student.group = d["group"]["name"]
                 student.level = level
@@ -533,6 +543,42 @@ class StudentApplicationViewSet(viewsets.ViewSet):
             {"detail": "Ariza muvaffaqiyatli yaratildi."},
             status=status.HTTP_201_CREATED
         )
+    
+    @action(detail=True, methods=["put", "patch"], url_path="update-item")
+    def update_item(self, request, pk=None):
+        student = getattr(request.user, 'student', None)
+        if not student:
+            return Response({"detail": "Talaba topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            app_item = ApplicationItem.objects.select_related('application').get(
+                id=pk, application__student=student
+            )
+        except ApplicationItem.DoesNotExist:
+            return Response({"detail": "Ariza topilmadi yoki sizga tegishli emas."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Faqat comment yangilash
+        student_comment = request.data.get("student_comment", "")
+        app_item.student_comment = student_comment
+        app_item.save()
+
+        # Fayllar listi JSON bo‘lishi kerak: [{"section": 1, "comment": "xujjat"}, ...]
+        try:
+            files_data = json.loads(request.data.get("files", "[]"))
+        except json.JSONDecodeError:
+            return Response({"detail": "Fayl ro‘yxati noto‘g‘ri formatda."}, status=status.HTTP_400_BAD_REQUEST)
+
+        for j, file_info in enumerate(files_data):
+            upload = request.FILES.get(f"files_{pk}_{j}")
+            if upload:
+                ApplicationFile.objects.create(
+                    item=app_item,
+                    file=upload,
+                    section_id=file_info.get("section"),
+                    comment=file_info.get("comment", "")
+                )
+
+        return Response({"detail": "Ma’lumotlar yangilandi."}, status=status.HTTP_200_OK)
 
 
 class NewApplicationsAPIView(generics.ListAPIView):
@@ -615,6 +661,9 @@ class ApplicationListAPIView(ListAPIView):
             "student__level",
         ).select_related("application_type", "student")
 
+        if user.university1:
+            qs = qs.filter(student__university1=user.university1)
+
         if user.faculties.exists():
             qs = qs.filter(student__faculty__in=user.faculties.all())
 
@@ -682,19 +731,19 @@ class AdminLoginAPIView(APIView):
         return Response({
             "access":  ser.validated_data["access"],
             "refresh": ser.validated_data["refresh"],
-            "user": {
-                "id":        user.id,
-                "username":  user.username,
-                "full_name": user.get_full_name(),
-            },
-            "role": user.role,
-            # Many‑to‑many maydonlar – string ro‘yxatga aylantiramiz
-            "faculties":  [f.name       for f in user.faculties.all()],
-            "sections":   [s.name       for s in user.sections.all()],
-            "directions": [d.name       for d in user.directions.all()],
-            "levels":     [l.name       for l in user.levels.all()],
-            "allow_all_students": user.allow_all_students,
-            "limit_by_course":    user.limit_by_course,
+            # "user": {
+            #     "id":        user.id,
+            #     "username":  user.username,
+            #     "full_name": user.get_full_name(),
+            # },
+            # "role": user.role,
+            # # Many‑to‑many maydonlar – string ro‘yxatga aylantiramiz
+            # "faculties":  [f.name       for f in user.faculties.all()],
+            # "sections":   [s.name       for s in user.sections.all()],
+            # "directions": [d.name       for d in user.directions.all()],
+            # "levels":     [l.name       for l in user.levels.all()],
+            # "allow_all_students": user.allow_all_students,
+            # "limit_by_course":    user.limit_by_course,
         })
     
 
@@ -1028,3 +1077,29 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
         return super().list(request, *args, **kwargs)
         
 
+class AdminAccountAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if user.role not in ['admin', 'dekan', 'kichik_admin']:
+            return Response({"detail": "Siz admin emassiz"}, status=403)
+
+        serializer = CustomAdminUserSerializer(user)
+        return Response(serializer.data)
+    
+
+# views.py
+class ApplicationFileUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = ApplicationFileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        obj = ApplicationFile.objects.select_related('item__application__student__user').filter(
+            pk=self.kwargs['pk']
+        ).first()
+        if not obj:
+            raise NotFound("Bunday fayl topilmadi.")
+        if obj.item.application.student.user != self.request.user:
+            raise PermissionDenied("Siz bu faylga o‘zgartirish kiritish huquqiga ega emassiz.")
+        return obj

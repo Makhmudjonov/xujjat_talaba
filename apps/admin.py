@@ -4,8 +4,12 @@ from django.contrib.auth.admin import UserAdmin # Import UserAdmin directly
 
 from apps.models import (
     Answer, Application, ApplicationFile, ApplicationItem, ApplicationType, ContractInfo, CustomAdminUser, Direction, Faculty,
-    GPARecord, Level, OdobAxloqStudent, Option, Question, Score, Section, SpecialApplicationStudent, Student, Test, TestSession, # Make sure CustomAdminUser is imported
+    GPARecord, Level, OdobAxloqStudent, Option, Question, Score, Section, SpecialApplicationStudent, Student, Test, TestSession, University, # Make sure CustomAdminUser is imported
 )
+
+@admin.register(University)
+class UniversityAdmin(admin.ModelAdmin):
+    list_display = ('name',)
 
 @admin.register(Student)
 class StudentAdmin(admin.ModelAdmin):
@@ -112,7 +116,7 @@ class CustomAdminUserAdmin(UserAdmin):
         ("Admin rollari", {
             "fields": (
                 "role", "sections", "faculties", "directions", "levels",
-                "limit_by_course", "allow_all_students", "can_score",  # ✅ Qo‘shildi
+                "limit_by_course", "allow_all_students", "can_score", 'university1', # ✅ Qo‘shildi
             )
         }),
         ("Muhim sanalar", {"fields": ("last_login", "date_joined")}),
@@ -125,7 +129,7 @@ class CustomAdminUserAdmin(UserAdmin):
                 "username", "password1", "password2", "email",
                 "role", "is_staff", "is_active",
                 "sections", "faculties", "directions", "levels",
-                "limit_by_course", "allow_all_students", "can_score",  # ✅ Qo‘shildi
+                "limit_by_course", "allow_all_students", "can_score", 'university1' # ✅ Qo‘shildi
             ),
         }),
     )

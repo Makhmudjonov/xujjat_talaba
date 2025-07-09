@@ -20,6 +20,12 @@ class Faculty(models.Model):
     def __str__(self):
         return self.name
 
+class University(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
 
 class Level(models.Model):
     """Bakalavr 1‑kurs / Magistr 2‑kurs va hokazo."""
@@ -48,6 +54,7 @@ class Student(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     university = models.CharField(max_length=255)
+    university1 = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
     faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, blank=True)
     group = models.CharField(max_length=100)
     level = models.ForeignKey(Level, on_delete=models.SET_NULL, null=True, blank=True)
@@ -97,7 +104,7 @@ class ContractInfo(models.Model):
     contract_type = models.CharField(max_length=100)
     pdf_link = models.URLField()
     contract_sum = models.BigIntegerField()
-    gpa = models.FloatField()
+    gpa = models.FloatField(null=True)
     debit = models.BigIntegerField(null=True, blank=True)
     credit = models.BigIntegerField(null=True, blank=True)
 
@@ -307,6 +314,7 @@ class CustomAdminUser(AbstractUser):
     faculties = models.ManyToManyField(Faculty, blank=True, related_name='admins')
     levels = models.ManyToManyField(Level, blank=True, related_name='admins')
     can_score = models.BooleanField(default=True, help_text="Agar true bo‘lsa, admin baho qo‘yishi mumkin.")
+    university1 = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
     
 
     limit_by_course = models.BooleanField(default=False)
