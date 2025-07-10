@@ -168,9 +168,11 @@ class StudentLoginAPIView(APIView):
                     user.save()
 
                 faculty, _ = Faculty.objects.get_or_create(
-                    # hemis_id=d["faculty"]["id"],
-                    defaults={"name": d["faculty"]["name"], "code": d["faculty"]["code"]},
+                    hemis_id=d["faculty"]["id"],
+                    name=d["faculty"]["name"],
+                    defaults={"code": d["faculty"]["code"]},
                 )
+
 
                 
 

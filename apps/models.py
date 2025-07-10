@@ -13,12 +13,15 @@ import os
 # CORE REFERENCE MODELS
 # ---------------------------
 class Faculty(models.Model):
-    hemis_id = models.IntegerField()
+    hemis_id = models.IntegerField(null=True, blank=True)
     name = models.CharField(max_length=255)
-    code = models.CharField(max_length=50)
+    code = models.CharField(max_length=50, blank=True, null=True)
+
+    class Meta:
+        unique_together = ('hemis_id', 'name')
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.hemis_id})"
 
 class University(models.Model):
     name = models.CharField(max_length=255)
