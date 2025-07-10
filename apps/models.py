@@ -20,11 +20,11 @@ class Faculty(models.Model):
     def __str__(self):
         return self.name
 
-# class University(models.Model):
-#     name = models.CharField(max_length=255)
+class University(models.Model):
+    name = models.CharField(max_length=255)
 
-#     def __str__(self):
-#         return self.name
+    def __str__(self):
+        return self.name
 
 
 class Level(models.Model):
