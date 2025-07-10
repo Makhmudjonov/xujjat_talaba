@@ -314,7 +314,7 @@ class CustomAdminUser(AbstractUser):
     faculties = models.ManyToManyField(Faculty, blank=True, related_name='admins')
     levels = models.ManyToManyField(Level, blank=True, related_name='admins')
     can_score = models.BooleanField(default=True, help_text="Agar true bo‘lsa, admin baho qo‘yishi mumkin.")
-    # university1 = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
+    university1 = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
     
 
     limit_by_course = models.BooleanField(default=False)
