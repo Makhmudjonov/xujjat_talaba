@@ -167,14 +167,15 @@ class StudentLoginAPIView(APIView):
                     user.set_unusable_password()
                     user.save()
 
-                faculty, _ = Faculty.objects.get_or_create(
-                    hemis_id=d["faculty"]["id"],
+                faculty, created = Faculty.objects.update_or_create(
                     name=d["faculty"]["name"],
+                    university=univer,
                     defaults={
                         "code": d["faculty"].get("code", ""),
-                        "university": university
+                        "hemis_id": d["faculty"]["id"],
                     }
                 )
+
 
 
                 
