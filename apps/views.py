@@ -1146,7 +1146,7 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
             logger.warning(f"Student {student.student_id_number} blocked due to: {record.sabab}")
             return Response({"detail": f"{record.sabab}"}, status=status.HTTP_403_FORBIDDEN)
 
-        tests = self.get_queryset().filter(levels__in=[student.level_id])
+        tests = self.get_queryset().filter(levels__id=student.level_id)
         serializer = self.get_serializer(tests, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
