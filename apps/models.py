@@ -23,7 +23,7 @@ class Faculty(models.Model):
     hemis_id = models.IntegerField(null=True, blank=True)
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, blank=True, null=True)
-    university = models.ForeignKey(University, on_delete=models.CASCADE, null=True)
+    university = models.ForeignKey(University, on_delete=models.CASCADE, null=True, blank=True)
 
     # class Meta:
     #     unique_together = ('hemis_id', 'name')
