@@ -170,7 +170,10 @@ class StudentLoginAPIView(APIView):
                 faculty, _ = Faculty.objects.get_or_create(
                     hemis_id=d["faculty"]["id"],
                     name=d["faculty"]["name"],
-                    defaults={"code": d["faculty"]["code"]},
+                    defaults={
+                        "code": d["faculty"].get("code", ""),
+                        "university": university
+                    }
                 )
 
 
