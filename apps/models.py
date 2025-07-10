@@ -13,7 +13,6 @@ import os
 # CORE REFERENCE MODELS
 # ---------------------------
 class Faculty(models.Model):
-    # hemis_id = models.IntegerField(unique=False)
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50)
 
@@ -22,7 +21,12 @@ class Faculty(models.Model):
 
 class University(models.Model):
     name = models.CharField(max_length=255)
-    # location = models.CharField(max_length=255, default='Unknown', null=True)
+
+    def __str__(self):
+        return self.name
+    
+class Universitya(models.Model):
+    name = models.CharField(max_length=255)
 
     def __str__(self):
         return self.name
@@ -55,7 +59,7 @@ class Student(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     university = models.CharField(max_length=255)
-    university1 = models.CharField(max_length=255, null=True, blank=True)
+    university1 = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
     faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, blank=True)
     group = models.CharField(max_length=100)
     level = models.ForeignKey(Level, on_delete=models.SET_NULL, null=True, blank=True)
