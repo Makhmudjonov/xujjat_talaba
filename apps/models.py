@@ -13,6 +13,7 @@ import os
 # CORE REFERENCE MODELS
 # ---------------------------
 class Faculty(models.Model):
+    hemis_id = models.IntegerField()
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50)
 

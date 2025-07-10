@@ -1,0 +1,1067 @@
+{
+  "model": "apps.applicationfile",
+  "pk": 5,
+  "fields": {
+    "item": 104,
+    "file": "",
+    "section": "applications/karimova_muborakxon_dilmurod_qizi/2025-2026/364241200212-Karimova_Muborakkh_MaRV4QV.pdf",
+    "comment": "2025-07-08 16:39:13.189330",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 6,
+  "fields": {
+    "item": 115,
+    "file": "",
+    "section": "applications/yusupov_soxibjon_baxodir_o‘g‘li/2025-2026/364241200291-Yusupov_Soxibjon.pdf",
+    "comment": "2025-07-08 16:52:39.838863",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 7,
+  "fields": {
+    "item": 198,
+    "file": "",
+    "section": "applications/madrahimova_mohinur_azamat_qizi/2025-2026/364241102478-649_653_Isroilov_Ulu_KeFKRCz.pdf",
+    "comment": "2025-07-09 07:06:19.250509",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 8,
+  "fields": {
+    "item": 207,
+    "file": "",
+    "section": "applications/ibragimova_feruza_ilxom_qizi/2025-2026/364241101815-IMG_20250709_121403_750.jpg",
+    "comment": "2025-07-09 07:15:25.278663",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 9,
+  "fields": {
+    "item": 211,
+    "file": "",
+    "section": "applications/xurromova_sarvinoz_olimjon_qizi/2025-2026/364241101306-ilmiyanjumanlar_uz_a_Jtv1xse.pdf",
+    "comment": "2025-07-09 07:18:20.638489",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 10,
+  "fields": {
+    "item": 214,
+    "file": "",
+    "section": "applications/xurromova_sarvinoz_olimjon_qizi/2025-2026/364241101306-ilmiyanjumanlar_uz_a_TdgKKWo.pdf",
+    "comment": "2025-07-09 07:18:20.642030",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 11,
+  "fields": {
+    "item": 220,
+    "file": "",
+    "section": "applications/xurromova_sarvinoz_olimjon_qizi/2025-2026/364241101306-ilmiyanjumanlar_uz_a_tyYgqdC.pdf",
+    "comment": "2025-07-09 07:18:20.647581",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 12,
+  "fields": {
+    "item": 233,
+    "file": "",
+    "section": "applications/sattorqulova_madina_muzaffar_qizi/2025-2026/364241102274-5tashabbus.pdf",
+    "comment": "2025-07-09 09:28:10.452897",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 13,
+  "fields": {
+    "item": 235,
+    "file": "",
+    "section": "applications/sattorqulova_madina_muzaffar_qizi/2025-2026/364241102274-Ichki_tartib_qoida.pdf",
+    "comment": "2025-07-09 09:28:10.455441",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 14,
+  "fields": {
+    "item": 237,
+    "file": "",
+    "section": "applications/sattorqulova_madina_muzaffar_qizi/2025-2026/364241102274-Davomat.pdf",
+    "comment": "2025-07-09 09:28:10.457942",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 15,
+  "fields": {
+    "item": 238,
+    "file": "",
+    "section": "applications/sattorqulova_madina_muzaffar_qizi/2025-2026/364241102274-Marifat_darsi.pdf",
+    "comment": "2025-07-09 09:28:10.459502",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 16,
+  "fields": {
+    "item": 239,
+    "file": "",
+    "section": "applications/sattorqulova_madina_muzaffar_qizi/2025-2026/364241102274-V.pdf",
+    "comment": "2025-07-09 09:28:10.461046",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 17,
+  "fields": {
+    "item": 240,
+    "file": "",
+    "section": "applications/sattorqulova_madina_muzaffar_qizi/2025-2026/364241102274-Teatr.pdf",
+    "comment": "2025-07-09 09:28:10.462639",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 18,
+  "fields": {
+    "item": 241,
+    "file": "",
+    "section": "applications/sattorqulova_madina_muzaffar_qizi/2025-2026/364241102274-V_g72EcfY.pdf",
+    "comment": "2025-07-09 09:28:10.464201",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 19,
+  "fields": {
+    "item": 242,
+    "file": "",
+    "section": "applications/sattorqulova_madina_muzaffar_qizi/2025-2026/364241102274-M.pdf",
+    "comment": "2025-07-09 09:28:10.465731",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 20,
+  "fields": {
+    "item": 282,
+    "file": "",
+    "section": "applications/xolboyeva_sabina_zokir_qizi/2025-2026/364241102071-IMG_6024.pdf",
+    "comment": "2025-07-09 11:05:41.367138",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 21,
+  "fields": {
+    "item": 284,
+    "file": "",
+    "section": "applications/xolboyeva_sabina_zokir_qizi/2025-2026/364241102071-IMG_6028_2.pdf",
+    "comment": "2025-07-09 11:05:41.369521",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 22,
+  "fields": {
+    "item": 286,
+    "file": "",
+    "section": "applications/xolboyeva_sabina_zokir_qizi/2025-2026/364241102071-IMG_6020.pdf",
+    "comment": "2025-07-09 11:05:41.371822",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 23,
+  "fields": {
+    "item": 324,
+    "file": "",
+    "section": "applications/alimqulova_ozoda_sodiq_qizi/2025-2026/364241100554-Sertifikat.pdf",
+    "comment": "2025-07-09 13:06:44.067953",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 24,
+  "fields": {
+    "item": 326,
+    "file": "",
+    "section": "applications/alimqulova_ozoda_sodiq_qizi/2025-2026/364241100554-Ma_rifat_darsi.pdf",
+    "comment": "2025-07-09 13:06:44.070455",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 25,
+  "fields": {
+    "item": 328,
+    "file": "",
+    "section": "applications/alimqulova_ozoda_sodiq_qizi/2025-2026/364241100554-attachment.pdf",
+    "comment": "2025-07-09 13:06:44.072575",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 26,
+  "fields": {
+    "item": 329,
+    "file": "",
+    "section": "applications/alimqulova_ozoda_sodiq_qizi/2025-2026/364241100554-Sport_1.pdf",
+    "comment": "2025-07-09 13:06:44.074076",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 27,
+  "fields": {
+    "item": 330,
+    "file": "",
+    "section": "applications/alimqulova_ozoda_sodiq_qizi/2025-2026/364241100554-kitobxonlik.pdf",
+    "comment": "2025-07-09 13:06:44.075633",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 28,
+  "fields": {
+    "item": 335,
+    "file": "",
+    "section": "applications/nuriddinova_navbahor_husniddin_qizi/2025-2026/364241100664-Diploma_of_Nomin_GKGtEGs.pdf",
+    "comment": "2025-07-09 13:14:18.203828",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 29,
+  "fields": {
+    "item": 339,
+    "file": "",
+    "section": "applications/nuriddinova_navbahor_husniddin_qizi/2025-2026/364241100664-tarixiy_obidalar.pdf",
+    "comment": "2025-07-09 13:14:18.209036",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 30,
+  "fields": {
+    "item": 365,
+    "file": "",
+    "section": "applications/odilova_nilufarxon_akmaljon_qizi/2025-2026/364241101809-Besh_tashabbus.pdf",
+    "comment": "2025-07-09 13:50:11.537058",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 31,
+  "fields": {
+    "item": 369,
+    "file": "",
+    "section": "applications/odilova_nilufarxon_akmaljon_qizi/2025-2026/364241101809-Malakaviy_amaliyot.pdf",
+    "comment": "2025-07-09 13:50:11.541058",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 32,
+  "fields": {
+    "item": 370,
+    "file": "",
+    "section": "applications/odilova_nilufarxon_akmaljon_qizi/2025-2026/364241101809-Ma.pdf",
+    "comment": "2025-07-09 13:50:11.542628",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 33,
+  "fields": {
+    "item": 371,
+    "file": "",
+    "section": "applications/odilova_nilufarxon_akmaljon_qizi/2025-2026/364241101809-Doc1.pdf",
+    "comment": "2025-07-09 13:50:11.544259",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 34,
+  "fields": {
+    "item": 372,
+    "file": "",
+    "section": "applications/odilova_nilufarxon_akmaljon_qizi/2025-2026/364241101809-Adiblar_xiyobonida__ooA4SzC.pdf",
+    "comment": "2025-07-09 13:50:11.545971",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 35,
+  "fields": {
+    "item": 374,
+    "file": "",
+    "section": "applications/odilova_nilufarxon_akmaljon_qizi/2025-2026/364241101809-Ustoz_va_murabbiyla_UzqmiHN.pdf",
+    "comment": "2025-07-09 13:50:11.548265",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 36,
+  "fields": {
+    "item": 398,
+    "file": "",
+    "section": "applications/maxmudjonov_mirazizbek_abdufattoh_o‘g‘li/2025-2026/364211100841-ВМ_149.pdf",
+    "comment": "2025-07-09 14:23:51.870589",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 37,
+  "fields": {
+    "item": 400,
+    "file": "",
+    "section": "applications/maxmudjonov_mirazizbek_abdufattoh_o‘g‘li/2025-2026/364211100841-ВМ_149_aXUCF4g.pdf",
+    "comment": "2025-07-09 14:23:51.872917",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 38,
+  "fields": {
+    "item": 403,
+    "file": "",
+    "section": "applications/maxmudjonov_mirazizbek_abdufattoh_o‘g‘li/2025-2026/364211100841-ВМ_149_ITrE5gL.pdf",
+    "comment": "2025-07-09 14:23:51.875993",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 39,
+  "fields": {
+    "item": 406,
+    "file": "",
+    "section": "applications/maxmudjonov_mirazizbek_abdufattoh_o‘g‘li/2025-2026/364211100841-TBC1191970232UZ.pdf",
+    "comment": "2025-07-09 14:23:51.878908",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 40,
+  "fields": {
+    "item": 420,
+    "file": "",
+    "section": "applications/xasanov_ilxomjon_sarvarbek_o‘g‘li/2025-2026/364241101817-IMG_1609.pdf",
+    "comment": "2025-07-09 14:58:45.299269",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 41,
+  "fields": {
+    "item": 422,
+    "file": "",
+    "section": "applications/xasanov_ilxomjon_sarvarbek_o‘g‘li/2025-2026/364241101817-IMAGE_2025-07-09_193819.pdf",
+    "comment": "2025-07-09 14:58:45.301713",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 42,
+  "fields": {
+    "item": 424,
+    "file": "",
+    "section": "applications/xasanov_ilxomjon_sarvarbek_o‘g‘li/2025-2026/364241101817-IMAGE_2025-07-09_193908.pdf",
+    "comment": "2025-07-09 14:58:45.304057",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 43,
+  "fields": {
+    "item": 426,
+    "file": "",
+    "section": "applications/xasanov_ilxomjon_sarvarbek_o‘g‘li/2025-2026/364241101817-IMG_6019.pdf",
+    "comment": "2025-07-09 14:58:45.306231",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 44,
+  "fields": {
+    "item": 427,
+    "file": "",
+    "section": "applications/xasanov_ilxomjon_sarvarbek_o‘g‘li/2025-2026/364241101817-IMAGE_2025-07-09_183827.pdf",
+    "comment": "2025-07-09 14:58:45.307712",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 45,
+  "fields": {
+    "item": 428,
+    "file": "",
+    "section": "applications/xasanov_ilxomjon_sarvarbek_o‘g‘li/2025-2026/364241101817-Unknown.pdf",
+    "comment": "2025-07-09 14:58:45.309165",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 46,
+  "fields": {
+    "item": 453,
+    "file": "",
+    "section": "applications/isroilova_gulshodaxon_dilmurotovna/2025-2026/364241100610-Image_to_PD_rDKXBh3.30.17.pdf",
+    "comment": "2025-07-09 18:23:11.569497",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 47,
+  "fields": {
+    "item": 456,
+    "file": "",
+    "section": "applications/isroilova_gulshodaxon_dilmurotovna/2025-2026/364241100610-Jul_9_2025_at_72618PM.pdf",
+    "comment": "2025-07-09 18:23:11.572684",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 48,
+  "fields": {
+    "item": 458,
+    "file": "",
+    "section": "applications/isroilova_gulshodaxon_dilmurotovna/2025-2026/364241100610-Заметка_9_июля_2025г..pdf",
+    "comment": "2025-07-09 18:23:11.574990",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 49,
+  "fields": {
+    "item": 460,
+    "file": "",
+    "section": "applications/isroilova_gulshodaxon_dilmurotovna/2025-2026/364241100610-Image_to_PD_Vi1c69A.06.28.pdf",
+    "comment": "2025-07-09 18:23:11.577324",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 50,
+  "fields": {
+    "item": 461,
+    "file": "",
+    "section": "applications/isroilova_gulshodaxon_dilmurotovna/2025-2026/364241100610-Image_to_PD_GjC818m.30.17.pdf",
+    "comment": "2025-07-09 18:23:11.578970",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 51,
+  "fields": {
+    "item": 478,
+    "file": "",
+    "section": "applications/soyibnazarova_rayxona_rustamovna/2025-2026/364241100295-pdf1.pdf",
+    "comment": "2025-07-09 19:00:42.718734",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 52,
+  "fields": {
+    "item": 482,
+    "file": "",
+    "section": "applications/soyibnazarova_rayxona_rustamovna/2025-2026/364241100295-Hazrati_Imom_majmuasi.pdf",
+    "comment": "2025-07-09 19:00:42.723443",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 53,
+  "fields": {
+    "item": 484,
+    "file": "",
+    "section": "applications/soyibnazarova_rayxona_rustamovna/2025-2026/364241100295-Мероприятие_День_то_TyT6nPA.pdf",
+    "comment": "2025-07-09 19:00:42.725998",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 54,
+  "fields": {
+    "item": 486,
+    "file": "",
+    "section": "applications/abdulxaqova_feruza_abdumannon_qizi/2025-2026/367241100772-5_TASHABBUS.jpg",
+    "comment": "2025-07-09 19:27:32.742271",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 55,
+  "fields": {
+    "item": 488,
+    "file": "",
+    "section": "applications/abdulxaqova_feruza_abdumannon_qizi/2025-2026/367241100772-ODOB_AXLOQ.pdf",
+    "comment": "2025-07-09 19:27:32.744670",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 56,
+  "fields": {
+    "item": 489,
+    "file": "",
+    "section": "applications/abdulxaqova_feruza_abdumannon_qizi/2025-2026/367241100772-SPORT.jpg",
+    "comment": "2025-07-09 19:27:32.746420",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 57,
+  "fields": {
+    "item": 490,
+    "file": "",
+    "section": "applications/abdulxaqova_feruza_abdumannon_qizi/2025-2026/367241100772-DAVOMAT.jpg",
+    "comment": "2025-07-09 19:27:32.748070",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 58,
+  "fields": {
+    "item": 491,
+    "file": "",
+    "section": "applications/abdulxaqova_feruza_abdumannon_qizi/2025-2026/367241100772-MARIFAT_DARSI.jpg",
+    "comment": "2025-07-09 19:27:32.749800",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 59,
+  "fields": {
+    "item": 492,
+    "file": "",
+    "section": "applications/abdulxaqova_feruza_abdumannon_qizi/2025-2026/367241100772-JAMOAT_ISHLARI.jpg",
+    "comment": "2025-07-09 19:27:32.751608",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 60,
+  "fields": {
+    "item": 493,
+    "file": "",
+    "section": "applications/abdulxaqova_feruza_abdumannon_qizi/2025-2026/367241100772-MUZEY.pdf",
+    "comment": "2025-07-09 19:27:32.753154",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 61,
+  "fields": {
+    "item": 494,
+    "file": "",
+    "section": "applications/abdulxaqova_feruza_abdumannon_qizi/2025-2026/367241100772-SPORT_HAYOTI.jpg",
+    "comment": "2025-07-09 19:27:32.754738",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 62,
+  "fields": {
+    "item": 495,
+    "file": "",
+    "section": "applications/abdulxaqova_feruza_abdumannon_qizi/2025-2026/367241100772-MARIFAT.jpg",
+    "comment": "2025-07-09 19:27:32.756249",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 63,
+  "fields": {
+    "item": 508,
+    "file": "",
+    "section": "applications/asadullayeva_mohinabonu_azizbek_qizi/2025-2026/367241101070-5_мухим_ташаббу_iXCIeZj.pdf",
+    "comment": "2025-07-09 20:55:28.000423",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 64,
+  "fields": {
+    "item": 513,
+    "file": "",
+    "section": "applications/asadullayeva_mohinabonu_azizbek_qizi/2025-2026/367241101070-Тадбир_мохинабону.pdf",
+    "comment": "2025-07-09 20:55:28.004702",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 65,
+  "fields": {
+    "item": 514,
+    "file": "",
+    "section": "applications/asadullayeva_mohinabonu_azizbek_qizi/2025-2026/367241101070-Волонтерство_мохинабону.pdf",
+    "comment": "2025-07-09 20:55:28.006319",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 66,
+  "fields": {
+    "item": 515,
+    "file": "",
+    "section": "applications/asadullayeva_mohinabonu_azizbek_qizi/2025-2026/367241101070-Посещение_музее_pDsoFWb.pdf",
+    "comment": "2025-07-09 20:55:28.007892",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 67,
+  "fields": {
+    "item": 516,
+    "file": "",
+    "section": "applications/asadullayeva_mohinabonu_azizbek_qizi/2025-2026/367241101070-Спорт_мохинабону_.pdf",
+    "comment": "2025-07-09 20:55:28.009372",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 68,
+  "fields": {
+    "item": 517,
+    "file": "",
+    "section": "applications/asadullayeva_mohinabonu_azizbek_qizi/2025-2026/367241101070-Доп_вклад_мохинабону.pdf",
+    "comment": "2025-07-09 20:55:28.010986",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 69,
+  "fields": {
+    "item": 535,
+    "file": "",
+    "section": "applications/rozimova_zarina_baxitjan_qizi/2025-2026/364241102482-Maʼrifat_darsi_fanidan_EKgIY9C.pdf",
+    "comment": "2025-07-10 02:01:29.354890",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 70,
+  "fields": {
+    "item": 538,
+    "file": "",
+    "section": "applications/rozimova_zarina_baxitjan_qizi/2025-2026/364241102482-sport_musobaqalari.pdf",
+    "comment": "2025-07-10 02:01:29.358372",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 71,
+  "fields": {
+    "item": 596,
+    "file": "",
+    "section": "applications/abduxalilov_samandar_abdirahmon_o‘g‘li/2025-2026/367241100937-IMG_20250710__VCtfepf.jpg",
+    "comment": "2025-07-10 06:25:26.867933",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 72,
+  "fields": {
+    "item": 599,
+    "file": "",
+    "section": "applications/abduxalilov_samandar_abdirahmon_o‘g‘li/2025-2026/367241100937-IMG_20250710__3ww986g.jpg",
+    "comment": "2025-07-10 06:25:26.871107",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 73,
+  "fields": {
+    "item": 601,
+    "file": "",
+    "section": "applications/abduxalilov_samandar_abdirahmon_o‘g‘li/2025-2026/367241100937-IMG_20250710__CNR2uos.jpg",
+    "comment": "2025-07-10 06:25:26.873669",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 74,
+  "fields": {
+    "item": 602,
+    "file": "",
+    "section": "applications/abduxalilov_samandar_abdirahmon_o‘g‘li/2025-2026/367241100937-IMG_20250710__6l29SfS.jpg",
+    "comment": "2025-07-10 06:25:26.875315",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 75,
+  "fields": {
+    "item": 603,
+    "file": "",
+    "section": "applications/abduxalilov_samandar_abdirahmon_o‘g‘li/2025-2026/367241100937-IMG_20250404__126fWpM.jpg",
+    "comment": "2025-07-10 06:25:26.876826",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 76,
+  "fields": {
+    "item": 605,
+    "file": "",
+    "section": "applications/abduxalilov_samandar_abdirahmon_o‘g‘li/2025-2026/367241100937-IMG_20250710__MMgtKhA.jpg",
+    "comment": "2025-07-10 06:25:26.879135",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 77,
+  "fields": {
+    "item": 636,
+    "file": "",
+    "section": "applications/mavlonova_saidaxon_subhon_qizi/2025-2026/367241100395-pdf24_converted_2-сжатый_2.pdf",
+    "comment": "2025-07-10 06:48:34.445179",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 78,
+  "fields": {
+    "item": 640,
+    "file": "",
+    "section": "applications/daminova_zebo_eshbobo_qizi/2025-2026/364241102128-5_tashabbus_doirasida_spo_iKaRHPo.pdf",
+    "comment": "2025-07-10 07:00:15.565192",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 79,
+  "fields": {
+    "item": 642,
+    "file": "",
+    "section": "applications/daminova_zebo_eshbobo_qizi/2025-2026/364241102128-Ichki_tartib_qoidalarga_a_JhWwi9c.pdf",
+    "comment": "2025-07-10 07:00:15.567635",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 80,
+  "fields": {
+    "item": 643,
+    "file": "",
+    "section": "applications/daminova_zebo_eshbobo_qizi/2025-2026/364241102128-Sportda_erishilgan_yutuq.pdf",
+    "comment": "2025-07-10 07:00:15.569116",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 81,
+  "fields": {
+    "item": 644,
+    "file": "",
+    "section": "applications/daminova_zebo_eshbobo_qizi/2025-2026/364241102128-Darslarda_qatnashish.pdf",
+    "comment": "2025-07-10 07:00:15.570555",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 82,
+  "fields": {
+    "item": 645,
+    "file": "",
+    "section": "applications/daminova_zebo_eshbobo_qizi/2025-2026/364241102128-Marifat_darsi.pdf",
+    "comment": "2025-07-10 07:00:15.572133",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 83,
+  "fields": {
+    "item": 646,
+    "file": "",
+    "section": "applications/daminova_zebo_eshbobo_qizi/2025-2026/364241102128-Volontiyorlik.pdf",
+    "comment": "2025-07-10 07:00:15.573548",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 84,
+  "fields": {
+    "item": 647,
+    "file": "",
+    "section": "applications/daminova_zebo_eshbobo_qizi/2025-2026/364241102128-Muzeylarga_tashrif.pdf",
+    "comment": "2025-07-10 07:00:15.574984",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 85,
+  "fields": {
+    "item": 648,
+    "file": "",
+    "section": "applications/daminova_zebo_eshbobo_qizi/2025-2026/364241102128-Sport_va_soglomlik.pdf",
+    "comment": "2025-07-10 07:00:15.576412",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 86,
+  "fields": {
+    "item": 649,
+    "file": "",
+    "section": "applications/daminova_zebo_eshbobo_qizi/2025-2026/364241102128-Oxirgi_fayl_.pdf",
+    "comment": "2025-07-10 07:00:15.577876",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 87,
+  "fields": {
+    "item": 665,
+    "file": "",
+    "section": "applications/jalolov_asliddin_avaz_o‘g‘li/2025-2026/367241200174-SCAN0291.PDF",
+    "comment": "2025-07-10 07:08:22.809800",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 88,
+  "fields": {
+    "item": 666,
+    "file": "",
+    "section": "applications/jalolov_asliddin_avaz_o‘g‘li/2025-2026/367241200174-SCAN0292.PDF",
+    "comment": "2025-07-10 07:08:22.813836",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 89,
+  "fields": {
+    "item": 670,
+    "file": "",
+    "section": "applications/jalolov_asliddin_avaz_o‘g‘li/2025-2026/367241200_pIrKcZt.UZ-Order-1281827-5882872_1.pdf",
+    "comment": "2025-07-10 07:08:22.818817",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 90,
+  "fields": {
+    "item": 692,
+    "file": "",
+    "section": "applications/tojiboyev_abbosbek_abdurashid_o‘g‘li/2025-2026/367241200061-gym.pdf",
+    "comment": "2025-07-10 07:35:18.776948",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 91,
+  "fields": {
+    "item": 774,
+    "file": "",
+    "section": "applications/sobirov_yunusjon_ulug‘bek_o‘g‘li/2025-2026/364241102433-IMG_20250710_151857_963.jpg",
+    "comment": "2025-07-10 10:19:27.368080",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 92,
+  "fields": {
+    "item": 779,
+    "file": "",
+    "section": "applications/sobirov_yunusjon_ulug‘bek_o‘g‘li/2025-2026/364241102433-IMG_20250710_151857_894.jpg",
+    "comment": "2025-07-10 10:19:27.373137",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 93,
+  "fields": {
+    "item": 781,
+    "file": "",
+    "section": "applications/sobirov_yunusjon_ulug‘bek_o‘g‘li/2025-2026/364241102433-IMG_20250710_151857_667.jpg",
+    "comment": "2025-07-10 10:19:27.375902",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 94,
+  "fields": {
+    "item": 783,
+    "file": "",
+    "section": "applications/ravshanova_diyoraxon_xabibullo_qizi/2025-2026/367241100640-Сканер_7.pdf",
+    "comment": "2025-07-10 10:45:46.121592",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 95,
+  "fields": {
+    "item": 786,
+    "file": "",
+    "section": "applications/ravshanova_diyoraxon_xabibullo_qizi/2025-2026/367241100640-сертификат.pdf",
+    "comment": "2025-07-10 10:45:46.130435",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 96,
+  "fields": {
+    "item": 787,
+    "file": "",
+    "section": "applications/ravshanova_diyoraxon_xabibullo_qizi/2025-2026/367241100640-reyting-daftar-3_DeJOfaS.pdf",
+    "comment": "2025-07-10 10:45:46.134918",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 97,
+  "fields": {
+    "item": 788,
+    "file": "",
+    "section": "applications/ravshanova_diyoraxon_xabibullo_qizi/2025-2026/367241100640-Сканер_3.pdf",
+    "comment": "2025-07-10 10:45:46.136795",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 98,
+  "fields": {
+    "item": 789,
+    "file": "",
+    "section": "applications/ravshanova_diyoraxon_xabibullo_qizi/2025-2026/367241100640-Сканер_10.pdf",
+    "comment": "2025-07-10 10:45:46.138352",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 99,
+  "fields": {
+    "item": 790,
+    "file": "",
+    "section": "applications/ravshanova_diyoraxon_xabibullo_qizi/2025-2026/367241100640-Сканер_5.pdf",
+    "comment": "2025-07-10 10:45:46.139919",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 100,
+  "fields": {
+    "item": 791,
+    "file": "",
+    "section": "applications/ravshanova_diyoraxon_xabibullo_qizi/2025-2026/367241100640-спорт.pdf",
+    "comment": "2025-07-10 10:45:46.141500",
+    "uploaded_at": null
+  }
+}
+{
+  "model": "apps.applicationfile",
+  "pk": 101,
+  "fields": {
+    "item": 792,
+    "file": "",
+    "section": "applications/ravshanova_diyoraxon_xabibullo_qizi/2025-2026/367241100640-Сканер_9.pdf",
+    "comment": "2025-07-10 10:45:46.143053",
+    "uploaded_at": null
+  }
+}
