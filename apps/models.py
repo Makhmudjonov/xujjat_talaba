@@ -54,7 +54,7 @@ class Student(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     university = models.CharField(max_length=255)
-    # university1 = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
+    university1 = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
     faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, blank=True)
     group = models.CharField(max_length=100)
     level = models.ForeignKey(Level, on_delete=models.SET_NULL, null=True, blank=True)
