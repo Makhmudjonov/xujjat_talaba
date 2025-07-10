@@ -18,6 +18,7 @@ from .views import (
     StudentApplicationViewSet,
     StudentLoginAPIView,
     SubmitAnswerAPIView,
+    TestResumeView,
     TestViewSet,
     ApplicationFileUpdateAPIView
 )
@@ -81,6 +82,7 @@ urlpatterns = [
     path('test/<int:session_id>/next/', GetNextQuestionAPIView.as_view(), name='next-question'),
     path('test/<int:session_id>/answer/', SubmitAnswerAPIView.as_view(), name='submit-answer'),
     path('test/<int:session_id>/finish/', FinishTestAPIView.as_view(), name='finish-test'),
+    path('test/<int:session_id>/resume/', TestResumeView.as_view(), name='resume-test'),
     # path('test/<int:session_id>/result/', TestResultAPIView.as_view(), name='test-result'),
 
     path("admin/tests/upload/", QuizUploadAPIView.as_view(), name="quiz-upload"),

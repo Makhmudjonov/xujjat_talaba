@@ -45,7 +45,7 @@ from .models import (
 from .serializers import (
     AdminLoginSerializer, AdminUserSerializer, AnswerSubmitSerializer, ApplicationDetailSerializer, ApplicationFullSerializer, ApplicationItemAdminSerializer, ApplicationItemSerializer, ApplicationTypeSerializer, CustomAdminUserSerializer, QuestionSerializer, QuizUploadSerializer, RandomizedQuestionSerializer, ScoreCreateSerializer, StartTestSerializer, StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
     ApplicationCreateSerializer, DirectionSerializer, ApplicationSerializer,
-    ApplicationFileSerializer, ScoreSerializer, SubmitMultipleApplicationsSerializer, TestResultSerializer, TestSerializer
+    ApplicationFileSerializer, ScoreSerializer, SubmitMultipleApplicationsSerializer, TestDictSerializer, TestResultSerializer, TestResumeSerializer, TestSerializer
 )
 from .permissions import (
     IsStudentAndOwnerOrReadOnlyPending,
@@ -54,9 +54,13 @@ from .permissions import (
 from rest_framework.permissions import IsAdminUser
 
 from .utils import get_tokens_for_student
+import logging
 
 
 User = get_user_model()  # faqat bir marta
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 
 # ────────────────────────────────────────────────────────────
@@ -164,7 +168,7 @@ class StudentLoginAPIView(APIView):
                     user.save()
 
                 faculty, _ = Faculty.objects.get_or_create(
-                    hemis_id=d["faculty"]["id"],
+                    # hemis_id=d["faculty"]["id"],
                     defaults={"name": d["faculty"]["name"], "code": d["faculty"]["code"]},
                 )
 
@@ -769,198 +773,258 @@ class ApplicationRetrieveView(RetrieveAPIView):
 class StartTestAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        required=["test_id"],
-        properties={"test_id": openapi.Schema(type=openapi.TYPE_INTEGER)}
-    ))
     def post(self, request):
-        test_id = request.data.get("test_id")
+        serializer = StartTestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        test_id = serializer.validated_data['test_id']
         test = get_object_or_404(Test, id=test_id)
 
         try:
             student = request.user.student
-        except Exception as e:
-            return Response({"detail": f"Student topilmadi: {str(e)}"},
-                            status=status.HTTP_400_BAD_REQUEST)
+        except AttributeError:
+            logger.error(f"No student profile for user {request.user.username}")
+            return Response({"detail": "Talaba topilmadi"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Kurs bo‘yicha tekshiruv
+        # Odob-axloq ro‘yxatidan tekshirish
+        record = OdobAxloqStudent.objects.filter(hemis_id=student.student_id_number).first()
+        if record:
+            logger.warning(f"Student {student.student_id_number} blocked due to: {record.sabab}")
+            return Response({"detail": f"{record.sabab}"}, status=status.HTTP_403_FORBIDDEN)
+
         if not test.levels.filter(id=student.level_id).exists():
             return Response({"detail": "Bu test sizning kursingiz uchun emas."},
                             status=status.HTTP_403_FORBIDDEN)
 
-        # 🛑 Avvalgi session borligini tekshirish
-        existing_session = TestSession.objects.filter(test=test, student=student).first()
+        existing_session = TestSession.objects.filter(test=test, student=student, finished_at__isnull=True).first()
         if existing_session:
-            first_q = existing_session.questions.first()
-            first_data = RandomizedQuestionSerializer(first_q).data if first_q else None
-            return Response({
-                "detail": "Siz bu testni allaqachon boshlagansiz.",
-                "session_id": existing_session.id,
-                "duration": test.time_limit,
-                "first_question": first_data,
-                "total_questions": existing_session.questions.count(),
-                "resume": True
-            })
+            logger.info(f"Resuming existing session {existing_session.id} for student {student.id}")
+            return Response(TestResumeSerializer(existing_session, context={'request': request}).data)
 
-        # Test vaqti boshlanishidan oldin bo‘lsa
-        if test.start_time and now() < test.start_time:
+        if test.start_time and timezone.now() < test.start_time:
             return Response({"detail": f"Test {test.start_time.strftime('%Y-%m-%d %H:%M')} dan keyin boshlanadi."},
-                            status=status.HTTP_403_FORBIDDEN)
+                            status=status.HTTP_400_BAD_REQUEST)
 
-        # Yangi test session va random savollar
         questions = list(test.questions.all())
+        if len(questions) < test.question_count:
+            logger.error(f"Not enough questions for test {test_id}. Available: {len(questions)}, Required: {test.question_count}")
+            return Response({"detail": "Testda yetarlicha savol mavjud emas."}, status=status.HTTP_400_BAD_REQUEST)
+
         random.shuffle(questions)
         selected = questions[:test.question_count]
 
-        session = TestSession.objects.create(student=student, test=test)
+        session = TestSession.objects.create(
+            student=student,
+            test=test,
+            current_question_index=0
+        )
         session.questions.set(selected)
+        logger.info(f"Created new session {session.id} with {len(selected)} questions for student {student.id}")
 
-        first_q = selected[0] if selected else None
-        first_data = RandomizedQuestionSerializer(first_q).data if first_q else None
+        first_question = selected[0] if selected else None
+        remaining_seconds = test.time_limit * 60
 
         return Response({
             "session_id": session.id,
             "duration": test.time_limit,
-            "first_question": first_data,
+            "first_question": RandomizedQuestionSerializer(first_question).data if first_question else None,
             "total_questions": len(selected),
-            "resume": False
+            "resume": False,
+            "current_index": 1,
+            "remaining_seconds": remaining_seconds
         })
 
-
-
-
-
-
-
-class GetNextQuestionAPIView(APIView):
+class TestResumeView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(
-        operation_summary="Keyingi savolni olish",
-        manual_parameters=[
-            openapi.Parameter('session_id', openapi.IN_PATH,
-                              description="Test session ID", type=openapi.TYPE_INTEGER)
-        ],
-        responses={200: RandomizedQuestionSerializer()}
-    )
     def get(self, request, session_id):
-        session = get_object_or_404(TestSession, id=session_id, student=request.user.student)
+        try:
+            student = request.user.student
+        except AttributeError:
+            logger.error(f"No student profile for user {request.user.username}")
+            return Response({"detail": "Talaba hisobi topilmadi"}, status=status.HTTP_403_FORBIDDEN)
 
-        # ✅ Vaqt tugaganini tekshir
-        if session.finished_at is None:
-            end_time = session.started_at + timezone.timedelta(minutes=session.test.time_limit)
-            if timezone.now() >= end_time:
-                self.finish_session(session)
-                return Response({"detail": "Test vaqti tugadi. Yakunlandi."}, status=200)
+        try:
+            session = TestSession.objects.get(id=session_id, student=student, finished_at__isnull=True)
+        except TestSession.DoesNotExist:
+            logger.error(f"No TestSession found for session_id={session_id}, student={student.id}")
+            return Response(
+                {"detail": "No TestSession matches the given query. Session may be completed or invalid."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
-        # ❓ Javob berilgan savollar
-        answered_ids = session.answers.values_list("question_id", flat=True)
+        if session.is_expired():
+            session.finished_at = timezone.now()
+            session.save()
+            logger.info(f"Session {session_id} expired for student {student.id}")
+            return Response({"detail": "Sessiya muddati tugagan"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 🎯 Keyingi savolni random tanlash
-        question = (session.questions
-                    .exclude(id__in=answered_ids)
-                    .order_by('?')
-                    .first())
+        questions = list(session.questions.all())
+        answered_ids = session.answers.values_list('question_id', flat=True)
+        unanswered_questions = [q for q in questions if q.id not in answered_ids]
 
-        if not question:
-            self.finish_session(session)
-            return Response({"detail": "Test yakunlangan"}, status=200)
+        if not unanswered_questions:
+            session.finished_at = timezone.now()
+            correct = session.answers.filter(is_correct=True).count()
+            total = len(questions)
+            session.correct_answers = correct
+            session.total_questions = total
+            session.score = round((correct / total) * 100, 2) if total else 0
+            session.save()
+            logger.info(f"Session {session_id} completed: {correct}/{total} correct")
+            return Response({"detail": "Test yakunlangan"}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(RandomizedQuestionSerializer(question).data)
-
-    def finish_session(self, session):
-        answers = session.answers.all()
-        correct = answers.filter(is_correct=True).count()
-        total = session.questions.count()
-
-        session.finished_at = timezone.now()
-        session.correct_answers = correct
-        session.total_questions = total
-        session.score = round((correct / total) * 100, 2) if total else 0
+        # Ensure current_question_index points to the next unanswered question
+        session.current_question_index = len(answered_ids)
         session.save()
 
+        current_question = unanswered_questions[0] if unanswered_questions else None
+        response_data = {
+            "id": session.id,
+            "total_questions": len(questions),
+            "current_question": RandomizedQuestionSerializer(current_question).data if current_question else None,
+            "remaining_seconds": session.remaining_seconds(),
+            "current_index": session.current_question_index + 1
+        }
+        logger.info(f"Resumed session {session_id} with current_index={session.current_question_index + 1}, unanswered={len(unanswered_questions)}")
+        return Response(response_data, status=status.HTTP_200_OK)
 
+
+class TestResumeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, session_id):
+        try:
+            student = request.user.student
+        except AttributeError:
+            logger.error(f"No student profile for user {request.user.username}")
+            return Response({"detail": "Talaba hisobi topilmadi"}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            session = TestSession.objects.get(id=session_id, student=student, finished_at__isnull=True)
+        except TestSession.DoesNotExist:
+            logger.error(f"No TestSession found for session_id={session_id}, student={student.id}")
+            return Response(
+                {"detail": "No TestSession matches the given query. Session may be completed or invalid."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if session.is_expired():
+            session.finished_at = timezone.now()
+            session.save()
+            logger.info(f"Session {session_id} expired for student {student.id}")
+            return Response({"detail": "Sessiya muddati tugagan"}, status=status.HTTP_400_BAD_REQUEST)
+
+        questions = list(session.questions.all())
+        answered_ids = session.answers.values_list('question_id', flat=True)
+        unanswered_questions = [q for q in questions if q.id not in answered_ids]
+
+        if not unanswered_questions:
+            session.finished_at = timezone.now()
+            correct = session.answers.filter(is_correct=True).count()
+            total = len(questions)
+            session.correct_answers = correct
+            session.total_questions = total
+            session.score = round((correct / total) * 100, 2) if total else 0
+            session.save()
+            logger.info(f"Session {session_id} completed: no unanswered questions")
+            return Response({"detail": "Test yakunlangan"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Ensure current_question_index points to an unanswered question
+        if session.current_question_index >= len(questions) or questions[session.current_question_index].id in answered_ids:
+            session.current_question_index = len(answered_ids)
+            session.save()
+
+        current_question = unanswered_questions[0] if unanswered_questions else None
+        serializer = TestResumeSerializer(session, context={'request': request})
+        logger.info(f"Resumed session {session_id} with current_index={session.current_question_index + 1}, unanswered={len(unanswered_questions)}")
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class SubmitAnswerAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(
-        operation_summary="Savolga javob yuborish",
-        manual_parameters=[
-            openapi.Parameter('session_id', openapi.IN_PATH, description="Test session ID", type=openapi.TYPE_INTEGER)
-        ],
-        request_body=AnswerSubmitSerializer,
-        responses={200: openapi.Response("Success", schema=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={"detail": openapi.Schema(type=openapi.TYPE_STRING)}
-        ))}
-    )
     def post(self, request, session_id):
-        session = get_object_or_404(TestSession, id=session_id, student=request.user.student)
+        serializer = AnswerSubmitSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        # ✅ Vaqt tugaganini tekshir
-        end_time = session.started_at + timezone.timedelta(minutes=session.test.time_limit)
-        if timezone.now() >= end_time or session.finished_at is not None:
-            return Response(
-                {"detail": "Test vaqti tugagan. Javob yuborib bo‘lmaydi."},
-                status=status.HTTP_403_FORBIDDEN
-            )
+        try:
+            session = TestSession.objects.get(id=session_id, student=request.user.student, finished_at__isnull=True)
+        except TestSession.DoesNotExist:
+            logger.error(f"No TestSession found for session_id={session_id}, student={request.user.student.id}")
+            return Response({"detail": "No TestSession matches the given query."}, status=status.HTTP_404_NOT_FOUND)
 
-        ser = AnswerSubmitSerializer(data=request.data)
-        ser.is_valid(raise_exception=True)
+        if session.is_expired():
+            session.finished_at = timezone.now()
+            session.save()
+            logger.info(f"Session {session_id} expired during answer submission")
+            return Response({"detail": "Test vaqti tugadi. Yakunlandi."}, status=status.HTTP_400_BAD_REQUEST)
 
-        question = get_object_or_404(Question, id=ser.validated_data["question_id"])
-        selected_option = get_object_or_404(Option, id=ser.validated_data["selected_option_id"])
+        question_id = serializer.validated_data['question_id']
+        selected_option_id = serializer.validated_data['selected_option_id']
 
-        # 🔁 Avvalgi javobni tekshirib, qayta yozishni oldini olamiz (agar kerak bo‘lsa)
-        if Answer.objects.filter(session=session, question=question).exists():
-            return Response(
-                {"detail": "Bu savolga allaqachon javob berilgan."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        questions = list(session.questions.all())
+        if question_id not in [q.id for q in questions]:
+            logger.error(f"Question {question_id} not in session {session_id} questions")
+            return Response({"detail": "Bu savol ushbu sessiyaga tegishli emas."}, status=status.HTTP_400_BAD_REQUEST)
 
+        if Answer.objects.filter(session=session, question_id=question_id).exists():
+            logger.warning(f"Duplicate answer attempt for question {question_id} in session {session_id}")
+            return Response({"detail": "Bu savolga allaqachon javob berilgan"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            question = Question.objects.get(id=question_id, test=session.test)
+            selected_option = Option.objects.get(id=selected_option_id, question=question)
+        except Question.DoesNotExist:
+            logger.error(f"Question {question_id} does not exist for test {session.test.id}")
+            return Response({"detail": "Savol topilmadi"}, status=status.HTTP_404_NOT_FOUND)
+        except Option.DoesNotExist:
+            logger.error(f"Option {selected_option_id} does not exist for question {question_id}")
+            return Response({"detail": "Variant topilmadi"}, status=status.HTTP_404_NOT_FOUND)
+
+        is_correct = selected_option.is_correct
         Answer.objects.create(
             session=session,
             question=question,
             selected_option=selected_option,
-            is_correct=selected_option.is_correct
+            is_correct=is_correct
         )
+        logger.info(f"Answer recorded for question {question_id} in session {session_id}. Total answers: {session.answers.count()}")
 
-        return Response({"detail": "Javob qabul qilindi"})
+        # Update current_question_index
+        answered_ids = session.answers.values_list('question_id', flat=True)
+        session.current_question_index = len(answered_ids)
+        session.save()
 
+        return Response({"detail": "Javob qabul qilindi"}, status=status.HTTP_200_OK)
 
 class FinishTestAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @swagger_auto_schema(
-        operation_summary="Testni yakunlash va natijani olish",
-        manual_parameters=[
-            openapi.Parameter('session_id', openapi.IN_PATH, description="Test session ID", type=openapi.TYPE_INTEGER)
-        ],
-        responses={200: TestResultSerializer()}
-    )
     def post(self, request, session_id):
-        session = get_object_or_404(TestSession, id=session_id, student=request.user.student)
-        answers = session.answers.all()
-        correct = answers.filter(is_correct=True).count()
-        total = session.questions.count()
+        try:
+            session = TestSession.objects.get(id=session_id, student=request.user.student, finished_at__isnull=True)
+        except TestSession.DoesNotExist:
+            logger.error(f"No TestSession found for session_id={session_id}, student={request.user.student.id}")
+            return Response({"detail": "No TestSession matches the given query."}, status=status.HTTP_404_NOT_FOUND)
 
-        # 🛡️ Noldan bo‘linishni oldini olish
-        if total == 0:
-            score = 0
-        else:
-            score = round((correct / total) * 100, 2)
+        questions = list(session.questions.all())
+        answered_ids = session.answers.values_list('question_id', flat=True)
+        if len(answered_ids) < len(questions):
+            logger.warning(f"Session {session_id} finished with {len(answered_ids)}/{len(questions)} answers")
 
         session.finished_at = timezone.now()
-        session.score = score
+        correct = session.answers.filter(is_correct=True).count()
+        total = len(questions)
         session.correct_answers = correct
         session.total_questions = total
+        session.score = round((correct / total) * 100, 2) if total else 0
         session.save()
+        logger.info(f"Session {session_id} finished: {correct}/{total} correct, score={session.score}%")
 
-        return Response(TestResultSerializer(session).data)
-    
-
+        return Response({
+            "correct_answers": correct,
+            "total_questions": total,
+            "score": session.score
+        })
 
 
 class QuizUploadAPIView(APIView):
@@ -1064,17 +1128,21 @@ class TestViewSet(viewsets.ReadOnlyModelViewSet):
         return {"request": self.request}
 
     def list(self, request, *args, **kwargs):
-        student = request.user.student
+        try:
+            student = request.user.student
+        except AttributeError:
+            logger.error(f"No student profile for user {request.user.username}")
+            return Response({"detail": "Talaba hisobi topilmadi"}, status=status.HTTP_403_FORBIDDEN)
 
         # Odob-axloq ro‘yxatidan tekshirish
         record = OdobAxloqStudent.objects.filter(hemis_id=student.student_id_number).first()
         if record:
-            return Response(
-                {"detail": f"{record.sabab}"},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            logger.warning(f"Student {student.student_id_number} blocked due to: {record.sabab}")
+            return Response({"detail": f"{record.sabab}"}, status=status.HTTP_403_FORBIDDEN)
 
-        return super().list(request, *args, **kwargs)
+        tests = self.get_queryset().filter(levels=student.level_id)
+        serializer = self.get_serializer(tests, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
         
 
 class AdminAccountAPIView(APIView):
@@ -1103,3 +1171,43 @@ class ApplicationFileUpdateAPIView(generics.UpdateAPIView):
         if obj.item.application.student.user != self.request.user:
             raise PermissionDenied("Siz bu faylga o‘zgartirish kiritish huquqiga ega emassiz.")
         return obj
+    
+
+class GetNextQuestionAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, session_id):
+        try:
+            session = TestSession.objects.get(id=session_id, student=request.user.student, finished_at__isnull=True)
+        except TestSession.DoesNotExist:
+            logger.error(f"No TestSession found for session_id={session_id}, student={request.user.student.id}")
+            return Response({"detail": "No TestSession matches the given query."}, status=status.HTTP_404_NOT_FOUND)
+
+        if session.is_expired():
+            session.finished_at = timezone.now()
+            session.save()
+            logger.info(f"Session {session_id} expired during next question request")
+            return Response({"detail": "Test vaqti tugadi. Yakunlandi."}, status=status.HTTP_400_BAD_REQUEST)
+
+        questions = list(session.questions.all())
+        answered_ids = session.answers.values_list('question_id', flat=True)
+        unanswered_questions = [q for q in questions if q.id not in answered_ids]
+
+        if not unanswered_questions:
+            session.finished_at = timezone.now()
+            correct = session.answers.filter(is_correct=True).count()
+            total = len(questions)
+            session.correct_answers = correct
+            session.total_questions = total
+            session.score = round((correct / total) * 100, 2) if total else 0
+            session.save()
+            logger.info(f"Session {session_id} completed: {correct}/{total} correct")
+            return Response({"detail": "Test yakunlangan"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Set current_question_index
+        session.current_question_index = len(answered_ids)
+        question = unanswered_questions[0]
+        session.save()
+        logger.info(f"Next question {question.id} served for session {session_id}, current_index={session.current_question_index + 1}")
+
+        return Response(RandomizedQuestionSerializer(question).data)

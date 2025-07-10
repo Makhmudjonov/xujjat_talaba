@@ -13,7 +13,7 @@ import os
 # CORE REFERENCE MODELS
 # ---------------------------
 class Faculty(models.Model):
-    hemis_id = models.IntegerField(unique=True)
+    # hemis_id = models.IntegerField(unique=False)
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50)
 
@@ -422,6 +422,7 @@ class TestSession(models.Model):
     correct_answers = models.IntegerField(null=True, blank=True)
     total_questions = models.IntegerField(null=True, blank=True)
     questions = models.ManyToManyField(Question, blank=True)
+    current_question_index = models.IntegerField(default=0,)  # New field to track progress
 
     def is_expired(self):
         if self.finished_at:

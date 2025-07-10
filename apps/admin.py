@@ -29,7 +29,7 @@ class StudentAdmin(admin.ModelAdmin):
 
 @admin.register(Faculty)
 class FacultyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'code', 'hemis_id')
+    list_display = ('name', 'code')
     search_fields = ('name', 'code')
 
 @admin.register(GPARecord)

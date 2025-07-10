@@ -3,6 +3,9 @@ import random
 from rest_framework import serializers
 from django.core.exceptions import ObjectDoesNotExist
 
+from datetime import timedelta  # Import timedelta from datetime
+from django.utils import timezone
+
 
 from komissiya.serializers import StudentSerializer
 from .models import (
@@ -678,8 +681,12 @@ class TestSerializer(serializers.ModelSerializer):
         if not student:
             return "unknown"
 
-        has_session = obj.testsession_set.filter(student=student).exists()
-        return "ishlangan" if has_session else "ishlanmagan"
+        session = obj.testsession_set.filter(student=student).first()
+        if session:
+            if session.finished_at is None:
+                return "ishlanmoqda"
+            return "ishlangan"
+        return "ishlanmagan"
 
     def get_result(self, obj):
         request = self.context.get("request")
@@ -726,4 +733,43 @@ class CustomAdminUserSerializer(serializers.ModelSerializer):
             'allow_all_students', 'limit_by_course'
         ]
 
-        
+
+class TestResumeSerializer(serializers.ModelSerializer):
+    current_question = serializers.SerializerMethodField()
+    total_questions = serializers.IntegerField(source='test.question_count')
+    remaining_seconds = serializers.SerializerMethodField()
+    current_index = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TestSession
+        fields = ['id', 'total_questions', 'current_question', 'remaining_seconds', 'current_index']  # Added 'current_index'
+
+    def get_current_question(self, obj):
+        questions = list(obj.questions.all())
+        if not questions or obj.current_question_index >= len(questions):
+            return None
+        return RandomizedQuestionSerializer(questions[obj.current_question_index]).data
+
+    def get_remaining_seconds(self, obj):
+        if obj.is_expired() or obj.finished_at:
+            return 0
+        end_time = obj.started_at + timedelta(minutes=obj.test.time_limit)
+        remaining = (end_time - timezone.now()).total_seconds()
+        return max(0, int(remaining))
+
+    def get_current_index(self, obj):
+        return obj.current_question_index + 1
+    
+
+
+class TestDictSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    start_time = serializers.DateTimeField(allow_null=True)
+    question_count = serializers.IntegerField()
+    total_questions = serializers.IntegerField()
+    time_limit = serializers.IntegerField()
+    created_at = serializers.DateTimeField()
+    status = serializers.ChoiceField(choices=["ishlangan", "ishlanmagan", "ishlanmoqda"])
+    session_id = serializers.IntegerField(required=False, allow_null=True)
+    result = serializers.DictField(allow_null=True, required=False)
