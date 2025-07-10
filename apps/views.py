@@ -818,12 +818,23 @@ class StartTestAPIView(APIView):
         random.shuffle(questions)
         selected = questions[:test.question_count]
 
-        session = TestSession.objects.create(
+        session, created = TestSession.objects.get_or_create(
             student=student,
             test=test,
-            current_question_index=0
+            defaults={
+                "current_question_index": 0,
+                "total_questions": test.question_count,
+                "score": 0,
+                "correct_answers": 0,
+            }
         )
+
+        if not created:
+            logger.info(f"Returning existing session {session.id} for student {student.id}")
+            return Response(TestResumeSerializer(session, context={'request': request}).data)
+
         session.questions.set(selected)
+
         logger.info(f"Created new session {session.id} with {len(selected)} questions for student {student.id}")
 
         first_question = selected[0] if selected else None
