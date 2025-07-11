@@ -31,7 +31,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets, permissions, generics,parsers
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView
 
@@ -282,75 +282,6 @@ class StudentAccountAPIView(APIView):
 
         serializer = StudentAccountSerializer(student)
         return Response(serializer.data)
-    
-class ApplicationItemViewSet(viewsets.ModelViewSet):
-    queryset = ApplicationItem.objects.all()
-    serializer_class = ApplicationItemSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        user = self.request.user
-        if hasattr(user, 'student'):
-            return ApplicationItem.objects.filter(application__student__user=user)
-        return ApplicationItem.objects.none()
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        student = getattr(user, 'student', None)
-        if not student:
-            raise ValidationError("Faqat studentlar ariza topshirishi mumkin.")
-
-        direction = serializer.validated_data.get('direction')
-        section = direction.section if direction else None
-
-        application_type_id = self.request.data.get('application_type_id')
-        if not application_type_id:
-            raise ValidationError("application_type_id talab qilinadi.")
-
-        application, created = Application.objects.get_or_create(
-            student=student,
-            application_type_id=application_type_id,
-            defaults={'status': 'pending', 'section': section}
-        )
-
-        app_item = serializer.save(application=application, section=section)
-
-        # Fayllarni JSON formatda olish
-        files_json = self.request.data.get('files')
-        if files_json:
-            try:
-                import json
-                files_data = json.loads(files_json)
-            except Exception:
-                files_data = []
-
-            for j, file_meta in enumerate(files_data):
-                upload = self.request.FILES.get(f"files_{i}_{j}")
-                if upload:
-                    ApplicationFile.objects.create(
-                        item=app_item,
-                        file=upload,
-                        section_id=file_meta.get('section'),
-                        comment=file_meta.get('comment', '')
-                    )
-
-
-    def partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        student = getattr(request.user, 'student', None)
-
-        if instance.application.student != student:
-            return Response({"detail": "Bu yo'nalishni taxrirlashga ruxsat yo'q."},
-                            status=status.HTTP_403_FORBIDDEN)
-
-        comment = request.data.get('student_comment')
-        if comment is not None:
-            instance.student_comment = comment
-            instance.save()
-            return Response(self.get_serializer(instance).data)
-
-        return Response({"detail": "Hech qanday o'zgarish kiritilmagan."},
-                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class StudentApplicationTypeListAPIView(APIView):
@@ -384,11 +315,12 @@ class StudentApplicationTypeListAPIView(APIView):
         )
         return Response(serializer.data)
 
-    
+
 class ApplicationItemViewSet(viewsets.ModelViewSet):
     queryset = ApplicationItem.objects.all()
     serializer_class = ApplicationItemSerializer
     permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser,JSONParser ]
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -398,26 +330,130 @@ class ApplicationItemViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if hasattr(user, 'student'):
-            return ApplicationItem.objects.filter(application__student__user=user)
+            return ApplicationItem.objects.filter(
+                application__student__user=user
+            ).select_related('application', 'direction').prefetch_related('files')
         return ApplicationItem.objects.none()
 
+    def list(self, request, *args, **kwargs):
+        logger.info(f"Received GET request to list application items for user {request.user}")
+        try:
+            queryset = self.get_queryset()
+            serializer = self.get_serializer(queryset, many=True)
+            logger.info(f"Successfully retrieved {queryset.count()} application items for user {request.user}")
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"Error in list method: {str(e)}", exc_info=True)
+            return Response({"detail": f"Xato yuz berdi: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     def perform_create(self, serializer):
-        student = self.request.user.student
+        logger.info(f"Received POST request to create ApplicationItem for user {self.request.user}")
+        student = getattr(self.request.user, 'student', None)
+        if not student:
+            logger.error("No student profile found for user.")
+            raise ValidationError("Talaba topilmadi.")
+
         direction = serializer.validated_data.get('direction')
         section = direction.section if direction else None
 
         application_type_id = self.request.data.get('application_type_id')
         if not application_type_id:
+            logger.error("No application_type_id provided.")
             raise ValidationError("application_type_id talab qilinadi.")
 
-        # Application yaratish yoki olish
-        application, created = Application.objects.get_or_create(
-            student=student,
-            application_type_id=application_type_id,
-            defaults={'status': 'pending', 'section': section}
-        )
+        try:
+            application, created = Application.objects.get_or_create(
+                student=student,
+                application_type_id=application_type_id,
+                defaults={'status': 'pending', 'section': section}
+            )
+            serializer.save(application=application, section=section)
+            logger.info(f"ApplicationItem created successfully for user {self.request.user}")
+        except Exception as e:
+            logger.error(f"Error creating ApplicationItem: {str(e)}", exc_info=True)
+            raise ValidationError(f"Ariza yaratishda xato: {str(e)}")
 
-        serializer.save(application=application, section=section)
+    @action(detail=True, methods=["put", "patch"], url_path="update-item")
+    def update_item(self, request, pk=None):
+        logger.info(f"Received request to update ApplicationItem {pk} for user {request.user}")
+        student = getattr(request.user, 'student', None)
+        if not student:
+            logger.error("No student profile found for user.")
+            return Response({"detail": "Talaba topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            app_item = ApplicationItem.objects.select_related('application').get(
+                id=pk, application__student=student
+            )
+        except ApplicationItem.DoesNotExist:
+            logger.error(f"ApplicationItem {pk} not found or not associated with student.")
+            return Response({"detail": "Ariza topilmadi yoki sizga tegishli emas."}, status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            student_comment = request.data.get("student_comment", "")
+            app_item.student_comment = student_comment
+            app_item.save()
+
+            files_data = json.loads(request.data.get("files", "[]"))
+            for j, file_info in enumerate(files_data):
+                upload = request.FILES.get(f"files_{pk}_{j}")
+                if upload:
+                    ApplicationFile.objects.create(
+                        item=app_item,
+                        file=upload,
+                        section_id=file_info.get("section"),
+                        comment=file_info.get("comment", "")
+                    )
+            logger.info(f"ApplicationItem {pk} updated successfully for user {request.user}")
+            return Response({"detail": "Ma’lumotlar yangilandi."}, status=status.HTTP_200_OK)
+        except json.JSONDecodeError:
+            logger.error("Invalid JSON format for files.")
+            return Response({"detail": "Fayl ro‘yxati noto‘g‘ri formatda."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Error updating ApplicationItem {pk}: {str(e)}", exc_info=True)
+            return Response({"detail": f"Yangilashda xato: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=["post"], url_path="files")
+    def upload_file(self, request, pk=None):
+        logger.info(f"Received POST request to upload file for ApplicationItem {pk} by user {request.user}")
+        student = getattr(request.user, 'student', None)
+        if not student:
+            logger.error("No student profile found for user.")
+            return Response({"detail": "Talaba topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            app_item = ApplicationItem.objects.select_related('application').get(
+                id=pk, application__student=student
+            )
+        except ApplicationItem.DoesNotExist:
+            logger.error(f"ApplicationItem with ID {pk} not found or not associated with student.")
+            return Response({"detail": "Ariza topilmadi yoki sizga tegishli emas."}, status=status.HTTP_404_NOT_FOUND)
+
+        upload = request.FILES.get("file")
+        if not upload:
+            logger.error("No file provided in request.")
+            return Response({"detail": "Fayl yuklanmadi."}, status=status.HTTP_400_BAD_REQUEST)
+
+        comment = request.data.get("comment", "")
+        section_id = request.data.get("section_id")  # Optional, as per serializer
+
+        try:
+            file_instance = ApplicationFile.objects.create(
+                item=app_item,
+                file=upload,
+                comment=comment,
+                section_id=section_id if section_id else None
+            )
+            logger.info(f"File uploaded successfully for ApplicationItem {pk}, File ID: {file_instance.id}")
+            serializer = ApplicationFileSerializer(file_instance, context={'request': request})
+            return Response({
+                "detail": "Fayl muvaffaqiyatli yuklandi.",
+                "data": serializer.data
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            logger.error(f"Error creating ApplicationFile: {str(e)}", exc_info=True)
+            return Response({"detail": f"Faylni saqlashda xato: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class DirectionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = DirectionSerializer
@@ -445,42 +481,39 @@ class DirectionViewSet(viewsets.ReadOnlyModelViewSet):
         context['student'] = getattr(self.request.user, 'student', None)
         return context
 
-    
 class StudentApplicationViewSet(viewsets.ViewSet):
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes     = [MultiPartParser, FormParser]
-    
-    
+    parser_classes = [MultiPartParser, FormParser]
 
-    # ... list() o‘zgarishsiz ...
+    def list(self, request):
+        # Existing list method (unchanged)
+        student = getattr(request.user, 'student', None)
+        if not student:
+            return Response({"detail": "Talaba topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
+        # ... (rest of the list method as per your implementation)
+        pass
 
     def create(self, request):
         student = getattr(request.user, 'student', None)
         if not student:
-            return Response({"detail": "Talaba topilmadi."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Talaba topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # --- boshlang‘ich tekshiruvlar (o‘zgarishsiz) ---
         data = request.data
 
         try:
             app_type_id = int(data.get("application_type"))
             app_type = get_object_or_404(ApplicationType, id=app_type_id)
         except (TypeError, ValueError):
-            return Response({"detail": "Invalid application_type."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Invalid application_type."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             items = json.loads(data.get("items", "[]"))
         except json.JSONDecodeError:
-            return Response({"detail": "Items noto‘g‘ri formatda."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Items noto‘g‘ri formatda."}, status=status.HTTP_400_BAD_REQUEST)
 
         if not isinstance(items, list) or not items:
-            return Response({"detail": "Kamida bitta yo‘nalish bo‘lishi kerak."},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Kamida bitta yo‘nalish bo‘lishi kerak."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # --- duplikat tekshiruv (o‘zgarishsiz) ---
         for idx, it in enumerate(items):
             dir_id = it.get("direction")
             if not dir_id:
@@ -498,37 +531,33 @@ class StudentApplicationViewSet(viewsets.ViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        # --------------- ASOSIY QISM ---------------
         with transaction.atomic():
             first_dir = get_object_or_404(Direction, id=items[0]["direction"])
             application = Application.objects.create(
-                student   = student,
-                application_type = app_type,
-                comment   = data.get("comment", ""),
-                section   = first_dir.section,
+                student=student,
+                application_type=app_type,
+                comment=data.get("comment", ""),
+                section=first_dir.section,
             )
 
             for i, it in enumerate(items):
                 dir_obj = get_object_or_404(Direction, id=it["direction"])
 
-                # string → float xavfsiz konvert (qiymat yo‘q bo‘lsa None qoladi)
-                gpa_val         = it.get("gpa")
+                gpa_val = it.get("gpa")
                 test_result_val = it.get("test_result")
 
-                gpa_float         = float(gpa_val)         if gpa_val         not in [None, ""] else None
+                gpa_float = float(gpa_val) if gpa_val not in [None, ""] else None
                 test_result_float = float(test_result_val) if test_result_val not in [None, ""] else None
 
-                # --- ApplicationItem ni gpa / test_result bilan yaratamiz ---
                 app_item = ApplicationItem.objects.create(
-                    application      = application,
-                    title            = dir_obj.name,
-                    direction        = dir_obj,
-                    student_comment  = it.get("student_comment", ""),
-                    gpa              = gpa_float,
-                    test_result      = test_result_float,
+                    application=application,
+                    title=dir_obj.name,
+                    direction=dir_obj,
+                    student_comment=it.get("student_comment", ""),
+                    gpa=gpa_float,
+                    test_result=test_result_float,
                 )
 
-                # --- Fayl (agar bo‘lsa) ---
                 for j, f in enumerate(it.get("files", [])):
                     upload = request.FILES.get(f"files_{i}_{j}")
                     if upload:
@@ -539,11 +568,8 @@ class StudentApplicationViewSet(viewsets.ViewSet):
                             comment=f.get("comment", "")
                         )
 
-
-                # --- Score jadvali (ixtiyoriy) ---
                 if dir_obj.type == "score" and gpa_float is not None:
                     Score.objects.create(item=app_item, reviewer=request.user, value=gpa_float)
-
                 elif dir_obj.type == "test" and test_result_float is not None:
                     Score.objects.create(item=app_item, reviewer=request.user, value=test_result_float)
 
@@ -551,7 +577,7 @@ class StudentApplicationViewSet(viewsets.ViewSet):
             {"detail": "Ariza muvaffaqiyatli yaratildi."},
             status=status.HTTP_201_CREATED
         )
-    
+
     @action(detail=True, methods=["put", "patch"], url_path="update-item")
     def update_item(self, request, pk=None):
         student = getattr(request.user, 'student', None)
@@ -565,12 +591,10 @@ class StudentApplicationViewSet(viewsets.ViewSet):
         except ApplicationItem.DoesNotExist:
             return Response({"detail": "Ariza topilmadi yoki sizga tegishli emas."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Faqat comment yangilash
         student_comment = request.data.get("student_comment", "")
         app_item.student_comment = student_comment
         app_item.save()
 
-        # Fayllar listi JSON bo‘lishi kerak: [{"section": 1, "comment": "xujjat"}, ...]
         try:
             files_data = json.loads(request.data.get("files", "[]"))
         except json.JSONDecodeError:
@@ -588,6 +612,32 @@ class StudentApplicationViewSet(viewsets.ViewSet):
 
         return Response({"detail": "Ma’lumotlar yangilandi."}, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=["post"], url_path="files")
+    def upload_file(self, request, pk=None):
+        student = getattr(request.user, 'student', None)
+        if not student:
+            return Response({"detail": "Talaba topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            app_item = ApplicationItem.objects.select_related('application').get(
+                id=pk, application__student=student
+            )
+        except ApplicationItem.DoesNotExist:
+            return Response({"detail": "Ariza topilmadi yoki sizga tegishli emas."}, status=status.HTTP_404_NOT_FOUND)
+
+        upload = request.FILES.get("file")
+        if not upload:
+            return Response({"detail": "Fayl yuklanmadi."}, status=status.HTTP_400_BAD_REQUEST)
+
+        comment = request.data.get("comment", "")
+
+        ApplicationFile.objects.create(
+            item=app_item,
+            file=upload,
+            comment=comment,
+        )
+
+        return Response({"detail": "Fayl muvaffaqiyatli yuklandi."}, status=status.HTTP_201_CREATED)
 
 class NewApplicationsAPIView(generics.ListAPIView):
     """

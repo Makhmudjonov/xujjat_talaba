@@ -39,6 +39,7 @@ router = DefaultRouter()
 # router.register(r'admins', CustomAdminUserViewSet) # Admin foydalanuvchilar uchun
 # router.register(r'levels', LevelViewSet)
 # router.register(r'applications', ApplicationViewSet, basename='application')
+
 router.register(r'student/application-items', ApplicationItemViewSet, basename='application-item')
 # router.register(r'admin/forms', ApplicationItemAdminViewSet, basename='admin-forms')
 # router.register(r'student/applications', StudentApplicationViewSet, basename='student-applications')

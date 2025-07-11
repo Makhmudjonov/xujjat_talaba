@@ -161,19 +161,21 @@ class DirectionSerializer(serializers.ModelSerializer):
 
 class ApplicationItemSerializer(serializers.ModelSerializer):
     files = ApplicationFileSerializer(many=True, read_only=True)
+    direction = serializers.PrimaryKeyRelatedField(queryset=Direction.objects.all(), required=False)
+    application = serializers.PrimaryKeyRelatedField(read_only=True)
+    reviewer_comment = serializers.CharField(allow_null=True, required=False, read_only=True)
 
     class Meta:
         model = ApplicationItem
         fields = [
             "id", "application", "direction", "title", "student_comment",
-            "reviewer_comment", "file", "gpa", "test_result", "files", "status"
+            "reviewer_comment", "gpa", "test_result", "files"
         ]
-
+        read_only_fields = ["id", "application", "files", "reviewer_comment"]
 
     def create(self, validated_data):
         gpa = validated_data.pop("gpa", None)
         test_result = validated_data.pop("test_result", None)
-
         direction = validated_data.get("direction")
 
         if direction:
