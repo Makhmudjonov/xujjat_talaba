@@ -21,6 +21,7 @@ class StudentAdmin(admin.ModelAdmin):
         'faculty',
         'group',
         'level',
+        'university'
     )
     list_filter = ('faculty', 'level', 'gender')
     search_fields = ('full_name', 'student_id_number', 'email', 'phone')
