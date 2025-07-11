@@ -156,7 +156,7 @@ class AnswerInline(admin.TabularInline):
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
     list_display = ('id', 'question', 'is_correct')
-    list_filter = ('is_correct',)
+    list_filter = ('is_correct', 'session')
 
 class OptionInline(admin.TabularInline):
     model = Option
