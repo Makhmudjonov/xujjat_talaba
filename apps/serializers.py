@@ -166,7 +166,7 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
         model = ApplicationItem
         fields = [
             "id", "application", "direction", "title", "student_comment",
-            "reviewer_comment", "file", "gpa", "test_result", "files"
+            "reviewer_comment", "file", "gpa", "test_result", "files", "status"
         ]
 
 
@@ -464,6 +464,7 @@ class ApplicationItemFullSerializer(serializers.ModelSerializer):
             "reviewer_comment",
             "score",
             "files",
+            "status"
         )
 
 class StudentShortSerializer(serializers.ModelSerializer):
