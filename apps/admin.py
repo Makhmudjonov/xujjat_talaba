@@ -192,7 +192,7 @@ class TestAdmin(admin.ModelAdmin):
 class TestSessionAdmin(admin.ModelAdmin):
     list_display = ("id", "student", "test", "started_at", "finished_at", "score")
     list_filter = ("test", "student")
-    search_fields = ("student__full_name", "student__hemis_id", "test__title")
+    search_fields = ("student__full_name", "student__student_id_number", "test__title")
     readonly_fields = ("started_at", "finished_at", "score", "correct_answers", "total_questions")
 
     def get_queryset(self, request):
