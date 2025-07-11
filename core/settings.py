@@ -80,7 +80,9 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = ['http://localhost:3000','http://192.168.137.120:3000','http://localhost:8000', 'https://tanlov.medsfera.uz', 'https://tg.tashmeduni.uz']
 
-CORS_ALLOWED_ORIGINS = ['https://tg.tashmeduni.uz',]
+CORS_ALLOWED_ORIGINS = ['https://tg.tashmeduni.uz',"https://tanlov.mesfera.uz"]
+
+CORS_ALLOW_CREDENTIALS = True
 
 ROOT_URLCONF = 'core.urls'
 
