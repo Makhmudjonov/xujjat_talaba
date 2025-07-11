@@ -1,12 +1,12 @@
 # views.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from django.db.models import Count, Avg
 from apps.models import Student, GPARecord, Application, ApplicationType, ApplicationItem
 
 class PublicStatsAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         stats = {}
@@ -54,7 +54,7 @@ class PublicStatsAPIView(APIView):
         return Response(stats)
 
 class FacultyStudentStatsAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         data = (
@@ -74,7 +74,7 @@ class FacultyStudentStatsAPIView(APIView):
     
     
 class GPAStatsAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         gpa_data = (
@@ -108,7 +108,7 @@ class GPAStatsAPIView(APIView):
     
 
 class ApplicationTypeStatsAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         data = (
@@ -120,7 +120,7 @@ class ApplicationTypeStatsAPIView(APIView):
         return Response(list(data))
     
 class StudentGenderStatsAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         data = (
@@ -137,7 +137,7 @@ class StudentGenderStatsAPIView(APIView):
         return Response(result)
     
 class UniversityStudentStatsAPIView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         data = (
