@@ -26,7 +26,7 @@ class StudentAdmin(admin.ModelAdmin):
     search_fields = ('full_name', 'student_id_number', 'email', 'phone')
     readonly_fields = ('student_id_number', 'full_name', 'email', 'phone')
 
-
+ 
 @admin.register(Faculty)
 class FacultyAdmin(admin.ModelAdmin):
     list_display = ('name', 'code')
