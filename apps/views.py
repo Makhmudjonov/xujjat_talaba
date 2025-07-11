@@ -642,7 +642,7 @@ class ScoreCreateAPIView(CreateAPIView):
 
         # Application statusini yangilash
         application = item.application
-        application.status = "accepted"
+        item.status = True
         application.save()
     
     @swagger_auto_schema(

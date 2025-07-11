@@ -266,7 +266,8 @@ class ApplicationItem(models.Model):
     file             = models.FileField(upload_to='application_items/', blank=True, null=True)
     gpa              = models.FloatField(blank=True, null=True)
     test_result      = models.FloatField(blank=True, null=True)  # or IntegerField if needed
-
+    status = models.BooleanField(default=False)
+    
     class Meta:
         unique_together = ('application', 'direction')
 
