@@ -1,4 +1,5 @@
 from django.urls import path, include
+from apps.filter.view import ApplicationTypeStatsAPIView, FacultyStudentStatsAPIView, GPAStatsAPIView, PublicStatsAPIView, StudentGenderStatsAPIView, UniversityStudentStatsAPIView
 from rest_framework.routers import DefaultRouter
 from .views import (
     AdminAccountAPIView,
@@ -54,8 +55,13 @@ router.register(r'tests', TestViewSet, basename='test')
 urlpatterns = [
     # Talaba login qilish uchun API endpointi
     path('students/login/', StudentLoginAPIView.as_view(), name='student-login'),
-    
 
+    path('stats/', PublicStatsAPIView.as_view(), name='public-stats'),
+    path('stats/faculty-students/', FacultyStudentStatsAPIView.as_view(), name='faculty-students-stats'),
+    path('stats/gpa/', GPAStatsAPIView.as_view(), name='gpa-stats'),
+    path('stats/applications-by-type/', ApplicationTypeStatsAPIView.as_view(), name='application-type-stats'),
+    path('stats/students-by-gender/', StudentGenderStatsAPIView.as_view(), name='students-by-gender'),
+    path('stats/students-by-university/', UniversityStudentStatsAPIView.as_view(), name='students-by-university'),
     # Joriy talabaning o'z arizalarini olish uchun API endpointi
     # Bu endpoint talabalarga o'z arizalari ro'yxatini ko'rish imkonini beradi.
     # path('student-applications/', StudentApplicationAPIView.as_view(), name='student-applications'),
