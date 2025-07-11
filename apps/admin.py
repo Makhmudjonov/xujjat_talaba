@@ -20,10 +20,9 @@ class StudentAdmin(admin.ModelAdmin):
         'phone',
         'faculty',
         'group',
-        'level',
-        'university'
+        'level'
     )
-    list_filter = ('faculty', 'level', 'gender')
+    list_filter = ('faculty', 'level', 'gender', 'university')
     search_fields = ('full_name', 'student_id_number', 'email', 'phone')
     readonly_fields = ('student_id_number', 'full_name', 'email', 'phone')
 
