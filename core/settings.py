@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps',
     'komissiya',
+    'django_filters',
 ]
 
 
