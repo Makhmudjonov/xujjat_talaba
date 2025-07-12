@@ -322,7 +322,7 @@ class ApplicationTypeSerializer(serializers.ModelSerializer):
     def get_student_level(self, obj):
         student = self.context.get('student')
         # Bu sizning modelga bog‘liq, agar `student.level.name` bo‘lsa:
-        return student.level if student.level else None
+        return student.level.name if student.level else None
 
     def get_can_apply(self, obj):
         student = self.context.get('student')
@@ -334,6 +334,11 @@ class ApplicationTypeSerializer(serializers.ModelSerializer):
 
     def _check_eligibility(self, student, appl_type):
         gpa = float(student.gpa or 0)
+
+        if student.level and appl_type.allowed_levels.exists():
+            if student.level not in appl_type.allowed_levels.all():
+                return False, f"{student.level.name} kurs uchun bu ariza turi ruxsat etilmagan"
+        
         if appl_type.min_gpa and gpa < appl_type.min_gpa:
             return False, f"GPA talab qilinadi: {appl_type.min_gpa} dan yuqori"
 
