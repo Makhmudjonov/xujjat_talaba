@@ -322,7 +322,7 @@ class ApplicationTypeSerializer(serializers.ModelSerializer):
     def get_student_level(self, obj):
         student = self.context.get('student')
         # Bu sizning modelga bog‘liq, agar `student.level.name` bo‘lsa:
-        return student.level.name if student.level else None
+        return student.level if student.level else None
 
     def get_can_apply(self, obj):
         student = self.context.get('student')
