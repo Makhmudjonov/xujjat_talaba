@@ -75,6 +75,7 @@ urlpatterns = [
     path('student/application-types/', StudentApplicationTypeListAPIView.as_view(), name='student-application-types'),
     # path('student/application-types/', StudentApplicationTypeListAPIView.as_view(), name='student-application-types'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh uchun
+    #admins api 
     path("admin/score/create/", ScoreCreateAPIView.as_view(), name="score-create"),
     path("admin/applications/", ApplicationListAPIView.as_view(), name="admin-application-list"),
     path("admin/login/", AdminLoginAPIView.as_view(), name="admin-login"),
