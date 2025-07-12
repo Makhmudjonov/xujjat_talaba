@@ -62,8 +62,14 @@ class ContractInfoAdmin(admin.ModelAdmin):
 
 admin.site.register(Section)
 admin.site.register(Direction)
-admin.site.register(Application, SimpleHistoryAdmin)
+# admin.site.register(Application, SimpleHistoryAdmin)
 admin.site.register(Score, SimpleHistoryAdmin)
+
+@admin.register(Application)
+class ApplicationAdmin(admin.ModelAdmin):
+    list_display = ('student', 'application_type', 'status', 'submitted_at')
+    list_filter = ('status', 'application_type', 'section')
+    search_fields = ('student__full_name', 'student__hemis_id')  # misol uchun
 
 @admin.register(ApplicationType)
 class ApplicationTypeAdmin(admin.ModelAdmin):
