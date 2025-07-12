@@ -69,7 +69,7 @@ admin.site.register(Score, SimpleHistoryAdmin)
 class ApplicationAdmin(admin.ModelAdmin):
     list_display = ('student', 'application_type', 'status', 'submitted_at')
     list_filter = ('status', 'application_type', 'section')
-    search_fields = ('student__full_name', 'student__id_number')  # misol uchun
+    search_fields = ('student__full_name', 'student__student_id_number')  # misol uchun
 
 @admin.register(ApplicationType)
 class ApplicationTypeAdmin(admin.ModelAdmin):
