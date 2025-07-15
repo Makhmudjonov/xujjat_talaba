@@ -2,9 +2,11 @@
 from datetime import datetime
 from django.utils import timezone
 import json
+import base64
 import random
 from django.forms import ValidationError
 import requests
+from django.db.models import Sum
 
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -45,7 +47,7 @@ from .models import (
     Section, Direction, Application, ApplicationFile, Score, CustomAdminUser, Test, TestSession, Option, University
 )
 from .serializers import (
-    AdminLoginSerializer, AdminUserSerializer, AnswerSubmitSerializer, ApplicationDetailSerializer, ApplicationFullSerializer, ApplicationItemAdminSerializer, ApplicationItemSerializer, ApplicationTypeSerializer, CustomAdminUserSerializer, QuestionSerializer, QuizUploadSerializer, RandomizedQuestionSerializer, ScoreCreateSerializer, StartTestSerializer, StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
+    AdminLoginSerializer, AdminUserSerializer, AnswerSubmitSerializer, ApplicationDetailSerializer, ApplicationFullSerializer, ApplicationItemAdminSerializer, ApplicationItemSerializer, ApplicationTypeSerializer, CustomAdminUserSerializer, LeaderBoardSerializer, QuestionSerializer, QuizUploadSerializer, RandomizedQuestionSerializer, ScoreCreateSerializer, StartTestSerializer, StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
     ApplicationCreateSerializer, DirectionSerializer, ApplicationSerializer,
     ApplicationFileSerializer, ScoreSerializer, SubmitMultipleApplicationsSerializer, TestDictSerializer, TestResultSerializer, TestResumeSerializer, TestSerializer
 )
@@ -281,7 +283,12 @@ class StudentAccountAPIView(APIView):
             return Response({"detail": "Talaba ma'lumotlari topilmadi"}, status=404)
 
         serializer = StudentAccountSerializer(student)
-        return Response(serializer.data)
+        
+        # 👇 Base64 encode
+        json_str = json.dumps(serializer.data)
+        base64_encoded = base64.b64encode(json_str.encode()).decode()
+
+        return Response({"data": base64_encoded})
 
 
 class StudentApplicationTypeListAPIView(APIView):
@@ -546,8 +553,33 @@ class StudentApplicationViewSet(viewsets.ViewSet):
                 gpa_val = it.get("gpa")
                 test_result_val = it.get("test_result")
 
+                def get_gpa_score(gpa):
+                    gpa_score_map = {
+                        5.0: 10.0,
+                        4.9: 9.7,
+                        4.8: 9.3,
+                        4.7: 9.0,
+                        4.6: 8.7,
+                        4.5: 8.3,
+                        4.4: 8.0,
+                        4.3: 7.7,
+                        4.2: 7.3,
+                        4.1: 7.0,
+                        4.0: 6.7,
+                        3.9: 6.3,
+                        3.8: 6.0,
+                        3.7: 5.7,
+                        3.6: 5.3,
+                        3.5: 5.0,
+                    }
+                    return gpa_score_map.get(round(gpa, 1), 0.0)
+
+
                 gpa_float = float(gpa_val) if gpa_val not in [None, ""] else None
                 test_result_float = float(test_result_val) if test_result_val not in [None, ""] else None
+
+                gpa_score  = get_gpa_score(gpa_float)
+                
 
                 app_item = ApplicationItem.objects.create(
                     application=application,
@@ -556,6 +588,7 @@ class StudentApplicationViewSet(viewsets.ViewSet):
                     student_comment=it.get("student_comment", ""),
                     gpa=gpa_float,
                     test_result=test_result_float,
+                    gpa_score=gpa_score,
                 )
 
                 for j, f in enumerate(it.get("files", [])):
@@ -692,6 +725,7 @@ class ScoreCreateAPIView(CreateAPIView):
 
         # Application statusini yangilash
         application = item.application
+                    
         item.status = True
         application.save()
     
@@ -1276,3 +1310,18 @@ class GetNextQuestionAPIView(APIView):
         logger.info(f"Next question {question.id} served for session {session_id}, current_index={session.current_question_index + 1}")
 
         return Response(RandomizedQuestionSerializer(question).data)
+    
+class LeaderboardAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        students = Student.objects.prefetch_related(
+            'applications__items__score',
+            'applications__items__direction',
+            'gpa_records',
+            'faculty',
+            'level'
+        ).all()
+
+        serializer = LeaderBoardSerializer(students, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)

@@ -11,6 +11,7 @@ from .views import (
     DirectionViewSet,
     FinishTestAPIView,
     GetNextQuestionAPIView,
+    LeaderboardAPIView,
     QuizUploadAPIView,
     ScoreCreateAPIView,
     StartTestAPIView,
@@ -83,6 +84,8 @@ urlpatterns = [
     path('admin-users/', AdminUserListAPIView.as_view(), name='admin-user-list'),
     path("admin/account/", AdminAccountAPIView.as_view(), name="admin-account"),
     path('admin/applications/<int:pk>/', ApplicationRetrieveView.as_view(), name='admin-application-detail'),
+
+    path('admin/leaderboard/', LeaderboardAPIView.as_view(), name='leaderboard'),
 
     path('student/files/<int:pk>/', ApplicationFileUpdateAPIView.as_view()),
 

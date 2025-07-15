@@ -92,7 +92,7 @@ class SpecialApplicationStudentAdmin(admin.ModelAdmin):
 @admin.register(ApplicationItem)
 class ApplicationItemAdmin(admin.ModelAdmin):
     list_display = ("id", "get_student_name", "get_level", "direction")
-
+    
     def get_student_name(self, obj):
         return obj.application.student.full_name
     get_student_name.short_description = "Talaba"
@@ -100,6 +100,8 @@ class ApplicationItemAdmin(admin.ModelAdmin):
     def get_level(self, obj):
         return obj.application.student.level.name
     get_level.short_description = "Bosqich (Level)"
+
+    
 
 
 @admin.register(CustomAdminUser)
@@ -121,8 +123,8 @@ class CustomAdminUserAdmin(UserAdmin):
         }),
         ("Admin rollari", {
             "fields": (
-                "role", "sections", "faculties", "directions", "levels",
-                "limit_by_course", "allow_all_students", "can_score", 'university1', # ✅ Qo‘shildi
+                "role", 'full_name', "sections", "faculties", "directions", "levels",
+                "limit_by_course", "allow_all_students", "can_score", 'university1', 
             )
         }),
         ("Muhim sanalar", {"fields": ("last_login", "date_joined")}),
@@ -156,7 +158,7 @@ class ApplicationFileAdmin(admin.ModelAdmin):
 #test admin
 class AnswerInline(admin.TabularInline):
     model = Answer
-    extra = 2  # Nechta bo‘sh javob chiqarilsin
+    extra = 2
 
 
 @admin.register(Answer)

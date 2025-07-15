@@ -72,6 +72,7 @@ class ApplicationFileSerializer(serializers.ModelSerializer):
 
 
 class ScoreSerializer(serializers.ModelSerializer):
+    reviewer2 = serializers.CharField(source='reviewer.full_name')
 
     def validate(self, data):
         user = self.context["request"].user
@@ -90,18 +91,12 @@ class ScoreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Score
-        fields = ['id', 'value', 'note', 'scored_at']
+        fields = ['id', 'value', 'note', 'scored_at', "item", "reviewer", "reviewer2"]
 
 class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = ['id', 'name']
-
-class ScoreSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Score
-        fields = "__all__"
-        ref_name = "AppScore"  # yoki 'ScoreInApp'
 
 class SectionMiniSerializer(serializers.ModelSerializer):
     class Meta:
@@ -366,7 +361,7 @@ class ApplicationItemAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApplicationItem
-        fields = ['id', 'student', 'direction', 'section', 'files', 'score']
+        fields = ['id', 'student', 'direction', 'section', 'files', 'score', ]
 
     def get_student(self, obj):
         return StudentSerializer(obj.application.student).data
@@ -457,8 +452,13 @@ class ApplicationFileShortSerializer(serializers.ModelSerializer):
 
 class ApplicationItemFullSerializer(serializers.ModelSerializer):
     direction_name = serializers.CharField(source="direction.name", read_only=True)
+    min_score = serializers.CharField(source="direction.min_score", read_only=True)
+    max_score = serializers.CharField(source="direction.max_score", read_only=True)
     score          = ScoreSerializer(read_only=True)          # all fields
     files          = ApplicationFileShortSerializer(many=True, read_only=True)
+    test_ball = serializers.SerializerMethodField()
+    gpa_ball = serializers.SerializerMethodField()
+
 
     class Meta:
         model  = ApplicationItem
@@ -469,8 +469,56 @@ class ApplicationItemFullSerializer(serializers.ModelSerializer):
             "reviewer_comment",
             "score",
             "files",
-            "status"
+            "status",
+            "min_score",
+            "max_score",
+            "test_result",
+            "test_ball",
+            "gpa_ball"
         )
+
+    def get_test_ball(self, obj):
+        try:
+            if obj.test_result is not None:
+                return round(float(obj.test_result) * 0.2, 2)
+            return ""
+        except:
+            return ""
+        
+    def get_gpa_ball(self, obj):
+        try:
+            student = obj.application.student
+            latest_gpa_record = student.gpa_records.order_by('-created_at').first()
+            if not latest_gpa_record:
+                return 0.0
+
+            gpa = float(latest_gpa_record.gpa)
+            gpa_score_map = {
+                5.0: 10.0,
+                4.9: 9.7,
+                4.8: 9.3,
+                4.7: 9.0,
+                4.6: 8.7,
+                4.5: 8.3,
+                4.4: 8.0,
+                4.3: 7.7,
+                4.2: 7.3,
+                4.1: 7.0,
+                4.0: 6.7,
+                3.9: 6.3,
+                3.8: 6.0,
+                3.7: 5.7,
+                3.6: 5.3,
+                3.5: 5.0,
+            }
+            return gpa_score_map.get(round(gpa, 1), 0.0)
+        except:
+            return 0.0
+
+        
+    
+
+        
 
 class StudentShortSerializer(serializers.ModelSerializer):
     faculty = serializers.CharField(source="faculty.name")
@@ -531,10 +579,11 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField()
     student = ApplicationStudentSerializer(read_only=True)
     application_type_name = serializers.CharField(source="application_type.title", read_only=True)
+    total_score = serializers.SerializerMethodField()
 
     class Meta:
         model = Application
-        fields = ("id", "status", "comment", "submitted_at", "application_type_name", "student", "items")
+        fields = ("id", "status", "comment", "submitted_at", "application_type_name", "student", "items", "total_score")
 
     def get_items(self, obj):
         request = self.context.get("request")
@@ -545,6 +594,55 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
             items = items.filter(direction__in=user.directions.all())
 
         return ApplicationItemFullSerializer(items, many=True, context=self.context).data
+    
+    def get_total_score(self, obj):
+        request = self.context.get("request")
+        user = request.user if request else None
+        items = obj.items.all()
+
+        if user and hasattr(user, "directions") and user.directions.exists():
+            items = items.filter(direction__in=user.directions.all())
+
+        total = 0.0
+        for item in items:
+            # if item.direction.name == "Talabaning akademik o‘zlashtirishi":
+            #     total += item.gpa_ball
+            if item.direction.name == 'Kitobxonlik madaniyati':
+                if  item.test_result != None:
+                    total += float(item.test_result) * 0.2 
+            elif item.direction.name == 'Talabaning akademik o‘zlashtirishi':
+                try:
+                    student = item.application.student
+                    latest_gpa_record = student.gpa_records.order_by('-created_at').first()
+                    if latest_gpa_record:
+                        gpa = float(latest_gpa_record.gpa)
+                        gpa_score_map = {
+                            5.0: 10.0,
+                            4.9: 9.7,
+                            4.8: 9.3,
+                            4.7: 9.0,
+                            4.6: 8.7,
+                            4.5: 8.3,
+                            4.4: 8.0,
+                            4.3: 7.7,
+                            4.2: 7.3,
+                            4.1: 7.0,
+                            4.0: 6.7,
+                            3.9: 6.3,
+                            3.8: 6.0,
+                            3.7: 5.7,
+                            3.6: 5.3,
+                            3.5: 5.0,
+                        }
+                        total += gpa_score_map.get(round(gpa, 1), 0.0)
+                except:
+                    pass
+            else:
+                if hasattr(item, "score") and item.score:
+                    total += item.score.value
+
+
+        return round(total, 2)
 
 
 
@@ -779,3 +877,69 @@ class TestDictSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=["ishlangan", "ishlanmagan", "ishlanmoqda"])
     session_id = serializers.IntegerField(required=False, allow_null=True)
     result = serializers.DictField(allow_null=True, required=False)
+
+
+
+class LeaderBoardSerializer(serializers.Serializer):
+    full_name = serializers.CharField()
+    faculty = serializers.SerializerMethodField()
+    course = serializers.SerializerMethodField()
+    group = serializers.CharField()
+    total_score = serializers.SerializerMethodField()
+
+    def get_faculty(self, obj):
+        return obj.faculty.name if obj.faculty else None
+
+    def get_course(self, obj):
+        return obj.level.name if obj.level else None
+
+    def get_total_score(self, obj):
+        request = self.context.get("request")
+        user = request.user if request else None
+
+        total = 0.0
+        for app in obj.applications.all():
+            items = app.items.all()
+
+            if user and hasattr(user, "directions") and user.directions.exists():
+                items = items.filter(direction__in=user.directions.all())
+
+            for item in items:
+                # Test ball
+                if item.direction.name == 'Kitobxonlik madaniyati' and item.test_result is not None:
+                    total += float(item.test_result) * 0.2
+
+                # GPA ball
+                elif item.direction.name == 'Talabaning akademik o‘zlashtirishi':
+                    try:
+                        latest_gpa_record = obj.gpa_records.order_by('-created_at').first()
+                        if latest_gpa_record:
+                            gpa = float(latest_gpa_record.gpa)
+                            gpa_score_map = {
+                                5.0: 10.0,
+                                4.9: 9.7,
+                                4.8: 9.3,
+                                4.7: 9.0,
+                                4.6: 8.7,
+                                4.5: 8.3,
+                                4.4: 8.0,
+                                4.3: 7.7,
+                                4.2: 7.3,
+                                4.1: 7.0,
+                                4.0: 6.7,
+                                3.9: 6.3,
+                                3.8: 6.0,
+                                3.7: 5.7,
+                                3.6: 5.3,
+                                3.5: 5.0,
+                            }
+                            total += gpa_score_map.get(round(gpa, 1), 0.0)
+                    except:
+                        pass
+
+                # Score ball
+                else:
+                    if hasattr(item, "score") and item.score:
+                        total += item.score.value
+
+        return round(total, 2)

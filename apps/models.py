@@ -265,6 +265,7 @@ class ApplicationItem(models.Model):
     reviewer_comment = models.TextField(blank=True, null=True)
     file             = models.FileField(upload_to='application_items/', blank=True, null=True)
     gpa              = models.FloatField(blank=True, null=True)
+    gpa_score = models.FloatField(blank=True, null=True)
     test_result      = models.FloatField(blank=True, null=True)  # or IntegerField if needed
     status = models.BooleanField(default=False)
     
@@ -273,7 +274,7 @@ class ApplicationItem(models.Model):
 
 class ApplicationFile(models.Model):
     item = models.ForeignKey(ApplicationItem, on_delete=models.CASCADE, related_name='files')
-    file = models.FileField(upload_to=application_file_upload_path)  # ✅ Fayl yuklash yo‘li
+    file = models.FileField(upload_to=application_file_upload_path, max_length=255)  # ✅ Fayl yuklash yo‘li
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name='application_files')
     comment = models.TextField(blank=True, null=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
@@ -329,6 +330,7 @@ class CustomAdminUser(AbstractUser):
     levels = models.ManyToManyField(Level, blank=True, related_name='admins')
     can_score = models.BooleanField(default=True, help_text="Agar true bo‘lsa, admin baho qo‘yishi mumkin.")
     university1 = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
+    full_name = models.CharField(blank=True, null=True)
     
 
     limit_by_course = models.BooleanField(default=False)
