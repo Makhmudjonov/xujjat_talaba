@@ -1008,8 +1008,7 @@ class TestResumeView(APIView):
             )
 
         if session.is_expired():
-            session.finished_at = timezone.now()
-            session.save()
+            session.finish_and_score()
             logger.info(f"Session {session_id} expired for student {student.id}")
             return Response({"detail": "Sessiya muddati tugagan"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1052,8 +1051,7 @@ class SubmitAnswerAPIView(APIView):
             return Response({"detail": "No TestSession matches the given query."}, status=status.HTTP_404_NOT_FOUND)
 
         if session.is_expired():
-            session.finished_at = timezone.now()
-            session.save()
+            session.finish_and_score()
             logger.info(f"Session {session_id} expired during answer submission")
             return Response({"detail": "Test vaqti tugadi. Yakunlandi."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1097,6 +1095,7 @@ class SubmitAnswerAPIView(APIView):
 
 class FinishTestAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    
 
     def post(self, request, session_id):
         try:
@@ -1109,6 +1108,8 @@ class FinishTestAPIView(APIView):
         answered_ids = session.answers.values_list('question_id', flat=True)
         if len(answered_ids) < len(questions):
             logger.warning(f"Session {session_id} finished with {len(answered_ids)}/{len(questions)} answers")
+
+        session.finish_and_score()
 
         session.finished_at = timezone.now()
         correct = session.answers.filter(is_correct=True).count()

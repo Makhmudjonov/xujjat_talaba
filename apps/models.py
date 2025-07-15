@@ -446,6 +446,18 @@ class TestSession(models.Model):
         end_time = self.started_at + timezone.timedelta(minutes=self.test.time_limit)
         return timezone.now() >= end_time
     
+    def finish_and_score(self):
+        if not self.finished_at:
+            self.finished_at = timezone.now()
+
+        total = self.questions.count()
+        correct = self.answers.filter(is_correct=True).count()
+
+        self.correct_answers = correct
+        self.total_questions = total
+        self.score = round((correct / total) * 100, 2) if total else 0
+        self.save()
+    
 
     class Meta:
         unique_together = ("student", "test")  # 🚨 Bu yerda cheklov
