@@ -73,14 +73,14 @@ logger = logging.getLogger(__name__)
 
 UNIVERSITY_API_CONFIG = {
     "tma": {
-        "base_url": "https://student.tma.uz/rest/v1",
+        "base_url": "https://student.ttachf.uz/rest/v1",
     },
-    "sampi": {
-        "base_url": "https://student.tashpmi.uz/rest/v1",
-    },
-    "stom": {
-        "base_url": "https://student.tsdi.uz/rest/v1",
-    },
+    # "sampi": {
+    #     "base_url": "https://student.tashpmi.uz/rest/v1",
+    # },
+    # "stom": {
+    #     "base_url": "https://student.tsdi.uz/rest/v1",
+    # },
 }
 
 

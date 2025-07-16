@@ -460,7 +460,7 @@ class TestSession(models.Model):
     
 
     class Meta:
-        unique_together = ("student", "test")  # 🚨 Bu yerda cheklov
+        unique_together = ("student", "test")  #🚨 Bu yerda cheklov
 
 
 class Answer(models.Model):
