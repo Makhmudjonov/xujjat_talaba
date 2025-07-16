@@ -554,6 +554,8 @@ class StudentApplicationViewSet(viewsets.ViewSet):
                 test_result_val = it.get("test_result")
 
                 def get_gpa_score(gpa):
+                    if gpa is None:
+                        return 0.0  # yoki None, yoki istalgan default qiymat
                     gpa_score_map = {
                         5.0: 10.0,
                         4.9: 9.7,
