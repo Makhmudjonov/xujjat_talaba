@@ -21,3 +21,4 @@ env/
 
 # Media/uploads
 /media/
+*.json
