@@ -49,7 +49,7 @@ from .models import (
 from .serializers import (
     AdminLoginSerializer, AdminUserSerializer, AnswerSubmitSerializer, ApplicationDetailSerializer, ApplicationFullSerializer, ApplicationItemAdminSerializer, ApplicationItemSerializer, ApplicationTypeSerializer, CustomAdminUserSerializer, LeaderBoardSerializer, QuestionSerializer, QuizUploadSerializer, RandomizedQuestionSerializer, ScoreCreateSerializer, StartTestSerializer, StudentAccountSerializer, StudentLoginSerializer, LevelSerializer, DirectionWithApplicationSerializer,
     ApplicationCreateSerializer, DirectionSerializer, ApplicationSerializer,
-    ApplicationFileSerializer, ScoreSerializer, SubmitMultipleApplicationsSerializer, TestDictSerializer, TestResultSerializer, TestResumeSerializer, TestSerializer
+    ApplicationFileSerializer, ScoreSerializer, StudentToifaUpdateSerializer, SubmitMultipleApplicationsSerializer, TestDictSerializer, TestResultSerializer, TestResumeSerializer, TestSerializer
 )
 from .permissions import (
     IsStudentAndOwnerOrReadOnlyPending,
@@ -1328,3 +1328,21 @@ class LeaderboardAPIView(APIView):
 
         serializer = LeaderBoardSerializer(students, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UpdateToifaAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]  # yoki admin check
+
+    def patch(self, request, student_id):
+        try:
+            student = Student.objects.get(id=student_id)
+        except Student.DoesNotExist:
+            return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = StudentToifaUpdateSerializer(student, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+

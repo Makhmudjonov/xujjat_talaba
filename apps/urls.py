@@ -22,7 +22,8 @@ from .views import (
     SubmitAnswerAPIView,
     TestResumeView,
     TestViewSet,
-    ApplicationFileUpdateAPIView
+    ApplicationFileUpdateAPIView,
+    UpdateToifaAPIView
 )
 from rest_framework_simplejwt.views import (
     TokenRefreshView,
@@ -88,6 +89,8 @@ urlpatterns = [
     path('admin/leaderboard/', LeaderboardAPIView.as_view(), name='leaderboard'),
 
     path('student/files/<int:pk>/', ApplicationFileUpdateAPIView.as_view()),
+
+    path('students/<int:student_id>/update-toifa/', UpdateToifaAPIView.as_view(), name='update-toifa'),
 
     path('test/start/', StartTestAPIView.as_view(), name='start-test'),
     path('test/<int:session_id>/next/', GetNextQuestionAPIView.as_view(), name='next-question'),

@@ -943,3 +943,10 @@ class LeaderBoardSerializer(serializers.Serializer):
                         total += item.score.value
 
         return round(total, 2)
+
+
+
+class StudentToifaUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Student
+        fields = ['toifa']
