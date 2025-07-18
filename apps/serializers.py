@@ -293,6 +293,7 @@ class ApplicationTypeSerializer(serializers.ModelSerializer):
     can_apply = serializers.SerializerMethodField()
     reason = serializers.SerializerMethodField()
     student_gpa = serializers.SerializerMethodField()
+    student_toifa = serializers.SerializerMethodField()
     student_level = serializers.SerializerMethodField()
     allowed_levels = serializers.SlugRelatedField(
         many=True,
@@ -305,12 +306,16 @@ class ApplicationTypeSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'subtitle', 'image', 'min_gpa',
             'access_type', 'allowed_levels',
-            'can_apply', 'reason', 'student_gpa', 'student_level'
+            'can_apply', 'reason', 'student_gpa', 'student_level', "student_toifa",
         ]
 
     def get_student_gpa(self, obj):
         student = self.context.get('student')
         return float(student.gpa or 0)
+    
+    def get_student_toifa(self, obj):
+        student = self.context.get('student')
+        return bool(student.toifa)
 
     def get_student_level(self, obj):
         student = self.context.get('student')
@@ -334,6 +339,12 @@ class ApplicationTypeSerializer(serializers.ModelSerializer):
         
         if appl_type.min_gpa and gpa < appl_type.min_gpa:
             return False, f"GPA talab qilinadi: {appl_type.min_gpa} dan yuqori"
+        
+        if appl_type.maxsus:
+            if student.toifa:
+                return True, None
+            else:
+                return False, "Ijtimoiy himoya reyestrida yo'q"
 
         if appl_type.access_type == 'universal':
             return True, None
@@ -346,8 +357,10 @@ class ApplicationTypeSerializer(serializers.ModelSerializer):
                 return False, "Faqat nogiron talabalar uchun"
 
         elif appl_type.access_type == 'special_list':
-            if not appl_type.special_students.filter(student=student).exists():
-                return False, "Faqat maxsus ro‘yxatdagi talabalar uchun"
+            if student.toifa:
+                return False, "Siz ijtimoiy himoya reestrida turganingiz uchun bu yo'nalishda ariza yubora olmaysiz"
+            else:
+                return True, None
 
         return True, None
 

@@ -474,12 +474,17 @@ class DirectionViewSet(viewsets.ReadOnlyModelViewSet):
         student = getattr(user, 'student', None)
         app_type_id = self.request.query_params.get("application_type_id")
 
-        if student and app_type_id:
-            applied_dirs = ApplicationItem.objects.filter(
-                application__student=student,
-                application__application_type_id=app_type_id
-            ).values_list('direction_id', flat=True)
-            qs = qs.exclude(id__in=applied_dirs)
+        if student:
+        # Agar student toifa bo‘lmasa, type='toifa' bo‘lganlarni chiqarib tashlaymiz
+            if not student.toifa:
+                qs = qs.exclude(type='toifa')
+
+            if app_type_id:
+                applied_dirs = ApplicationItem.objects.filter(
+                    application__student=student,
+                    application__application_type_id=app_type_id
+                ).values_list('direction_id', flat=True)
+                qs = qs.exclude(id__in=applied_dirs)
 
         return qs.order_by("id")
 
@@ -520,9 +525,24 @@ class StudentApplicationViewSet(viewsets.ViewSet):
 
         if not isinstance(items, list) or not items:
             return Response({"detail": "Kamida bitta yo‘nalish bo‘lishi kerak."}, status=status.HTTP_400_BAD_REQUEST)
-
+        
+        
         for idx, it in enumerate(items):
+            fayl = it.get("files")
+
+
+            
             dir_id = it.get("direction")
+
+            direc = Direction.objects.get(id=dir_id)
+
+            if direc.type == 'toifa':
+                if not fayl:
+                    return Response(
+                        {"detail": f"Ijtimoiy himoya reestrda turgan talabalar tasdiqlovchi hujjat yuklash shart"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
             if not dir_id:
                 return Response(
                     {"detail": f"{idx+1}-yo‘nalishda direction yo‘q."},
@@ -1338,8 +1358,10 @@ class UpdateToifaAPIView(APIView):
             student = Student.objects.get(user=request.user)
         except Student.DoesNotExist:
             return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        new_toifa_value = not student.toifa
         
-        serializer = StudentToifaUpdateSerializer(student,toifa=True)
+        serializer = StudentToifaUpdateSerializer(student, data={'toifa': new_toifa_value})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

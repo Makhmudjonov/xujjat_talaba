@@ -141,6 +141,7 @@ class Direction(models.Model):
         ("file", "File"),
         ("test", "Test"),
         ("gpa", "GPA"),
+        ("toifa", "Reestr"),
     ]
 
     section = models.ForeignKey("Section", on_delete=models.CASCADE, related_name="directions")
@@ -178,6 +179,7 @@ class ApplicationType(models.Model):
         ('universal', 'Hamma talabalar uchun'),
         ('min_gpa', 'GPA talab'),
         ('special_list', 'Faqat maxsus ro‘yxatdagi talabalar'),
+        ('maxsus', 'Ijtimoiy ximoya reestridagi talabalar'),
     ]
 
     key = models.CharField(max_length=100, unique=True)
@@ -188,6 +190,10 @@ class ApplicationType(models.Model):
     min_gpa = models.FloatField(blank=True, null=True)
     allowed_levels = models.ManyToManyField(Level, blank=True)
     access_type = models.CharField(max_length=20, choices=ACCESS_CHOICES, default='universal')
+
+    @property
+    def maxsus(self):
+        return self.access_type in ['maxsus']
 
     def __str__(self):
         return self.name
