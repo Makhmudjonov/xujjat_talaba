@@ -1331,11 +1331,11 @@ class LeaderboardAPIView(APIView):
 
 
 class UpdateToifaAPIView(APIView):
-    permission_classes = [permissions.IsAuthenticated]  # yoki admin check
+    permission_classes = [permissions.IsAuthenticated]  # kerak bo‘lsa, admin permission qo‘shing
 
-    def patch(self, request, student_id):
+    def patch(self, request):
         try:
-            student = Student.objects.get(id=student_id)
+            student = Student.objects.get(user=request.user)
         except Student.DoesNotExist:
             return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
         
