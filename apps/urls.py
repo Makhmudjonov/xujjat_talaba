@@ -90,7 +90,7 @@ urlpatterns = [
 
     path('student/files/<int:pk>/', ApplicationFileUpdateAPIView.as_view()),
 
-    path('students/<int:student_id>/update-toifa/', UpdateToifaAPIView.as_view(), name='update-toifa'),
+    path('students/update-toifa/', UpdateToifaAPIView.as_view(), name='update-toifa'),
 
     path('test/start/', StartTestAPIView.as_view(), name='start-test'),
     path('test/<int:session_id>/next/', GetNextQuestionAPIView.as_view(), name='next-question'),

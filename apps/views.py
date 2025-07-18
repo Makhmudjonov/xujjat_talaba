@@ -1339,7 +1339,7 @@ class UpdateToifaAPIView(APIView):
         except Student.DoesNotExist:
             return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        serializer = StudentToifaUpdateSerializer(student, data=request.data, partial=True)
+        serializer = StudentToifaUpdateSerializer(student,toifa=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
