@@ -191,6 +191,19 @@ class ApplicationType(models.Model):
     allowed_levels = models.ManyToManyField(Level, blank=True)
     access_type = models.CharField(max_length=20, choices=ACCESS_CHOICES, default='universal')
 
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+
+    def is_active(self):
+        now = timezone.now()
+        if not self.start_time and not self.end_time:
+            return True
+        if self.start_time and not self.end_time:
+            return self.start_time <= now
+        if not self.start_time and self.end_time:
+            return now <= self.end_time
+        return self.start_time <= now <= self.end_time
+
     @property
     def maxsus(self):
         return self.access_type in ['maxsus']

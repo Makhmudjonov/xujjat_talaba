@@ -367,6 +367,15 @@ class ApplicationItemViewSet(viewsets.ModelViewSet):
         if not application_type_id:
             logger.error("No application_type_id provided.")
             raise ValidationError("application_type_id talab qilinadi.")
+        
+        try:
+            # from .models import ApplicationType  # Import kerak bo'lishi mumkin
+            app_type = ApplicationType.objects.get(id=application_type_id)
+            if not app_type.is_active():
+                raise ValidationError("Ariza topshirish muddati tugagan.")
+        except ApplicationType.DoesNotExist:
+            raise ValidationError("Ariza turi topilmadi.")
+        
 
         try:
             application, created = Application.objects.get_or_create(
@@ -395,6 +404,10 @@ class ApplicationItemViewSet(viewsets.ModelViewSet):
         except ApplicationItem.DoesNotExist:
             logger.error(f"ApplicationItem {pk} not found or not associated with student.")
             return Response({"detail": "Ariza topilmadi yoki sizga tegishli emas."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # 🔒 Ariza topshirish muddati tekshiruvi
+        if not app_item.application.application_type.is_active():
+            return Response({"error": "Ariza topshirish muddati tugagan"}, status=status.HTTP_403_FORBIDDEN)
 
         try:
             student_comment = request.data.get("student_comment", "")
@@ -435,6 +448,10 @@ class ApplicationItemViewSet(viewsets.ModelViewSet):
         except ApplicationItem.DoesNotExist:
             logger.error(f"ApplicationItem with ID {pk} not found or not associated with student.")
             return Response({"detail": "Ariza topilmadi yoki sizga tegishli emas."}, status=status.HTTP_404_NOT_FOUND)
+        
+        if not app_item.application.application_type.is_active():
+            return Response({"detail": "Fayl yuklash muddati tugagan."}, status=status.HTTP_403_FORBIDDEN)
+
 
         upload = request.FILES.get("file")
         if not upload:
@@ -517,6 +534,19 @@ class StudentApplicationViewSet(viewsets.ViewSet):
             app_type = get_object_or_404(ApplicationType, id=app_type_id)
         except (TypeError, ValueError):
             return Response({"detail": "Invalid application_type."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # ⏱️ Vaqtni tekshirish:
+        now = timezone.now()
+        if app_type.start_time and now < app_type.start_time:
+            return Response(
+                {"detail": "Ariza topshirish hali boshlanmagan."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if app_type.end_time and now > app_type.end_time:
+            return Response(
+                {"detail": "Ariza topshirish muddati tugagan."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             items = json.loads(data.get("items", "[]"))
@@ -645,6 +675,12 @@ class StudentApplicationViewSet(viewsets.ViewSet):
             )
         except ApplicationItem.DoesNotExist:
             return Response({"detail": "Ariza topilmadi yoki sizga tegishli emas."}, status=status.HTTP_404_NOT_FOUND)
+        
+
+        # update_item metodida app_item dan application_type ni oling
+         # 🔒 Ariza topshirish muddati tekshiruvi
+        if not app_item.application.application_type.is_active():
+            return Response({"error": "Ariza topshirish muddati tugagan"}, status=status.HTTP_403_FORBIDDEN)
 
         student_comment = request.data.get("student_comment", "")
         app_item.student_comment = student_comment
@@ -679,6 +715,10 @@ class StudentApplicationViewSet(viewsets.ViewSet):
             )
         except ApplicationItem.DoesNotExist:
             return Response({"detail": "Ariza topilmadi yoki sizga tegishli emas."}, status=status.HTTP_404_NOT_FOUND)
+        
+         # 🔒 Ariza topshirish muddati tekshiruvi
+        if not app_item.application.application_type.is_active():
+            return Response({"error": "Ariza topshirish muddati tugagan"}, status=status.HTTP_403_FORBIDDEN)
 
         upload = request.FILES.get("file")
         if not upload:
@@ -1285,14 +1325,21 @@ class ApplicationFileUpdateAPIView(generics.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
-        obj = ApplicationFile.objects.select_related('item__application__student__user').filter(
+        obj = ApplicationFile.objects.select_related('item__application__student__user', 'item__application__application_type').filter(
             pk=self.kwargs['pk']
         ).first()
+        
         if not obj:
             raise NotFound("Bunday fayl topilmadi.")
+        
         if obj.item.application.student.user != self.request.user:
             raise PermissionDenied("Siz bu faylga o‘zgartirish kiritish huquqiga ega emassiz.")
+        
+        if not obj.item.application.application_type.is_active():
+            raise PermissionDenied("Faylni o‘zgartirish muddati tugagan.")
+        
         return obj
+
     
 
 class GetNextQuestionAPIView(APIView):
