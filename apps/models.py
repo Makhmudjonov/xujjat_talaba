@@ -191,8 +191,8 @@ class ApplicationType(models.Model):
     allowed_levels = models.ManyToManyField(Level, blank=True)
     access_type = models.CharField(max_length=20, choices=ACCESS_CHOICES, default='universal')
 
-    start_time = models.DateTimeField(null=True, blank=True)
-    end_time = models.DateTimeField(null=True, blank=True)
+    # start_time = models.DateTimeField(null=True, blank=True)
+    # end_time = models.DateTimeField(null=True, blank=True)
 
     def is_active(self):
         now = timezone.now()
