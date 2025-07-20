@@ -157,12 +157,13 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
     direction = serializers.PrimaryKeyRelatedField(queryset=Direction.objects.all(), required=False)
     application = serializers.PrimaryKeyRelatedField(read_only=True)
     reviewer_comment = serializers.CharField(allow_null=True, required=False, read_only=True)
+    score = ScoreSerializer(read_only=True)
 
     class Meta:
         model = ApplicationItem
         fields = [
             "id", "application", "direction", "title", "student_comment",
-            "reviewer_comment", "gpa", "test_result", "files"
+            "reviewer_comment", "gpa", "test_result", "files", "status", "score"
         ]
         read_only_fields = ["id", "application", "files", "reviewer_comment"]
 
