@@ -1,7 +1,5 @@
-from rest_framework import viewsets, permissions
+from rest_framework import mixins, viewsets, permissions
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-
 from apps.models import Student
 from apps.serializers import StudentsGpaSerializer
 
@@ -9,7 +7,7 @@ class IsAdminUser(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.is_staff
 
-class AdminStudentListViewSet(viewsets.ReadOnlyModelViewSet):
+class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Student.objects.all().prefetch_related('gpa_records')
     serializer_class = StudentsGpaSerializer
     permission_classes = [IsAdminUser]
