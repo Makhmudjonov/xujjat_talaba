@@ -338,6 +338,7 @@ class FacultySerializer(serializers.ModelSerializer):
 class StudentsGpaSerializer(serializers.ModelSerializer):
     gpa_records = GPARecordSerializer(many=True, read_only=True)
     faculty = FacultySerializer(read_only=True)
+    level = LevelSerializer(read_only=True)
 
 
     class Meta:
