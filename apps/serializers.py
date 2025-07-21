@@ -190,10 +190,14 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
     def get_result_test(self, obj):
         request = self.context.get("request")
         student = getattr(request.user, "student", None)
-        if not student:
+        if not student or not obj.direction or not obj.direction.test:
             return None
 
-        session = obj.testsession_set.filter(student=student).first()
+        session = TestSession.objects.filter(
+            student=student,
+            test=obj.direction.test
+        ).first()
+
         if session and session.score is not None:
             return {
                 "score": session.score,
