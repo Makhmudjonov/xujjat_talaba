@@ -182,7 +182,7 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
         model = ApplicationItem
         fields = [
             "id", "application", "direction", "title", "student_comment",
-            "reviewer_comment", "gpa", "test_result", "files", "status", "score", "test_session"
+            "reviewer_comment", "gpa", "test_result", "files", "status", "score", "result_test"
         ]
         read_only_fields = ["id", "application", "files", "reviewer_comment"]
 
