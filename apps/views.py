@@ -813,7 +813,6 @@ class ApplicationListAPIView(ListAPIView):
             "items__score",
             "student__faculty",
             "student__level",
-            "student__full_name",
         ).select_related("application_type", "student")
 
         if user.university1:
