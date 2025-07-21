@@ -176,7 +176,7 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
     application = serializers.PrimaryKeyRelatedField(read_only=True)
     reviewer_comment = serializers.CharField(allow_null=True, required=False, read_only=True)
     score = ScoreSerializer(read_only=True)
-    result_test = TestResultSerializer(read_only=True)
+    result_test = serializers.SerializerMethodField()
 
     class Meta:
         model = ApplicationItem
