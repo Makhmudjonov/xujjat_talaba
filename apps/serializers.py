@@ -201,7 +201,7 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
 
         if session and session.score is not None:
             return {
-                "score": session.score,
+                "score": session.correct_answers * 20 / 25,
                 "correct": session.correct_answers,
                 "total": session.total_questions
             }
