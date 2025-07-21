@@ -345,7 +345,7 @@ class StudentsGpaSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'student_id_number', 'full_name',
             'phone', 'image', 'gender', 
-            'university', 'university1', 'faculty',
+            'university', 'university1', 'faculty.name',
             'group', 'level', 'toifa', 'gpa_records'
         ]
 
