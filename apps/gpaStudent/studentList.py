@@ -2,6 +2,7 @@ from rest_framework import mixins, viewsets, permissions
 from drf_yasg.utils import swagger_auto_schema
 from apps.models import Student
 from apps.serializers import StudentsGpaSerializer
+from komissiya.views import StandardResultsSetPagination
 
 class IsAdminUser(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -11,6 +12,7 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Student.objects.all().prefetch_related('gpa_records')
     serializer_class = StudentsGpaSerializer
     permission_classes = [IsAdminUser]
+    pagination_class = StandardResultsSetPagination
 
     @swagger_auto_schema(
         operation_summary="Adminlar uchun barcha studentlar va ularning GPA baholari",
