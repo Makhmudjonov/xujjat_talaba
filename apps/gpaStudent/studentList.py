@@ -11,6 +11,7 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     queryset = Student.objects.all().prefetch_related('gpa_records')
     serializer_class = StudentsGpaSerializer
     permission_classes = [IsAdminUser]
+    pagination_class = 20
 
     @swagger_auto_schema(
         operation_summary="Adminlar uchun barcha studentlar va ularning GPA baholari",
