@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from komissiya.serializers import StudentSerializer
 from .models import (
-    ApplicationItem, ApplicationType, Level, Question, Section, Direction, Application, ApplicationFile,
+    ApplicationItem, ApplicationType, Faculty, Level, Question, Section, Direction, Application, ApplicationFile,
     Score, CustomAdminUser, Student, GPARecord, Test, TestSession, Option
 )
 
@@ -330,15 +330,22 @@ class GPARecordSerializer(serializers.ModelSerializer):
             "subjects", "debt_subjects", "can_transfer", "method", "created_at"
         ]
 
+class FacultySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Faculty
+        fields = "__all__"
+
 class StudentsGpaSerializer(serializers.ModelSerializer):
     gpa_records = GPARecordSerializer(many=True, read_only=True)
+    fakultet = FacultySerializer(read_only=True)
+
 
     class Meta:
         model = Student
         fields = [
             'id', 'student_id_number', 'full_name',
             'phone', 'image', 'gender', 
-            'university', 'university1', 'faculty',
+            'university', 'university1', 'fakultet.name',
             'group', 'level', 'toifa', 'gpa_records'
         ]
 
