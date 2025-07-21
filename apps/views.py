@@ -834,7 +834,7 @@ class ApplicationListAPIView(ListAPIView):
 
         student = self.request.query_params.get("student")
         if student:
-            qs = qs.filter(student__full_name__in=student)
+            qs = qs.filter(student__full_name__icontains=student)
 
         return qs.distinct()
     
