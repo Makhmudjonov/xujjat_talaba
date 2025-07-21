@@ -337,7 +337,7 @@ class FacultySerializer(serializers.ModelSerializer):
 
 class StudentsGpaSerializer(serializers.ModelSerializer):
     gpa_records = GPARecordSerializer(many=True, read_only=True)
-    fakultet = FacultySerializer(read_only=True)
+    faculty = FacultySerializer(read_only=True)
 
 
     class Meta:
@@ -345,7 +345,7 @@ class StudentsGpaSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'student_id_number', 'full_name',
             'phone', 'image', 'gender', 
-            'university', 'university1', 'fakultet.name',
+            'university', 'university1', 'faculty',
             'group', 'level', 'toifa', 'gpa_records'
         ]
 
