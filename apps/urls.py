@@ -1,4 +1,5 @@
 from django.urls import path, include
+from apps.application.applicationExcel import ApplicationExportExcelAPIView
 from apps.filter.view import ApplicationTypeStatsAPIView, FacultyStudentStatsAPIView, GPAStatsAPIView, PublicStatsAPIView, StudentGenderStatsAPIView, UniversityStudentStatsAPIView
 from rest_framework.routers import DefaultRouter
 
@@ -57,10 +58,14 @@ router.register(r'admin/students-gpa', AdminStudentListViewSet, basename='studen
 
 
 
+
+
 # Barcha URL patternlari
 urlpatterns = [
     # Talaba login qilish uchun API endpointi
     path('students/login/', StudentLoginAPIView.as_view(), name='student-login'),
+
+    path("admin/applications/export/", ApplicationExportExcelAPIView.as_view(), name="application-export-excel"),
 
     path('stats/', PublicStatsAPIView.as_view(), name='public-stats'),
     path('stats/faculty-students/', FacultyStudentStatsAPIView.as_view(), name='faculty-students-stats'),
