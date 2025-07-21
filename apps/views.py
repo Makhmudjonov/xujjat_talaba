@@ -813,6 +813,7 @@ class ApplicationListAPIView(ListAPIView):
             "items__score",
             "student__faculty",
             "student__level",
+            "student__full_name",
         ).select_related("application_type", "student")
 
         if user.university1:
@@ -832,12 +833,17 @@ class ApplicationListAPIView(ListAPIView):
         if status:
             qs = qs.filter(status=status)
 
+        full_name = self.request.query_params.get("full_name")
+        if full_name:
+            qs = qs.filter(full_name=full_name)
+
         return qs.distinct()
     
     @swagger_auto_schema(
     operation_summary="Adminlar uchun applicationlar ro‘yxati",
     manual_parameters=[
         openapi.Parameter("status", openapi.IN_QUERY, description="Filter by status (pending, accepted, rejected)", type=openapi.TYPE_STRING),
+        openapi.Parameter("full_name", openapi.IN_QUERY, description="Name bo'yicha qidiruv", type=openapi.TYPE_STRING),
         ]
     )
     def get(self, request, *args, **kwargs):
