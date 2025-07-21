@@ -164,13 +164,19 @@ class TestResultSerializer(serializers.ModelSerializer):
             'total_questions',
         ]
 
+class TestSessionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TestSession
+        fields = ['id', 'score', 'correct_answers', 'total_questions', 'started_at', 'finished_at']
+
+
 class ApplicationItemSerializer(serializers.ModelSerializer):
     files = ApplicationFileSerializer(many=True, read_only=True)
     direction = serializers.PrimaryKeyRelatedField(queryset=Direction.objects.all(), required=False)
     application = serializers.PrimaryKeyRelatedField(read_only=True)
     reviewer_comment = serializers.CharField(allow_null=True, required=False, read_only=True)
     score = ScoreSerializer(read_only=True)
-    test_session = TestResultSerializer(read_only=True)
+    result_test = TestResultSerializer(read_only=True)
 
     class Meta:
         model = ApplicationItem
@@ -181,9 +187,19 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "application", "files", "reviewer_comment"]
 
     
-    def get_test_resulta(self, obj):
-        if obj.test_session:
-            return obj.test_session.score
+    def get_result_test(self, obj):
+        request = self.context.get("request")
+        student = getattr(request.user, "student", None)
+        if not student:
+            return None
+
+        session = obj.testsession_set.filter(student=student).first()
+        if session and session.score is not None:
+            return {
+                "score": session.score,
+                "correct": session.correct_answers,
+                "total": session.total_questions
+            }
         return None
 
     def create(self, validated_data):
