@@ -330,6 +330,19 @@ class GPARecordSerializer(serializers.ModelSerializer):
             "subjects", "debt_subjects", "can_transfer", "method", "created_at"
         ]
 
+class StudentsGpaSerializer(serializers.ModelSerializer):
+    gpa_records = GPARecordSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Student
+        fields = [
+            'id', 'student_id_number', 'full_name', 'short_name',
+            'email', 'phone', 'image', 'gender', 'birth_date',
+            'address', 'university', 'university1', 'faculty',
+            'group', 'level', 'toifa', 'gpa_records'
+        ]
+
+
 class StudentAccountSerializer(serializers.ModelSerializer):
     gpa_records = GPARecordSerializer(many=True, read_only=True)
     faculty_name = serializers.CharField(source='faculty.name', read_only=True)

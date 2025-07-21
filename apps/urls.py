@@ -1,6 +1,8 @@
 from django.urls import path, include
 from apps.filter.view import ApplicationTypeStatsAPIView, FacultyStudentStatsAPIView, GPAStatsAPIView, PublicStatsAPIView, StudentGenderStatsAPIView, UniversityStudentStatsAPIView
 from rest_framework.routers import DefaultRouter
+
+from apps.gpaStudent.studentList import AdminStudentListViewSet
 from .views import (
     AdminAccountAPIView,
     AdminLoginAPIView,
@@ -51,6 +53,7 @@ router.register(r'student/application-items', ApplicationItemViewSet, basename='
 router.register(r"directions", DirectionViewSet, basename="direction")
 router.register("student/applications", StudentApplicationViewSet, basename="student-applications")
 router.register(r'tests', TestViewSet, basename='test')
+router.register(r'admin/students-gpa', AdminStudentListViewSet, basename='student')
 
 
 
