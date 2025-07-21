@@ -333,7 +333,7 @@ class GPARecordSerializer(serializers.ModelSerializer):
 class FacultySerializer(serializers.ModelSerializer):
     class Meta:
         model = Faculty
-        fields = "name"
+        fields = ["name"]
 
 class StudentsGpaSerializer(serializers.ModelSerializer):
     gpa_records = GPARecordSerializer(many=True, read_only=True)
