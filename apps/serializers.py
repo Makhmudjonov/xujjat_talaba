@@ -158,6 +158,7 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
     application = serializers.PrimaryKeyRelatedField(read_only=True)
     reviewer_comment = serializers.CharField(allow_null=True, required=False, read_only=True)
     score = ScoreSerializer(read_only=True)
+    test_result = serializers.FloatField(required=False, allow_null=True)
 
     class Meta:
         model = ApplicationItem
@@ -166,6 +167,12 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
             "reviewer_comment", "gpa", "test_result", "files", "status", "score"
         ]
         read_only_fields = ["id", "application", "files", "reviewer_comment"]
+
+    
+    def get_test_result(self, obj):
+        if obj.test_session:
+            return obj.test_session.score
+        return None
 
     def create(self, validated_data):
         gpa = validated_data.pop("gpa", None)
