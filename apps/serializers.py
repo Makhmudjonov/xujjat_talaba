@@ -177,12 +177,13 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
     reviewer_comment = serializers.CharField(allow_null=True, required=False, read_only=True)
     score = ScoreSerializer(read_only=True)
     result_test = serializers.SerializerMethodField()
+    result_gpa = serializers.SerializerMethodField()
 
     class Meta:
         model = ApplicationItem
         fields = [
             "id", "application", "direction", "title", "student_comment",
-            "reviewer_comment", "gpa", "test_result", "files", "status", "score", "result_test"
+            "reviewer_comment", "gpa", "test_result", "files", "status", "score", "result_test", "result_gpa"
         ]
         read_only_fields = ["id", "application", "files", "reviewer_comment"]
 
@@ -205,6 +206,20 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
                 "total": session.total_questions
             }
         return None
+    
+    def get_result_gpa(self, obj):
+        request = self.context.get("request")
+        student = getattr(request.user, "student", None)
+        if not student:
+            return None
+
+        # Agar student modelda 'gpa' maydoni bo‘lsa:
+        return {
+            "gpa": student.gpa,
+            "score": obj.gpa_score
+        } if hasattr(student, "gpa") else None
+    
+
 
     def create(self, validated_data):
         gpa = validated_data.pop("gpa", None)
