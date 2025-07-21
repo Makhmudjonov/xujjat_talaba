@@ -152,19 +152,31 @@ class DirectionSerializer(serializers.ModelSerializer):
             return session.score if session else None
         return None
 
+class TestResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TestSession
+        fields = [
+            'id',
+            'started_at',
+            'finished_at',
+            'score',
+            'correct_answers',
+            'total_questions',
+        ]
+
 class ApplicationItemSerializer(serializers.ModelSerializer):
     files = ApplicationFileSerializer(many=True, read_only=True)
     direction = serializers.PrimaryKeyRelatedField(queryset=Direction.objects.all(), required=False)
     application = serializers.PrimaryKeyRelatedField(read_only=True)
     reviewer_comment = serializers.CharField(allow_null=True, required=False, read_only=True)
     score = ScoreSerializer(read_only=True)
-    test_resulta = serializers.SerializerMethodField()
+    test_session = TestResultSerializer(read_only=True)
 
     class Meta:
         model = ApplicationItem
         fields = [
             "id", "application", "direction", "title", "student_comment",
-            "reviewer_comment", "gpa", "test_result", "files", "status", "score", "test_resulta"
+            "reviewer_comment", "gpa", "test_result", "files", "status", "score", "test_session"
         ]
         read_only_fields = ["id", "application", "files", "reviewer_comment"]
 
@@ -755,17 +767,7 @@ class AnswerSubmitSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
     selected_option_id = serializers.IntegerField()
 
-class TestResultSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TestSession
-        fields = [
-            'id',
-            'started_at',
-            'finished_at',
-            'score',
-            'correct_answers',
-            'total_questions',
-        ]
+
 
 
 class QuizUploadSerializer(serializers.Serializer):
