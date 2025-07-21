@@ -842,7 +842,7 @@ class ApplicationListAPIView(ListAPIView):
     operation_summary="Adminlar uchun applicationlar ro‘yxati",
     manual_parameters=[
         openapi.Parameter("status", openapi.IN_QUERY, description="Filter by status (pending, accepted, rejected)", type=openapi.TYPE_STRING),
-        openapi.Parameter("full_name", openapi.IN_QUERY, description="Name bo'yicha qidiruv", type=openapi.TYPE_STRING),
+        openapi.Parameter("student", openapi.IN_QUERY, description="Name bo'yicha qidiruv", type=openapi.TYPE_STRING),
         ]
     )
     def get(self, request, *args, **kwargs):
