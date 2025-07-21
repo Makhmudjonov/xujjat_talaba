@@ -216,7 +216,7 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
         # Agar student modelda 'gpa' maydoni bo‘lsa:
         return {
             "gpa": student.gpa,
-            "score": (float(student.gpa) * 16)
+            "score": (float(student.gpa) * 2)
         } if hasattr(student, "gpa") else None
     
 
