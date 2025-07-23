@@ -73,7 +73,7 @@ class ExportStudentPDF(APIView):
             elements.append(Paragraph(f"<b>{idx}. {item.title}</b>", styles["Normal"]))
 
             # Umumiy qiymatlar
-            score_value = item.score.score if hasattr(item, 'score') and item.score else "Mavjud emas"
+            score_value = item.score.value if hasattr(item, 'score') and item.score else "Mavjud emas"
             reviewer_comment = item.reviewer_comment or "Mavjud emas"
             student_comment = item.student_comment or "Mavjud emas"
 
