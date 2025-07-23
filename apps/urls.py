@@ -4,6 +4,7 @@ from apps.filter.view import ApplicationTypeStatsAPIView, FacultyStudentStatsAPI
 from rest_framework.routers import DefaultRouter
 
 from apps.gpaStudent.studentList import AdminStudentListViewSet
+from apps.natija.pdf import ExportStudentPDF
 from .views import (
     AdminAccountAPIView,
     AdminLoginAPIView,
@@ -64,6 +65,7 @@ router.register(r'admin/students-gpa', AdminStudentListViewSet, basename='studen
 urlpatterns = [
     # Talaba login qilish uchun API endpointi
     path('students/login/', StudentLoginAPIView.as_view(), name='student-login'),
+    path('student/profile/pdf/', ExportStudentPDF.as_view(), name='export-student-pdf'),
 
     path("admin/applications/export/", ApplicationExportExcelAPIView.as_view(), name="application-export-excel"),
 
