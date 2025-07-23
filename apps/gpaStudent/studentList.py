@@ -8,6 +8,7 @@ from django.http import HttpResponse
 import openpyxl
 from django.db.models import Subquery, OuterRef, FloatField
 
+from apps.filter.filters import StudentFilter
 from apps.models import Student, GPARecord
 from apps.serializers import StudentsGpaSerializer
 from komissiya.views import StandardResultsSetPagination
@@ -22,6 +23,7 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['faculty', 'level', 'university']
+    filterset_class = StudentFilter
 
     def get_queryset(self):
         latest_gpa_subquery = GPARecord.objects.filter(
