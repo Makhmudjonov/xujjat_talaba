@@ -21,7 +21,7 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = [IsAdminUser]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['faculty', 'level', 'university1']
+    filterset_fields = ['faculty', 'level', 'university']
 
     def get_queryset(self):
         latest_gpa_subquery = GPARecord.objects.filter(
@@ -29,7 +29,7 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         ).order_by('-education_year', '-id').values('gpa')[:1]
 
         return Student.objects.all().prefetch_related(
-            'gpa_records', 'faculty', 'level', 'university1'
+            'gpa_records', 'faculty', 'level', 'university'
         ).annotate(
             latest_gpa=Subquery(latest_gpa_subquery, output_field=FloatField())
         ).order_by('-latest_gpa')  # yuqoridan quyiga GPA bo‘yicha saralash
@@ -38,9 +38,9 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         operation_summary="Filterlangan studentlarni Excel (.xlsx) formatda yuklab olish",
         tags=["Admin - Studentlar"],
         manual_parameters=[
-            openapi.Parameter("university1", openapi.IN_QUERY, description="Universitet ID", type=openapi.TYPE_INTEGER),
-            openapi.Parameter("level", openapi.IN_QUERY, description="Bosqich ID", type=openapi.TYPE_INTEGER),
-            openapi.Parameter("faculty", openapi.IN_QUERY, description="Fakultet ID", type=openapi.TYPE_INTEGER),
+            openapi.Parameter("university", openapi.IN_QUERY, description="Universitet", type=openapi.TYPE_STRING),
+            openapi.Parameter("level", openapi.IN_QUERY, description="Bosqich", type=openapi.TYPE_STRING),
+            openapi.Parameter("faculty", openapi.IN_QUERY, description="Fakultet", type=openapi.TYPE_STRING),
         ]
     )
     def list(self, request, *args, **kwargs):
