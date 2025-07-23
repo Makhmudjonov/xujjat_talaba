@@ -41,6 +41,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from apps.pagenation import CustomPagination
+from komissiya.views import StandardResultsIndexSetPagination
 
 from .models import (
     Answer, ApplicationItem, ApplicationType, Faculty, Level, OdobAxloqStudent, Question, Student, ContractInfo, GPARecord,
@@ -1388,6 +1389,7 @@ class GetNextQuestionAPIView(APIView):
     
 class LeaderboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = StandardResultsIndexSetPagination
 
     def get(self, request):
         students = Student.objects.prefetch_related(

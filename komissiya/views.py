@@ -86,9 +86,14 @@ class KomissiyaLoginAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 10
+    page_size = 100
     page_size_query_param = 'page_size'
-    max_page_size = 50
+    max_page_size = 500
+
+class StandardResultsIndexSetPagination(PageNumberPagination):
+    page_size = 100
+    page_size_query_param = 'page_size'
+    max_page_size = 500
 
 class KomissiyaApplicationView(ListAPIView):
     serializer_class = ApplicationSerializer
