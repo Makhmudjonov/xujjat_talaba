@@ -4,7 +4,7 @@ from apps.models import Application, ApplicationItem, ApplicationType, Student, 
 
 class StudentFilter(django_filters.FilterSet):
     gender = django_filters.CharFilter(field_name="gender", lookup_expr='iexact')
-    university = django_filters.CharFilter(field_name="university", lookup_expr='icontains')
+    university = django_filters.CharFilter(field_name="university__name", lookup_expr='icontains')  # agar FK bo‘lsa
     faculty = django_filters.NumberFilter(field_name="faculty__id")
     level = django_filters.NumberFilter(field_name="level__id")
 
