@@ -74,23 +74,26 @@ class ExportStudentPDF(APIView):
 
             # Umumiy qiymatlar
             score_value = item.score.value if hasattr(item, 'score') and item.score else "Mavjud emas"
+            result_gpa = item.result_gpa.score if hasattr(item, 'result_gpa') else "Mavjud emas"
             reviewer_comment = item.reviewer_comment or "Mavjud emas"
             student_comment = item.student_comment or "Mavjud emas"
 
             if direction_name == "Kitobxonlik madaniyati":
-                test_result = item.test_result if item.test_result is not None else "Mavjud emas"
-                test_score = round(item.test_result * 20 / 100, 2) if item.test_result else "Mavjud emas"
+                test_result = item.result_test.score if item.result_test is not None else "Mavjud emas"
+                test_score = round(item.result_test.score * 20 / 100, 2) if item.result_test else "Mavjud emas"
                 item_data = [
                     ["Yo‘nalish", direction_name],
                     ["Test natija", test_result],
                     ["Test ball", test_score],
+                    ["Jami savol", item.result_test.total if item.result_test else "Mavjud emas"],
+                    ["To'gri javob", item.result_test.correct if item.result_test else "Mavjud emas"],
                     ["Baholovchi izohi", reviewer_comment],
                 ]
             elif direction_name == "Talabaning akademik o‘zlashtirishi":
                 item_data = [
                     ["Yo‘nalish", direction_name],
-                    ["GPA", item.gpa if item.gpa else "Mavjud emas"],
-                    ["Ball", score_value],
+                    ["GPA", result_gpa if result_gpa else "Mavjud emas"],
+                    ["Ball", item.result_gpa.score if item.result_gpa else "Mavjud emas"],
                     ["Talaba izohi", student_comment],
                     ["Baholovchi izohi", reviewer_comment],
                 ]
