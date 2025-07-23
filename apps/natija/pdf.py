@@ -5,32 +5,45 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
 from io import BytesIO
-from apps.models import ApplicationItem, Student
-from django.shortcuts import get_object_or_404
-import base64
 import requests
+from PIL import Image as PILImage
+from django.shortcuts import get_object_or_404
+from apps.models import Student, ApplicationItem
 
 class ExportStudentPDF(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         student = get_object_or_404(Student, user=request.user)
-
-        # Application items
         app_items = ApplicationItem.objects.filter(application__student=student).prefetch_related('files', 'direction', 'score')
 
-        # PDF initialization
         buffer = BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4)
         elements = []
         styles = getSampleStyleSheet()
 
-        # 1. Student info
-        elements.append(Paragraph("📌 <b>Student Ma’lumotlari</b>", styles["Heading2"]))
-        student_data = [
-            ["F.I.Sh.", student.full_name],
+        # Student image
+        image_data = None
+        if student.image:
+            try:
+                response = requests.get(student.image.url)
+                if response.status_code == 200:
+                    img_temp = BytesIO(response.content)
+                    pil_img = PILImage.open(img_temp)
+                    pil_img.thumbnail((120, 120))
+                    img_io = BytesIO()
+                    pil_img.save(img_io, format="PNG")
+                    img_io.seek(0)
+                    image_data = Image(img_io, width=1.5 * inch, height=1.5 * inch)
+            except:
+                pass
+
+        # Student Info
+        student_info = [
             ["Shaxsiy ID", student.student_id_number],
+            ["F.I.Sh.", student.full_name],
             ["Telefon", student.phone or ""],
             ["Jinsi", student.gender],
             ["Universitet", student.university],
@@ -38,53 +51,42 @@ class ExportStudentPDF(APIView):
             ["Guruh", student.group],
             ["Bosqich", student.level.name if student.level else ""],
         ]
-        student_table = Table(student_data, colWidths=[150, 350])
+        student_table = Table(student_info, colWidths=[150, 250])
         student_table.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
         ]))
-        elements.append(student_table)
-        elements.append(Spacer(1, 15))
 
-        # 2. Application items table
-        elements.append(Paragraph("📑 <b>Application Itemlari</b>", styles["Heading2"]))
-        for item in app_items:
-            elements.append(Spacer(1, 8))
+        if image_data:
+            full_table = Table([[image_data, student_table]], colWidths=[120, 400])
+        else:
+            full_table = student_table
+
+        elements.append(Paragraph("📌 <b>Talaba ma’lumotlari</b>", styles["Heading2"]))
+        elements.append(full_table)
+        elements.append(Spacer(1, 20))
+
+        # Applications
+        elements.append(Paragraph("📑 <b>Arizalar</b>", styles["Heading2"]))
+        for idx, item in enumerate(app_items, start=1):
+            elements.append(Paragraph(f"<b>{idx}. {item.title}</b>", styles["Normal"]))
             item_data = [
                 ["Yo‘nalish", item.direction.name if item.direction else ""],
-                ["Ball (GPA)", item.gpa_score or ""],
-                ["Ball (Test)", item.test_result or ""],
+                ["GPA", item.result_gpa["gpa"] if item.result_gpa else ""],
+                ["GPA Ball", item.result_gpa["score"] if item.result_gpa else ""],
+                ["Test natija", item.test_result if item.test_result is not None else ""],
+                ["Test ball", item.result_test["score"] if item.result_test else ""],
+                ["To‘g‘ri javob", item.result_test["correct"] if item.result_test else ""],
+                ["Savollar soni", item.result_test["total"] if item.result_test else ""],
                 ["Talaba izohi", item.student_comment or ""],
                 ["Baholovchi izohi", item.reviewer_comment or ""],
             ]
-            item_table = Table(item_data, colWidths=[150, 350])
-            item_table.setStyle(TableStyle([
+            table = Table(item_data, colWidths=[150, 350])
+            table.setStyle(TableStyle([
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.whitesmoke),
             ]))
-            elements.append(item_table)
-
-            # Fayllar ro‘yxati
-            if item.files.exists():
-                file_names = [f.file.name for f in item.files.all()]
-                file_data = [["Fayllar:"]] + [[fname] for fname in file_names]
-                file_table = Table(file_data, colWidths=[500])
-                file_table.setStyle(TableStyle([
-                    ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
-                ]))
-                elements.append(file_table)
-
-            elements.append(Spacer(1, 10))
-
-        # 3. Rasm (optional)
-        if student.image:
-            try:
-                image_url = student.image.url
-                image_path = student.image.path
-                elements.append(Spacer(1, 15))
-                elements.append(Paragraph("🖼️ <b>Student rasmi:</b>", styles["Normal"]))
-                elements.append(Image(image_path, width=100, height=100))
-            except:
-                pass
+            elements.append(table)
+            elements.append(Spacer(1, 12))
 
         doc.build(elements)
         buffer.seek(0)
