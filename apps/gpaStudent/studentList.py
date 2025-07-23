@@ -28,11 +28,8 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             student=OuterRef('pk')
         ).order_by('-education_year', '-id').values('gpa')[:1]
 
-        return Student.objects.all().prefetch_related(
-            'gpa_records', 'faculty', 'level', 'university'
-        ).annotate(
-            latest_gpa=Subquery(latest_gpa_subquery, output_field=FloatField())
-        ).order_by('-latest_gpa')  # yuqoridan quyiga GPA bo‘yicha saralash
+        return Student.objects.annotate(
+            latest_gpa=Subquery(latest_gpa_subquery, output_field=FloatField())).order_by('-latest_gpa').select_related('faculty', 'level', 'university').prefetch_related('gpa_records')
 
     @swagger_auto_schema(
         operation_summary="Filterlangan studentlarni Excel (.xlsx) formatda yuklab olish",
