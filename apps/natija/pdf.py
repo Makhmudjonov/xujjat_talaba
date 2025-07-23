@@ -68,30 +68,40 @@ class ExportStudentPDF(APIView):
         # Applications
         elements.append(Paragraph("📑 <b>Arizalar</b>", styles["Heading2"]))
         for idx, item in enumerate(app_items, start=1):
+            direction_name = item.direction.name if item.direction else ""
+
             elements.append(Paragraph(f"<b>{idx}. {item.title}</b>", styles["Normal"]))
-            if item.direction == 'Kitobxonlik madaniyati' or item.direction.name == "Kitobxonlik madaniyati":
+
+            # Umumiy qiymatlar
+            score_value = item.score.score if hasattr(item, 'score') and item.score else "Mavjud emas"
+            reviewer_comment = item.reviewer_comment or "Mavjud emas"
+            student_comment = item.student_comment or "Mavjud emas"
+
+            if direction_name == "Kitobxonlik madaniyati":
+                test_result = item.test_result if item.test_result is not None else "Mavjud emas"
+                test_score = round(item.test_result * 20 / 100, 2) if item.test_result else "Mavjud emas"
                 item_data = [
-                ["Yo‘nalish", item.direction.name if item.direction else ""],
-                ["Test natija", item.test_result if item.test_result is not None else "", "%"],
-                ["Test ball", item.test_result if item.test_result * 20 / 100 else "Mavjud emas"],
-                ["Ball", item.score.get("score") if isinstance(item.score, dict) else "Mavjud emas"],
-                ["Baholovchi izohi", item.reviewer_comment or "Mavjud emas"],
-            ]
-            elif item.direction == "Talabaning akademik o‘zlashtirishi" or item.direction == 'Talabaning akademik o‘zlashtirishi':
+                    ["Yo‘nalish", direction_name],
+                    ["Test natija", test_result],
+                    ["Test ball", test_score],
+                    ["Baholovchi izohi", reviewer_comment],
+                ]
+            elif direction_name == "Talabaning akademik o‘zlashtirishi":
                 item_data = [
-                ["Yo‘nalish", item.direction.name if item.direction else ""],
-                ["GPA", item.gpa if item.gpa else "Mavjud emas"],
-                ["Ball", item.score.get("score") if isinstance(item.score, dict) else "Mavjud emas"],
-                ["Talaba izohi", item.student_comment or "Mavjud emas"],
-                ["Baholovchi izohi", item.reviewer_comment or "Mavjud emas"],
-            ]
+                    ["Yo‘nalish", direction_name],
+                    ["GPA", item.gpa if item.gpa else "Mavjud emas"],
+                    ["Ball", score_value],
+                    ["Talaba izohi", student_comment],
+                    ["Baholovchi izohi", reviewer_comment],
+                ]
             else:
                 item_data = [
-                ["Yo‘nalish", item.direction.name if item.direction else ""],
-                ["Talaba izohi", item.student_comment or ""],
-                ["Ball", item.score.get("score") if isinstance(item.score, dict) else "Mavjud emas"],
-                ["Baholovchi izohi", item.reviewer_comment or ""],
-            ]
+                    ["Yo‘nalish", direction_name],
+                    ["Talaba izohi", student_comment],
+                    ["Ball", score_value],
+                    ["Baholovchi izohi", reviewer_comment],
+                ]
+
             table = Table(item_data, colWidths=[150, 350])
             table.setStyle(TableStyle([
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
@@ -106,3 +116,4 @@ class ExportStudentPDF(APIView):
         return HttpResponse(buffer, content_type='application/pdf', headers={
             'Content-Disposition': 'attachment; filename="student_profile.pdf"',
         })
+        
