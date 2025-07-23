@@ -1389,7 +1389,7 @@ class GetNextQuestionAPIView(APIView):
     
 class LeaderboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = StandardResultsIndexSetPagination
+    pagination_class = StandardResultsIndexSetPagination
 
     def get(self, request):
         students = Student.objects.prefetch_related(
