@@ -6,7 +6,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
-from apps.models import ApplicationItem, ApplicationFile, Student
+from apps.models import ApplicationItem, Student
 from django.shortcuts import get_object_or_404
 import base64
 import requests
@@ -52,8 +52,8 @@ class ExportStudentPDF(APIView):
             elements.append(Spacer(1, 8))
             item_data = [
                 ["Yo‘nalish", item.direction.name if item.direction else ""],
-                ["Ball (GPA)", item.result_gpa or ""],
-                ["Ball (Test)", item.result_test or ""],
+                ["Ball (GPA)", item.gpa_score or ""],
+                ["Ball (Test)", item.test_result or ""],
                 ["Talaba izohi", item.student_comment or ""],
                 ["Baholovchi izohi", item.reviewer_comment or ""],
             ]
