@@ -339,16 +339,23 @@ class StudentsGpaSerializer(serializers.ModelSerializer):
     gpa_records = GPARecordSerializer(many=True, read_only=True)
     faculty = FacultySerializer(read_only=True)
     level = LevelSerializer(read_only=True)
-
+    last_gpa = serializers.SerializerMethodField()
 
     class Meta:
         model = Student
         fields = [
             'id', 'student_id_number', 'full_name',
-            'phone', 'image', 'gender', 
+            'phone', 'image', 'gender',
             'university', 'university1', 'faculty',
-            'group', 'level', 'toifa', 'gpa_records'
+            'group', 'level', 'toifa',
+            'gpa_records', 'last_gpa'
         ]
+
+    def get_last_gpa(self, obj):
+        record = obj.gpa_records.last()
+        if record:
+            return GPARecordSerializer(record).data
+        return None
 
 
 class StudentAccountSerializer(serializers.ModelSerializer):
