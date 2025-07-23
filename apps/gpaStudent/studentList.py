@@ -1,50 +1,46 @@
 from rest_framework import mixins, viewsets, permissions
-from django_filters.rest_framework import DjangoFilterBackend, FilterSet, NumberFilter
+from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
-from apps.models import Student
-from apps.serializers import StudentsGpaSerializer
-from komissiya.views import StandardResultsSetPagination
+from drf_yasg import openapi
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.http import HttpResponse
 import openpyxl
-from drf_yasg import openapi
+from django.db.models import Subquery, OuterRef, FloatField
 
+from apps.models import Student, GPARecord
+from apps.serializers import StudentsGpaSerializer
+from komissiya.views import StandardResultsSetPagination
 
 class IsAdminUser(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user and request.user.is_staff
 
-
-# Custom GPA filter
-class StudentGpaFilter(FilterSet):
-    min_gpa = NumberFilter(method='filter_by_min_gpa')
-
-    class Meta:
-        model = Student
-        fields = ['faculty', 'level', 'university1']
-
-    def filter_by_min_gpa(self, queryset, name, value):
-        return queryset.filter(gpa_records__gpa__gte=value).distinct()
-
-
 class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = Student.objects.all().prefetch_related('gpa_records', 'faculty', 'level', 'university1')
     serializer_class = StudentsGpaSerializer
     permission_classes = [IsAdminUser]
     pagination_class = StandardResultsSetPagination
-
     filter_backends = [DjangoFilterBackend]
-    filterset_class = StudentGpaFilter
+    filterset_fields = ['faculty', 'level', 'university1']
+
+    def get_queryset(self):
+        latest_gpa_subquery = GPARecord.objects.filter(
+            student=OuterRef('pk')
+        ).order_by('-education_year', '-id').values('gpa')[:1]
+
+        return Student.objects.all().prefetch_related(
+            'gpa_records', 'faculty', 'level', 'university1'
+        ).annotate(
+            latest_gpa=Subquery(latest_gpa_subquery, output_field=FloatField())
+        ).order_by('-latest_gpa')  # yuqoridan quyiga GPA bo‘yicha saralash
 
     @swagger_auto_schema(
-        operation_summary="Admin uchun studentlar ro'yxati",
+        operation_summary="Filterlangan studentlarni Excel (.xlsx) formatda yuklab olish",
         tags=["Admin - Studentlar"],
         manual_parameters=[
             openapi.Parameter("university1", openapi.IN_QUERY, description="Universitet ID", type=openapi.TYPE_INTEGER),
             openapi.Parameter("level", openapi.IN_QUERY, description="Bosqich ID", type=openapi.TYPE_INTEGER),
             openapi.Parameter("faculty", openapi.IN_QUERY, description="Fakultet ID", type=openapi.TYPE_INTEGER),
-            openapi.Parameter("min_gpa", openapi.IN_QUERY, description="Minimal GPA bo‘yicha filter", type=openapi.TYPE_NUMBER),
         ]
     )
     def list(self, request, *args, **kwargs):
@@ -73,7 +69,7 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
                 student.student_id_number,
                 student.phone or "",
                 student.gender,
-                student.university or "",
+                student.university,
                 student.faculty.name if student.faculty else "",
                 student.group or "",
                 student.level.name if student.level else "",
