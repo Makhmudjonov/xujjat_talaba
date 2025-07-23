@@ -94,7 +94,7 @@ class ExportStudentPDF(APIView):
                 item_data = [
                     ["Yo‘nalish", direction_name],
                     ["GPA", result_gpa if result_gpa else "Mavjud emas"],
-                    ["Ball", item.result_gpa.score if item.result_gpa else "Mavjud emas"],
+                    ["Ball", result_gpa if result_gpa else "Mavjud emas"],
                     ["Talaba izohi", student_comment],
                     ["Baholovchi izohi", reviewer_comment],
                 ]
