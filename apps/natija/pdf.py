@@ -69,15 +69,27 @@ class ExportStudentPDF(APIView):
         elements.append(Paragraph("📑 <b>Arizalar</b>", styles["Heading2"]))
         for idx, item in enumerate(app_items, start=1):
             elements.append(Paragraph(f"<b>{idx}. {item.title}</b>", styles["Normal"]))
-            item_data = [
+            if item.direction == 'Kitobxonlik madaniyati' or item.direction.name == "Kitobxonlik madaniyati":
+                item_data = [
                 ["Yo‘nalish", item.direction.name if item.direction else ""],
-                ["GPA", item.result_gpa["gpa"] if item.result_gpa else ""],
-                ["GPA Ball", item.result_gpa["score"] if item.result_gpa else ""],
-                ["Test natija", item.test_result if item.test_result is not None else ""],
-                ["Test ball", item.result_test["score"] if item.result_test else ""],
-                ["To‘g‘ri javob", item.result_test["correct"] if item.result_test else ""],
-                ["Savollar soni", item.result_test["total"] if item.result_test else ""],
+                ["Test natija", item.test_result if item.test_result is not None else "", "%"],
+                ["Test ball", item.test_result if item.test_result * 20 / 100 else "Mavjud emas"],
+                ["Ball", item.score.get("score") if isinstance(item.score, dict) else "Mavjud emas"],
+                ["Baholovchi izohi", item.reviewer_comment or "Mavjud emas"],
+            ]
+            elif item.direction == "Talabaning akademik o‘zlashtirishi" or item.direction == 'Talabaning akademik o‘zlashtirishi':
+                item_data = [
+                ["Yo‘nalish", item.direction.name if item.direction else ""],
+                ["GPA", item.gpa if item.gpa else "Mavjud emas"],
+                ["Ball", item.score.get("score") if isinstance(item.score, dict) else "Mavjud emas"],
+                ["Talaba izohi", item.student_comment or "Mavjud emas"],
+                ["Baholovchi izohi", item.reviewer_comment or "Mavjud emas"],
+            ]
+            else:
+                item_data = [
+                ["Yo‘nalish", item.direction.name if item.direction else ""],
                 ["Talaba izohi", item.student_comment or ""],
+                ["Ball", item.score.get("score") if isinstance(item.score, dict) else "Mavjud emas"],
                 ["Baholovchi izohi", item.reviewer_comment or ""],
             ]
             table = Table(item_data, colWidths=[150, 350])
