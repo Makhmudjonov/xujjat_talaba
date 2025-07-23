@@ -7,7 +7,6 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
 from apps.models import ApplicationItem, ApplicationFile, Student
-from apps.serializers import StudentProfileSerializer
 from django.shortcuts import get_object_or_404
 import base64
 import requests
