@@ -75,18 +75,19 @@ class ExportStudentPDF(APIView):
             # Umumiy qiymatlar
             score_value = item.score.value if hasattr(item, 'score') and item.score else "Mavjud emas"
             result_gpa = item.result_gpa.score if hasattr(item, 'result_gpa') else "Mavjud emas"
+            result_test = item.result_test.score if hasattr(item, 'result_test') else "Mavjud emas"
+            total_test = item.result_test.total if hasattr(item, 'result_test') else "Mavjud emas"
+            correct_test = item.result_test.correct if hasattr(item, 'result_test') else "Mavjud emas"
             reviewer_comment = item.reviewer_comment or "Mavjud emas"
             student_comment = item.student_comment or "Mavjud emas"
 
             if direction_name == "Kitobxonlik madaniyati":
-                test_result = item.result_test.score if item.result_test is not None else "Mavjud emas"
-                test_score = round(item.result_test.score * 20 / 100, 2) if item.result_test else "Mavjud emas"
                 item_data = [
                     ["Yo‘nalish", direction_name],
-                    ["Test natija", test_result],
-                    ["Test ball", test_score],
-                    ["Jami savol", item.result_test.total if item.result_test else "Mavjud emas"],
-                    ["To'gri javob", item.result_test.correct if item.result_test else "Mavjud emas"],
+                    ["Test natija", item.test_result if item.test_result else "Mavjud emas"],
+                    ["Test ball", result_test],
+                    ["Jami savol", total_test],
+                    ["To'gri javob", correct_test],
                     ["Baholovchi izohi", reviewer_comment],
                 ]
             elif direction_name == "Talabaning akademik o‘zlashtirishi":
