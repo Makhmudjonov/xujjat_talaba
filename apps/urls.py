@@ -1,6 +1,6 @@
 from django.urls import path, include
 from apps.application.applicationExcel import ApplicationExportExcelAPIView
-from apps.filter.filters import global_student_filter_options
+from apps.filter.filters import global_student_filter_faculty, global_student_filter_level
 from apps.filter.view import ApplicationTypeStatsAPIView, FacultyStudentStatsAPIView, GPAStatsAPIView, PublicStatsAPIView, StudentGenderStatsAPIView, UniversityStudentStatsAPIView
 from rest_framework.routers import DefaultRouter
 
@@ -114,7 +114,8 @@ urlpatterns = [
 
 
     #FILTERS
-    path("admin/student-filters/", global_student_filter_options),
+    path("admin/student-levels/", global_student_filter_level),
+    path("admin/student-facultys/", global_student_filter_faculty),
 
     
     

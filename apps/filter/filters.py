@@ -1,6 +1,6 @@
 # filters.py
 import django_filters
-from apps.models import Application, ApplicationItem, ApplicationType, Student, GPARecord
+from apps.models import Application, ApplicationItem, ApplicationType, Faculty, Student, GPARecord, University
 
 class StudentFilter(django_filters.FilterSet):
     gender = django_filters.CharFilter(field_name="gender", lookup_expr='iexact')
@@ -81,8 +81,25 @@ from apps.models import Student, Level
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
-def global_student_filter_options(request):
+def global_student_filter_faculty(request):
+    faculty = Faculty.objects.filter(student__isnull=False).distinct().values("id", "name")
+    return Response({
+        "facultys": list(faculty)
+    })
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def global_student_filter_level(request):
     levels = Level.objects.filter(student__isnull=False).distinct().values("id", "name")
     return Response({
         "levels": list(levels)
     })
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def global_student_filter_university(request):
+    universitys = University.objects.filter(student__isnull=False).distinct().values("id", "name")
+    return Response({
+        "universitys": list(universitys)
+    })
+

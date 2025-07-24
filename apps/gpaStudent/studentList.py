@@ -22,7 +22,7 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = [IsAdminUser]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['faculty', 'level', 'university']
+    filterset_fields = ['faculty', 'level', 'university', 'full_name']
     filterset_class = StudentFilter
 
     def get_queryset(self):
@@ -40,6 +40,7 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             openapi.Parameter("university", openapi.IN_QUERY, description="Universitet", type=openapi.TYPE_STRING),
             openapi.Parameter("level", openapi.IN_QUERY, description="Bosqich", type=openapi.TYPE_STRING),
             openapi.Parameter("faculty", openapi.IN_QUERY, description="Fakultet", type=openapi.TYPE_STRING),
+            openapi.Parameter("name", openapi.IN_QUERY, description="FISH", type=openapi.TYPE_STRING),
         ]
     )
     def list(self, request, *args, **kwargs):
