@@ -16,6 +16,8 @@ import os
 class University(models.Model):
     name = models.CharField(max_length=255)
 
+    history = HistoricalRecords()
+
     def __str__(self):
         return self.name
     
@@ -24,6 +26,8 @@ class Faculty(models.Model):
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, blank=True, null=True)
     university = models.ForeignKey(University, on_delete=models.CASCADE, null=True, blank=True)
+
+    history = HistoricalRecords()
 
     # class Meta:
     #     unique_together = ('hemis_id', 'name')
@@ -36,6 +40,8 @@ class Faculty(models.Model):
 class Universitya(models.Model):
     name = models.CharField(max_length=255)
 
+    history = HistoricalRecords()
+
     def __str__(self):
         return self.name
 
@@ -44,6 +50,8 @@ class Level(models.Model):
     """Bakalavr 1‑kurs / Magistr 2‑kurs va hokazo."""
     code = models.CharField(max_length=10, unique=True)
     name = models.CharField(max_length=50)
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name
@@ -101,6 +109,8 @@ class GPARecord(models.Model):
     method = models.CharField(max_length=50)
     created_at = models.DateTimeField()
 
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"{self.student.full_name} - {self.education_year} ({self.level})"
 
@@ -123,6 +133,8 @@ class ContractInfo(models.Model):
     debit = models.BigIntegerField(null=True, blank=True)
     credit = models.BigIntegerField(null=True, blank=True)
 
+    history = HistoricalRecords()
+
     def __str__(self):
         return f"{self.student.full_name} - {self.contract_number}"
 
@@ -132,6 +144,8 @@ class ContractInfo(models.Model):
 # ---------------------------
 class Section(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.name
@@ -153,6 +167,8 @@ class Direction(models.Model):
     min_score = models.FloatField(default=0)
     max_score = models.FloatField(default=10)
     type = models.CharField(max_length=10, choices=DIRECTION_TYPE_CHOICES, default='file')
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.section.name} / {self.name}"
@@ -195,6 +211,8 @@ class ApplicationType(models.Model):
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
 
+    history = HistoricalRecords()
+
     def is_active(self):
         now = timezone.now()
         if not self.start_time and not self.end_time:
@@ -233,6 +251,8 @@ class Application(models.Model):
     status    = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_PENDING)
     submitted_at = models.DateTimeField(auto_now_add=True)  # yoki shunga o‘xshash
     application_type = models.ForeignKey(ApplicationType, on_delete=models.CASCADE, related_name='applications')
+
+    history = HistoricalRecords()
 
 
     # class Meta:
@@ -289,6 +309,8 @@ class ApplicationItem(models.Model):
     gpa_score = models.FloatField(blank=True, null=True)
     test_result      = models.FloatField(blank=True, null=True)  # or IntegerField if needed
     status = models.BooleanField(default=False)
+
+    history = HistoricalRecords()
     
     class Meta:
         unique_together = ('application', 'direction')
@@ -302,6 +324,8 @@ class ApplicationFile(models.Model):
     # application_item = models.ForeignKey(
     #     ApplicationItem, on_delete=models.CASCADE, related_name="application_files"
     # )
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"File for  - {self.section.name}"
@@ -357,6 +381,8 @@ class CustomAdminUser(AbstractUser):
     limit_by_course = models.BooleanField(default=False)
     allow_all_students = models.BooleanField(default=False)
 
+    history = HistoricalRecords()
+
     USERNAME_FIELD = 'username'
 
     # users/models.py (yoki qayerda bo‘lsa)
@@ -399,6 +425,9 @@ class SpecialApplicationStudent(models.Model):
     Aynan shu ApplicationType uchun ariza berishi mumkin bo‘lgan talaba
     (HEMIS ID bo‘yicha).
     """
+
+    history = HistoricalRecords()
+
     application_type = models.ForeignKey(
         ApplicationType,
         on_delete=models.CASCADE,
@@ -434,6 +463,8 @@ class Test(models.Model):
     start_time = models.DateTimeField(null=True, blank=True)  # 🆕 Yangi qo‘shildi
     created_at = models.DateTimeField(auto_now_add=True)
 
+    history = HistoricalRecords()
+
     def __str__(self):
         return self.title
 
@@ -442,6 +473,8 @@ class Question(models.Model):
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='questions')
     text = models.TextField()
     correct_option = models.CharField(max_length=1)  # "A", "B", "C", "D"
+
+    history = HistoricalRecords()
     
 
 class Option(models.Model):
@@ -449,6 +482,8 @@ class Option(models.Model):
     label = models.CharField(max_length=1)  # "A", "B", "C", "D"
     text = models.TextField()
     is_correct = models.BooleanField(default=False)
+
+    history = HistoricalRecords()
 
 class TestSession(models.Model):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
@@ -460,6 +495,8 @@ class TestSession(models.Model):
     total_questions = models.IntegerField(null=True, blank=True)
     questions = models.ManyToManyField(Question, blank=True)
     current_question_index = models.IntegerField(default=0,)  # New field to track progress
+
+    history = HistoricalRecords()
 
     def is_expired(self):
         if self.finished_at:
@@ -490,10 +527,14 @@ class Answer(models.Model):
     selected_option = models.ForeignKey(Option, on_delete=models.CASCADE)
     is_correct = models.BooleanField()
 
+    history = HistoricalRecords()
+
 
 class OdobAxloqStudent(models.Model):
     sabab = models.CharField(max_length=500)
     hemis_id = models.CharField(max_length=20)
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return f"{self.hemis_id} ({self.sabab})"
