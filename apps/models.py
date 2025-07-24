@@ -74,6 +74,8 @@ class Student(models.Model):
     level = models.ForeignKey(Level, on_delete=models.SET_NULL, null=True, blank=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
+    history = HistoricalRecords()
+
 
     @property
     def gpa(self):
