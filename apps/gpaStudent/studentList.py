@@ -30,7 +30,7 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         qs = Student.objects.all()
 
         # Admin filtratsiyasi:
-        if getattr(user, 'role', None) == 'admin':
+        if user:
             if user.university1:
                 qs = qs.filter(university1=user.university1)
 
