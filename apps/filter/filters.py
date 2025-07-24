@@ -83,7 +83,8 @@ from apps.models import Student, Level
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def global_student_filter_faculty(request):
-    faculty = Faculty.objects.filter(student__isnull=False).distinct().values("id", "name")
+    user = request.user
+    faculty = Faculty.objects.filter(student__isnull=False, user=user).distinct().values("id", "name")
     return Response({
         "facultys": list(faculty)
     })

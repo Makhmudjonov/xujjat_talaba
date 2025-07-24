@@ -40,7 +40,7 @@ class ExportStudentScoreExcelView(APIView):
         ws = wb.active
         ws.title = "Student Scores"
 
-        headers = ['ID', 'FISH', 'Fakultet', 'Kurs', 'Guruh', 'Toifa', 'GPA Ball/*16', 'Ijtimoiy Index natijasi', 'Jami ball(GPA ball + (Ijtimoiy Index natijasi) * 0.2)']
+        headers = ['ID', 'FISH', 'Fakultet', 'Kurs', 'Guruh', 'Toifa', 'GPA Ball/*16', 'Ijtimoiy Index natijasi', 'Jami ball(GPA ball + (Ijtimoiy Index natijasi * 0.2)']
         ws.append(headers)
 
         for row in serializer.data:
