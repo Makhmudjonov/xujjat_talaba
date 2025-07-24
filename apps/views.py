@@ -1389,26 +1389,6 @@ class GetNextQuestionAPIView(APIView):
         logger.info(f"Next question {question.id} served for session {session_id}, current_index={session.current_question_index + 1}")
 
         return Response(RandomizedQuestionSerializer(question).data)
-    
-class LeaderboardAPIView(mixins.ListModelMixin, viewsets.GenericViewSet):
-    permission_classes = [IsAuthenticated]
-    pagination_class = StandardResultsSetPagination
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['faculty', 'level', 'university']
-    filterset_class = StudentFilter
-
-    def get(self, request):
-        students = Student.objects.prefetch_related(
-            'applications__items__score',
-            'applications__items__direction',
-            'gpa_records',
-            'faculty',
-            'level'
-        ).all()
-
-        serializer = LeaderBoardSerializer(students, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 class UpdateToifaAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]  # kerak bo‘lsa, admin permission qo‘shing
