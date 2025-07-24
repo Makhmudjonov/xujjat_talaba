@@ -63,7 +63,17 @@ class ContractInfoAdmin(SimpleHistoryAdmin):
 admin.site.register(Section)
 admin.site.register(Direction)
 # admin.site.register(Application, SimpleHistoryAdmin)
-admin.site.register(Score, SimpleHistoryAdmin)
+
+
+@admin.register(Score)
+class ScoreAdmin(SimpleHistoryAdmin):
+    list_display = ('id', 'get_student_full_name', 'value', 'reviewer', 'scored_at')
+    search_fields = ('item__application__student__full_name',)
+    list_filter = ('scored_at', 'reviewer')
+
+    def get_student_full_name(self, obj):
+        return obj.item.application.student.full_name
+    get_student_full_name.short_description = "Talaba"
 
 @admin.register(Application)
 class ApplicationAdmin(SimpleHistoryAdmin):
