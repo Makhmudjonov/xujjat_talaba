@@ -357,7 +357,7 @@ class StudentsGpaSerializer(serializers.ModelSerializer):
             'phone', 'image', 'gender',
             'university', 'university1', 'faculty',
             'group', 'level', 'toifa',
-            'gpa_records', 'last_gpa', 'gpaball'
+            'gpa_records', 'last_gpa', 'gpaball', 'toifa'
         ]
 
     def get_last_gpa(self, obj):
