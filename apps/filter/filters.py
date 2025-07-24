@@ -84,15 +84,16 @@ from apps.models import Student, Level
 @permission_classes([IsAdminUser])
 def global_student_filter_faculty(request):
     user = request.user
-    faculty = Faculty.objects.filter(student__isnull=False, user=user).distinct().values("id", "name")
+    faculties = user.faculties.filter(student__isnull=False).distinct().values("id", "name")
     return Response({
-        "facultys": list(faculty)
+        "facultys": list(faculties)
     })
 
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def global_student_filter_level(request):
-    levels = Level.objects.filter(student__isnull=False).distinct().values("id", "name")
+    user = request.user
+    levels = user.levels.objects.filter(student__isnull=False).distinct().values("id", "name")
     return Response({
         "levels": list(levels)
     })
@@ -100,7 +101,8 @@ def global_student_filter_level(request):
 @api_view(["GET"])
 @permission_classes([IsAdminUser])
 def global_student_filter_university(request):
-    universitys = University.objects.filter(student__isnull=False).distinct().values("id", "name")
+    user = request.user
+    universitys = user.university.objects.filter(student__isnull=False).distinct().values("id", "name")
     return Response({
         "universitys": list(universitys)
     })
