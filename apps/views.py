@@ -1413,6 +1413,8 @@ class LeaderboardAPIView(APIView):
         ]
     )
     def get(self, request):
+        admin = request.user
+
         students = Student.objects.prefetch_related(
             'applications__items__score',
             'applications__items__direction',
@@ -1421,6 +1423,18 @@ class LeaderboardAPIView(APIView):
             'level'
         ).all()
 
+        # Admin filtrlar
+        if hasattr(admin, "role") and admin.role != "student":
+            if admin.university1:
+                students = students.filter(university1=admin.university1)
+            if admin.faculties.exists():
+                students = students.filter(faculty__in=admin.faculties.all())
+            if admin.levels.exists():
+                students = students.filter(level__in=admin.levels.all())
+            if admin.directions.exists():
+                students = students.filter(applications__items__direction__in=admin.directions.all())
+
+        # Query params filtrlar
         faculty_id = request.GET.get("faculty")
         level_id = request.GET.get("level")
         course = request.GET.get("course")
@@ -1430,13 +1444,14 @@ class LeaderboardAPIView(APIView):
         if level_id:
             students = students.filter(level_id=level_id)
         if course:
-            students = students.filter(course=course)
+            students = students.filter(group__icontains=course)
 
-        # Qo'lda paginatsiya
+        # Paginatsiya
         paginator = self.pagination_class()
-        page = paginator.paginate_queryset(students, request)
+        page = paginator.paginate_queryset(students.distinct(), request)
         serializer = self.serializer_class(page, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
+
 
 
 class UpdateToifaAPIView(APIView):
