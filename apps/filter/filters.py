@@ -102,7 +102,7 @@ def global_student_filter_level(request):
 @permission_classes([IsAdminUser])
 def global_student_filter_university(request):
     user = request.user
-    universitys = user.university.filter(student__isnull=False).distinct().values("id", "name")
+    universitys = user.university1.filter(student__isnull=False).distinct().values("id", "name")
     return Response({
         "universitys": list(universitys)
     })
