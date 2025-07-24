@@ -95,7 +95,7 @@ urlpatterns = [
     path("admin/account/", AdminAccountAPIView.as_view(), name="admin-account"),
     path('admin/applications/<int:pk>/', ApplicationRetrieveView.as_view(), name='admin-application-detail'),
 
-    path('admin/leaderboard/', LeaderboardAPIView.as_view(), name='leaderboard'),
+    path('admin/leaderboard/', LeaderboardAPIView.as_view({'get': 'list'}), name='admin-leaderboard'),
 
     path('student/files/<int:pk>/', ApplicationFileUpdateAPIView.as_view()),
 

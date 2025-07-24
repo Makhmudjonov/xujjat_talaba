@@ -8,14 +8,10 @@ from django.forms import ValidationError
 import requests
 from django.db.models import Sum
 
-from django_filters.rest_framework import DjangoFilterBackend
-
 from rest_framework.decorators import action
-from rest_framework import mixins, viewsets, permissions
+from rest_framework import viewsets, permissions
 
 from django.utils.timezone import now
-from rest_framework.viewsets import GenericViewSet
-from rest_framework.mixins import RetrieveModelMixin
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -23,7 +19,6 @@ from django.utils.dateparse import parse_date
 from django.core.exceptions import PermissionDenied
 
 from django.contrib.auth import authenticate
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from rest_framework.authentication import TokenAuthentication
 
@@ -41,10 +36,7 @@ from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
-from apps.filter.filters import StudentFilter
-from apps.gpaStudent.pagenation import StandardResultsSetPagination
 from apps.pagenation import CustomPagination
-from komissiya.views import StandardResultsIndexSetPagination
 
 from .models import (
     Answer, ApplicationItem, ApplicationType, Faculty, Level, OdobAxloqStudent, Question, Student, ContractInfo, GPARecord,
