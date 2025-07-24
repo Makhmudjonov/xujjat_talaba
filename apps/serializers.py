@@ -1073,11 +1073,11 @@ class TestResumeSerializer(serializers.ModelSerializer):
 class TestDictSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     title = serializers.CharField()
-    start_time = serializers.DateTimeField(allow_null=True)
+    start_time = serializers.DateTimeField(allow_null=True, format="%Y-%m-%d %H:%M")
     question_count = serializers.IntegerField()
     total_questions = serializers.IntegerField()
     time_limit = serializers.IntegerField()
-    created_at = serializers.DateTimeField()
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
     status = serializers.ChoiceField(choices=["ishlangan", "ishlanmagan", "ishlanmoqda"])
     session_id = serializers.IntegerField(required=False, allow_null=True)
     result = serializers.DictField(allow_null=True, required=False)
