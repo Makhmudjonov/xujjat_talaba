@@ -1081,13 +1081,10 @@ class LeaderBoardSerializer(serializers.Serializer):
             for item in items:
                 # Test ball
                 if item.direction.name == 'Kitobxonlik madaniyati' and item.test_result is not None:
-                    if not user or not item.direction or not item.direction.test:
+                    if not obj or not item.direction or not item.direction.test:
                         return None
 
-                    session = TestSession.objects.filter(
-                        student=user,
-                        test=item.direction.test
-                    ).first()
+                    session = TestSession.objects.filter(student=obj, test=item.direction.test).first()
 
                     if session and session.correct_answers is not None:
                         # Har to‘g‘ri javob uchun 0.8 ball (20 / 25)
