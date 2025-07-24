@@ -362,7 +362,7 @@ class StudentsGpaSerializer(serializers.ModelSerializer):
     def get_gpaball(self, obj):
         record = obj.gpa_records.last()
         if record and record.gpa:
-            return round(float(record[0].gpa) * 16, 2)
+            return round(float(record.gpa) * 16, 2)
         return None
 
 
