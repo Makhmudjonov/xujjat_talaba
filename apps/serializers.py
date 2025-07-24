@@ -406,24 +406,34 @@ class StudentCombinedScoreSerializer(serializers.ModelSerializer):
             for item in items:
                 direction_name = item.direction.name if item.direction else ""
 
+                # Test ball
                 if direction_name == 'Kitobxonlik madaniyati':
                     if item.test_result is not None:
                         session = TestSession.objects.filter(student=obj, test=item.direction.test).first()
                         if session and session.correct_answers is not None:
                             total += session.correct_answers * 20 / 25
+                        else:
+                            total += 0  # test natija yo‘q
 
+                # GPA ball
                 elif direction_name == 'Talabaning akademik o‘zlashtirishi':
-                    latest_gpa_record = obj.gpa_records.order_by('-created_at').first()
-                    if latest_gpa_record:
-                        gpa = float(latest_gpa_record.gpa)
-                        gpa_score_map = {
-                            5.0: 10.0, 4.9: 9.7, 4.8: 9.3, 4.7: 9.0,
-                            4.6: 8.7, 4.5: 8.3, 4.4: 8.0, 4.3: 7.7,
-                            4.2: 7.3, 4.1: 7.0, 4.0: 6.7, 3.9: 6.3,
-                            3.8: 6.0, 3.7: 5.7, 3.6: 5.3, 3.5: 5.0,
-                        }
-                        total += gpa_score_map.get(round(gpa, 1), 0.0)
+                    try:
+                        latest_gpa_record = obj.gpa_records.order_by('-created_at').first()
+                        if latest_gpa_record:
+                            gpa = float(latest_gpa_record.gpa)
+                            gpa_score_map = {
+                                5.0: 10.0, 4.9: 9.7, 4.8: 9.3, 4.7: 9.0,
+                                4.6: 8.7, 4.5: 8.3, 4.4: 8.0, 4.3: 7.7,
+                                4.2: 7.3, 4.1: 7.0, 4.0: 6.7, 3.9: 6.3,
+                                3.8: 6.0, 3.7: 5.7, 3.6: 5.3, 3.5: 5.0,
+                            }
+                            total += gpa_score_map.get(round(gpa, 1), 0.0)
+                        else:
+                            total += 0
+                    except:
+                        total += 0
 
+                # Boshqa score itemlar
                 else:
                     total += item.score.value if hasattr(item, "score") and item.score else 0
 
@@ -433,33 +443,11 @@ class StudentCombinedScoreSerializer(serializers.ModelSerializer):
         gpaball = self.get_gpaball(obj) or 0
         score_total = self.get_score_total(obj) or 0
         total = round(score_total * 0.2 + gpaball, 2)
-
-        # Barcha talabalarni olamiz va ular uchun total score hisoblaymiz
-        all_students = self.context.get("all_students")
-        if all_students is None:
-            all_students = Student.objects.all()
-
-        student_scores = []
-        for student in all_students:
-            gpaball_s = self.get_gpaball(student) or 0
-            score_total_s = self.get_score_total(student) or 0
-            total_s = round(score_total_s * 0.2 + gpaball_s, 2)
-            student_scores.append((student.id, total_s))
-
-        # total score bo‘yicha kamayish tartibida saralash
-        student_scores.sort(key=lambda x: x[1], reverse=True)
-
-        # Joriy student nechinchi o‘rinda turganini aniqlash
-        rank = next((i + 1 for i, (sid, score) in enumerate(student_scores) if sid == obj.id), None)
-
         return {
             "gpa": gpaball,
             "score_total": score_total,
-            "total": total,
-            "rank": rank,
-            "out_of": len(student_scores)
+            "total": total
         }
-
 
 
 
