@@ -365,6 +365,49 @@ class StudentsGpaSerializer(serializers.ModelSerializer):
         return None
 
 
+
+class StudentCombinedScoreSerializer(serializers.ModelSerializer):
+    faculty = serializers.CharField(source="faculty.name", read_only=True)
+    course = serializers.CharField(source="level.name", read_only=True)
+    group = serializers.CharField()
+    gpaball = serializers.SerializerMethodField()
+    score_total = serializers.SerializerMethodField()
+    total_score = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Student
+        fields = ['id', 'full_name', 'faculty', 'course', 'group', 'gpaball', 'score_total', 'total_score']
+
+    def get_gpaball(self, obj):
+        record = obj.gpa_records.order_by('-education_year', '-created_at').first()
+        if record and record.gpa is not None:
+            return round(float(record.gpa) * 16, 2)
+        return 0.0
+
+    def get_score_total(self, obj):
+        request = self.context.get("request")
+        user = request.user if request else None
+        total = 0.0
+
+        for app in obj.applications.all():
+            items = app.items.all()
+            if user and hasattr(user, "directions") and user.directions.exists():
+                items = items.filter(direction__in=user.directions.all())
+
+            for item in items:
+                if item.direction.name == 'Kitobxonlik madaniyati' and item.test_result is not None:
+                    total += float(item.test_result)
+                elif hasattr(item, "score") and item.score:
+                    total += item.score.value
+        return round(total, 2)
+
+    def get_total_score(self, obj):
+        gpaball = self.get_gpaball(obj)
+        score_total = self.get_score_total(obj)
+        return round(score_total * 0.2 + gpaball, 2)
+
+
+
 class StudentAccountSerializer(serializers.ModelSerializer):
     gpa_records = GPARecordSerializer(many=True, read_only=True)
     faculty_name = serializers.CharField(source='faculty.name', read_only=True)

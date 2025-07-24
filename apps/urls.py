@@ -4,6 +4,8 @@ from apps.filter.filters import global_student_filter_faculty, global_student_fi
 from apps.filter.view import ApplicationTypeStatsAPIView, FacultyStudentStatsAPIView, GPAStatsAPIView, PublicStatsAPIView, StudentGenderStatsAPIView, UniversityStudentStatsAPIView
 from rest_framework.routers import DefaultRouter
 
+from apps.full_score.export_score import ExportStudentScoreExcelView
+from apps.full_score.view import StudentScoreView
 from apps.gpaStudent.studentList import AdminStudentListViewSet
 from apps.natija.pdf import ExportStudentPDF
 from .views import (
@@ -64,6 +66,11 @@ router.register(r'admin/students-gpa', AdminStudentListViewSet, basename='studen
 
 # Barcha URL patternlari
 urlpatterns = [
+
+    path('api/admin/students/scores/', StudentScoreView.as_view(), name='student-scores'),
+    path('api/admin/students/scores/export/', ExportStudentScoreExcelView.as_view(), name='export-student-scores'),
+
+    
     # Talaba login qilish uchun API endpointi
     path('students/login/', StudentLoginAPIView.as_view(), name='student-login'),
     path('student/profile/pdf/', ExportStudentPDF.as_view(), name='export-student-pdf'),
