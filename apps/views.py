@@ -8,10 +8,13 @@ from django.forms import ValidationError
 import requests
 from django.db.models import Sum
 
+from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework.decorators import action
-from rest_framework import viewsets, permissions
 
 from django.utils.timezone import now
+from rest_framework.viewsets import GenericViewSet
+from rest_framework.mixins import RetrieveModelMixin
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
@@ -19,6 +22,7 @@ from django.utils.dateparse import parse_date
 from django.core.exceptions import PermissionDenied
 
 from django.contrib.auth import authenticate
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from rest_framework.authentication import TokenAuthentication
 
@@ -37,6 +41,7 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from apps.pagenation import CustomPagination
+from komissiya.views import StandardResultsIndexSetPagination
 
 from .models import (
     Answer, ApplicationItem, ApplicationType, Faculty, Level, OdobAxloqStudent, Question, Student, ContractInfo, GPARecord,
@@ -1381,6 +1386,49 @@ class GetNextQuestionAPIView(APIView):
         logger.info(f"Next question {question.id} served for session {session_id}, current_index={session.current_question_index + 1}")
 
         return Response(RandomizedQuestionSerializer(question).data)
+    
+class LeaderboardAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsIndexSetPagination
+
+    @swagger_auto_schema(
+        operation_summary="Leaderboard ro'yxati (studentlar ballari bilan)",
+        manual_parameters=[
+            openapi.Parameter(
+                'faculty', openapi.IN_QUERY, description="Faculty ID", type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                'level', openapi.IN_QUERY, description="Level ID", type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                'course', openapi.IN_QUERY, description="Kurs (1-5)", type=openapi.TYPE_INTEGER
+            ),
+        ]
+    )
+
+    def get(self, request):
+        students = Student.objects.prefetch_related(
+            'applications__items__score',
+            'applications__items__direction',
+            'gpa_records',
+            'faculty',
+            'level'
+        ).all()
+
+        faculty_id = request.GET.get("faculty")
+        level_id = request.GET.get("level")
+        course = request.GET.get("course")
+
+        if faculty_id:
+            students = students.filter(faculty_id=faculty_id)
+        if level_id:
+            students = students.filter(level_id=level_id)
+        if course:
+            students = students.filter(course=course)
+
+        serializer = LeaderBoardSerializer(students, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class UpdateToifaAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]  # kerak bo‘lsa, admin permission qo‘shing

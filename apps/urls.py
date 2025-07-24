@@ -3,7 +3,7 @@ from apps.application.applicationExcel import ApplicationExportExcelAPIView
 from apps.filter.view import ApplicationTypeStatsAPIView, FacultyStudentStatsAPIView, GPAStatsAPIView, PublicStatsAPIView, StudentGenderStatsAPIView, UniversityStudentStatsAPIView
 from rest_framework.routers import DefaultRouter
 
-from apps.gpaStudent.studentList import AdminStudentListViewSet, LeaderboardAPIView
+from apps.gpaStudent.studentList import AdminStudentListViewSet
 from apps.natija.pdf import ExportStudentPDF
 from .views import (
     AdminAccountAPIView,
@@ -15,6 +15,7 @@ from .views import (
     DirectionViewSet,
     FinishTestAPIView,
     GetNextQuestionAPIView,
+    LeaderboardAPIView,
     QuizUploadAPIView,
     ScoreCreateAPIView,
     StartTestAPIView,
@@ -95,7 +96,7 @@ urlpatterns = [
     path("admin/account/", AdminAccountAPIView.as_view(), name="admin-account"),
     path('admin/applications/<int:pk>/', ApplicationRetrieveView.as_view(), name='admin-application-detail'),
 
-    path('admin/leaderboard/', LeaderboardAPIView.as_view({'get': 'list'}), name='admin-leaderboard'),
+    path('admin/leaderboard/', LeaderboardAPIView.as_view(), name='leaderboard'),
 
     path('student/files/<int:pk>/', ApplicationFileUpdateAPIView.as_view()),
 
