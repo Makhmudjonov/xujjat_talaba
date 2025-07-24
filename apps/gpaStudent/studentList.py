@@ -27,28 +27,35 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        qs = Student.objects.all()
 
+        # Admin roli bo‘yicha filter
+        if user.role == 'admin':
+            if user.university1:
+                qs = qs.filter(university=user.university1)
+
+            if user.faculties.exists():
+                qs = qs.filter(faculty__in=user.faculties.all())
+
+            if user.levels.exists():
+                qs = qs.filter(level__in=user.levels.all())
+
+            if user.directions.exists():
+                qs = qs.filter(direction__in=user.directions.all())
+
+            if user.sections.exists():
+                qs = qs.filter(section__in=user.sections.all())
+
+        # GPA annotate
         latest_gpa_subquery = GPARecord.objects.filter(
             student=OuterRef('pk')
         ).order_by('-education_year', '-id').values('gpa')[:1]
 
-        qs = Student.objects.annotate(
+        qs = qs.annotate(
             latest_gpa=Subquery(latest_gpa_subquery, output_field=FloatField())
-        ).order_by('-latest_gpa').select_related(
-            'faculty', 'level'
-        ).prefetch_related('gpa_records')
+        ).select_related('faculty', 'level', 'university').prefetch_related('gpa_records')
 
-        # Admin filtrlarini qo‘llash:
-        if user.faculty:
-            qs = qs.filter(faculty=user.faculty)
-        if user.level:
-            qs = qs.filter(level=user.level)
-        if user.university:
-            qs = qs.filter(university=user.university)
-        if hasattr(user, "direction") and user.direction:
-            qs = qs.filter(applications__items__direction=user.direction).distinct()
-
-        return qs
+        return qs.order_by('-latest_gpa')
 
     @swagger_auto_schema(
         operation_summary="Filterlangan studentlarni Excel (.xlsx) formatda yuklab olish",
