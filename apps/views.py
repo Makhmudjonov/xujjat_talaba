@@ -1390,6 +1390,7 @@ class GetNextQuestionAPIView(APIView):
 class LeaderboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsIndexSetPagination
+    serializer_class = LeaderBoardSerializer
 
     @swagger_auto_schema(
         operation_summary="Leaderboard ro'yxati (studentlar ballari bilan)",
