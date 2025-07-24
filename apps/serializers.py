@@ -396,9 +396,39 @@ class StudentCombinedScoreSerializer(serializers.ModelSerializer):
 
             for item in items:
                 if item.direction.name == 'Kitobxonlik madaniyati' and item.test_result is not None:
-                    total += float(item.test_result)
-                elif hasattr(item, "score") and item.score:
-                    total += item.score.value
+                    total += float(item.test_result) * 0.2
+                    
+                if item.direction.name == 'Talabaning akademik o‘zlashtirishi':
+                    try:
+                        latest_gpa_record = obj.gpa_records.order_by('-created_at').first()
+                        if latest_gpa_record:
+                            gpa = float(latest_gpa_record.gpa)
+                            gpa_score_map = {
+                                5.0: 10.0,
+                                4.9: 9.7,
+                                4.8: 9.3,
+                                4.7: 9.0,
+                                4.6: 8.7,
+                                4.5: 8.3,
+                                4.4: 8.0,
+                                4.3: 7.7,
+                                4.2: 7.3,
+                                4.1: 7.0,
+                                4.0: 6.7,
+                                3.9: 6.3,
+                                3.8: 6.0,
+                                3.7: 5.7,
+                                3.6: 5.3,
+                                3.5: 5.0,
+                            }
+                            total += gpa_score_map.get(round(gpa, 1), 0.0)
+                    except:
+                        pass
+
+                # Score ball
+                else:
+                    if hasattr(item, "score") and item.score:
+                        total += item.score.value
         return round(total, 2)
 
     def get_total_score(self, obj):
