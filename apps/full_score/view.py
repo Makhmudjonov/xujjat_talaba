@@ -16,37 +16,31 @@ class StudentScoreView(ListAPIView):
     serializer_class = StudentCombinedScoreSerializer
     permission_classes = [IsAdminUser]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['faculty', 'level']
     search_fields = ['full_name', 'group']
     ordering_fields = ['gpaball', 'score_total', 'total_score']
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         user = self.request.user
+
+        # Boshlang'ich queryset
         queryset = Student.objects.prefetch_related(
-            'applications__items__score', 'gpa_records', 'faculty', 'level'
+            'applications__items__score',
+            'gpa_records',
+            'faculty',
+            'level'
         )
 
-        # Faqat superuserlarga barcha malumotlar ko‘rinadi
-        if not user.is_superuser:
-            if user.faculty:
-                queryset = queryset.filter(faculty=user.faculty)
-            if user.level:
-                queryset = queryset.filter(level=user.level)
+        # Faqat admin roliga tekshiruv
+        if user.role in ['admin', 'dekan', 'kichik_admin']:
+            if user.university1:
+                queryset = queryset.filter(university=user.university1)
+            if user.faculties.exists():
+                queryset = queryset.filter(faculty__in=user.faculties.all())
+            if user.levels.exists():
+                queryset = queryset.filter(level__in=user.levels.all())
 
+        # Superuser hammasini ko‘ra oladi
         return queryset
 
-    @swagger_auto_schema(
-        operation_summary="Studentlar ballari ro‘yxati (admin filtering)",
-        manual_parameters=[
-            openapi.Parameter('faculty', openapi.IN_QUERY, description="Fakultet ID (ixtiyoriy, admin o‘z fakultetini ko‘radi)", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('level', openapi.IN_QUERY, description="Kurs ID (ixtiyoriy, admin o‘z kursini ko‘radi)", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('search', openapi.IN_QUERY, description="F.I.Sh yoki guruh bo‘yicha qidirish", type=openapi.TYPE_STRING),
-            openapi.Parameter('ordering', openapi.IN_QUERY, description="Saralash: gpaball, score_total, total_score", type=openapi.TYPE_STRING),
-            openapi.Parameter('page', openapi.IN_QUERY, description="Sahifa raqami", type=openapi.TYPE_INTEGER),
-            openapi.Parameter('page_size', openapi.IN_QUERY, description="Har bir sahifadagi elementlar soni", type=openapi.TYPE_INTEGER),
-        ]
-    )
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
 
