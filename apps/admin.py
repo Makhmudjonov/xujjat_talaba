@@ -76,8 +76,9 @@ class ScoreAdmin(SimpleHistoryAdmin):
     get_student_full_name.short_description = "Talaba"
 
     def get_direction(self, obj):
-        return obj.item.applicationitem.direction.name if obj.item.applicationitem.direction else "-"
+        return obj.item.direction.name if obj.item.direction else "-"
     get_direction.short_description = "Yo‘nalish"
+
 
     # def get_section(self, obj):
     #     direction = obj.item.application.direction
