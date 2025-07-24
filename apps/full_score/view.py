@@ -3,8 +3,10 @@ from rest_framework.permissions import IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
-from .models import Student
-from .serializers import StudentCombinedScoreSerializer
+from apps.models import Student
+from apps.serializers import StudentCombinedScoreSerializer
+
+
 from .pagination import StandardResultsSetPagination  # agar siz custom pagination class ishlatsangiz
 
 class StudentScoreView(ListAPIView):
