@@ -11,7 +11,10 @@ class ExportStudentScoreExcelView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        students = Student.objects.prefetch_related(
+        user = request.user
+
+        # Boshlang'ich queryset
+        queryset = Student.objects.prefetch_related(
             'applications__items__score',
             'applications__items__direction',
             'gpa_records',
@@ -19,13 +22,25 @@ class ExportStudentScoreExcelView(APIView):
             'level'
         ).all()
 
-        serializer = StudentCombinedScoreSerializer(students, many=True, context={'request': request})
+        # Faqat admin, dekan, kichik_admin rollari uchun filtering
+        if user.role in ['admin', 'dekan', 'kichik_admin']:
+            if user.university1:
+                queryset = queryset.filter(university=user.university1)
+            if user.faculties.exists():
+                queryset = queryset.filter(faculty__in=user.faculties.all())
+            if user.levels.exists():
+                queryset = queryset.filter(level__in=user.levels.all())
+
+        # Superuser barcha ma’lumotni ko‘ra oladi (filterlashsiz)
+        # (Agar `is_superuser` tekshiruvi kerak bo‘lsa, u holda yuqoridagi filterlarni o'tkazib yuborishingiz mumkin)
+
+        serializer = StudentCombinedScoreSerializer(queryset, many=True, context={'request': request})
 
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Student Scores"
 
-        headers = ['ID', 'Full Name', 'Faculty', 'Course', 'Group','Toifa', 'GPA Ball', 'Score Total', 'Total Score']
+        headers = ['ID', 'Full Name', 'Faculty', 'Course', 'Group', 'Toifa', 'GPA Ball', 'Score Total', 'Total Score']
         ws.append(headers)
 
         for row in serializer.data:
@@ -42,7 +57,7 @@ class ExportStudentScoreExcelView(APIView):
                 total_score_data.get('total', 0),
             ])
 
-        # Auto-width
+        # Auto column width
         for col in ws.columns:
             max_length = 0
             column = col[0].column  # 1-based index
