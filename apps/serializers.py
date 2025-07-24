@@ -384,7 +384,7 @@ class StudentCombinedScoreSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = ['id', 'full_name', 'faculty', 'course', 'group', 'toifa', 'gpaball', 'score_total', 'total_score', 'gpa_records']
+        fields = ['id', 'full_name', 'faculty', 'course', 'group', 'toifa', 'gpaball', 'score_total', 'total_score', ]
 
     
     def get_queryset(self):
