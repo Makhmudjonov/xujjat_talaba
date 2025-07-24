@@ -1046,7 +1046,7 @@ class LeaderBoardSerializer(serializers.Serializer):
                     total += float(item.test_result) * 0.2
 
                 # GPA ball
-                elif item.direction.name == 'Talabaning akademik o‘zlashtirishi':
+                if item.direction.name == 'Talabaning akademik o‘zlashtirishi':
                     try:
                         latest_gpa_record = obj.gpa_records.order_by('-created_at').first()
                         if latest_gpa_record:
