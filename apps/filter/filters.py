@@ -72,3 +72,17 @@ class ApplicationItemFilter(django_filters.FilterSet):
     class Meta:
         model = ApplicationItem
         fields = ['direction', 'gpa_min', 'gpa_max', 'test_min', 'test_max']
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+from apps.models import Student, Level
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def global_student_filter_options(request):
+    levels = Level.objects.filter(student__isnull=False).distinct().values("id", "name")
+    return Response({
+        "levels": list(levels)
+    })
