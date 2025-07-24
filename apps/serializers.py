@@ -386,6 +386,31 @@ class StudentCombinedScoreSerializer(serializers.ModelSerializer):
         model = Student
         fields = ['id', 'full_name', 'faculty', 'course', 'group', 'gpaball', 'score_total', 'total_score']
 
+    
+    def get_queryset(self):
+        user = self.request.user
+        queryset = Student.objects.all().prefetch_related(
+            'applications__items__score',
+            'applications__items__direction',
+            'gpa_records',
+        ).select_related('faculty', 'level')
+
+        # Admin filtratsiyasi:
+        if user.is_superuser:
+            return queryset
+
+        # Faqat kerakli filterlar bo‘yicha cheklash
+        if hasattr(user, 'faculty') and user.faculty:
+            queryset = queryset.filter(faculty=user.faculty)
+        if hasattr(user, 'level') and user.level:
+            queryset = queryset.filter(level=user.level)
+        if hasattr(user, 'university') and user.university:
+            queryset = queryset.filter(faculty__university=user.university)
+        if hasattr(user, 'directions') and user.directions.exists():
+            queryset = queryset.filter(applications__items__direction__in=user.directions.all())
+
+        return queryset.distinct()
+
     def get_gpaball(self, obj):
         record = obj.gpa_records.order_by('-education_year', '-created_at').first()
         if record and record.gpa is not None:
