@@ -1463,7 +1463,7 @@ class LeaderboardAPIView(APIView):
         ws.title = "Leaderboard"
 
         headers = [
-            "ID", "Full Name", "Faculty", "Level", "Group", "Course", "Total Score"
+            "ID", "Full Name", "Faculty", "Level", "Group", "Course", "Total Score", "Toifa"
         ]
         ws.append(headers)
 
@@ -1488,6 +1488,7 @@ class LeaderboardAPIView(APIView):
                 student.group,
                 student.course,
                 round(total_score, 2),
+                student.toifa if hasattr(student, 'toifa') else False
             ])
 
         # Auto column width
