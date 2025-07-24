@@ -69,11 +69,15 @@ admin.site.register(Direction)
 class ScoreAdmin(SimpleHistoryAdmin):
     list_display = ('id', 'get_student_full_name', 'value', 'reviewer', 'scored_at')
     search_fields = ('item__application__student__full_name',)
-    list_filter = ('scored_at', 'reviewer')
+    list_filter = ('scored_at','item__application__direction',)
 
     def get_student_full_name(self, obj):
         return obj.item.application.student.full_name
     get_student_full_name.short_description = "Talaba"
+
+    def get_direction(self, obj):
+        return obj.item.application.direction.name if obj.item.application.direction else '-'
+    get_direction.short_description = "Yo‘nalish"
 
 @admin.register(Application)
 class ApplicationAdmin(SimpleHistoryAdmin):
