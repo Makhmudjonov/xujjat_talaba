@@ -1,5 +1,6 @@
 from django.urls import path, include
 from apps.application.applicationExcel import ApplicationExportExcelAPIView
+from apps.changePassword.view import ChangePasswordView
 from apps.filter.filters import global_student_filter_faculty, global_student_filter_level, global_student_filter_university
 from apps.filter.view import ApplicationTypeStatsAPIView, FacultyStudentStatsAPIView, GPAStatsAPIView, PublicStatsAPIView, StudentGenderStatsAPIView, UniversityStudentStatsAPIView
 from rest_framework.routers import DefaultRouter
@@ -69,6 +70,8 @@ urlpatterns = [
 
     path('admin/mandat/', StudentScoreView.as_view(), name='student-scores'),
     path('admin/mandat/export/', ExportStudentScoreExcelView.as_view(), name='export-student-scores'),
+
+    path('admin/auth/change-password/', ChangePasswordView.as_view(), name='change_password'),
 
     
     # Talaba login qilish uchun API endpointi
