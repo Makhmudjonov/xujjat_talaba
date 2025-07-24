@@ -67,17 +67,21 @@ admin.site.register(Direction)
 
 @admin.register(Score)
 class ScoreAdmin(SimpleHistoryAdmin):
-    list_display = ('id', 'get_student_full_name', 'value', 'reviewer', 'scored_at')
+    list_display = ('id', 'get_student_full_name', 'get_direction', 'value', 'reviewer', 'scored_at')
     search_fields = ('item__application__student__full_name',)
-    list_filter = ('scored_at','item__application__direction',)
+    list_filter = (
+        'scored_at',
+        'item__direction',  # ✅ Direction bo‘yicha filter to‘g‘rilandi
+    )
 
     def get_student_full_name(self, obj):
         return obj.item.application.student.full_name
     get_student_full_name.short_description = "Talaba"
 
     def get_direction(self, obj):
-        return obj.direction.name if obj.direction else "-"
+        return obj.item.direction.name if obj.item.direction else "-"
     get_direction.short_description = "Yo‘nalish"
+
 
 
     # def get_section(self, obj):
