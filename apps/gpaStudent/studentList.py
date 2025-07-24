@@ -26,12 +26,29 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     filterset_class = StudentFilter
 
     def get_queryset(self):
+        user = self.request.user
+
         latest_gpa_subquery = GPARecord.objects.filter(
             student=OuterRef('pk')
         ).order_by('-education_year', '-id').values('gpa')[:1]
 
-        return Student.objects.annotate(
-            latest_gpa=Subquery(latest_gpa_subquery, output_field=FloatField())).order_by('-latest_gpa').select_related('faculty', 'level').prefetch_related('gpa_records')
+        qs = Student.objects.annotate(
+            latest_gpa=Subquery(latest_gpa_subquery, output_field=FloatField())
+        ).order_by('-latest_gpa').select_related(
+            'faculty', 'level'
+        ).prefetch_related('gpa_records')
+
+        # Admin filtrlarini qo‘llash:
+        if user.faculty:
+            qs = qs.filter(faculty=user.faculty)
+        if user.level:
+            qs = qs.filter(level=user.level)
+        if user.university:
+            qs = qs.filter(university=user.university)
+        if hasattr(user, "direction") and user.direction:
+            qs = qs.filter(applications__items__direction=user.direction).distinct()
+
+        return qs
 
     @swagger_auto_schema(
         operation_summary="Filterlangan studentlarni Excel (.xlsx) formatda yuklab olish",
