@@ -1079,54 +1079,41 @@ class LeaderBoardSerializer(serializers.Serializer):
                 items = items.filter(direction__in=user.directions.all())
 
             for item in items:
+                direction_name = item.direction.name if item.direction else ""
+
                 # Test ball
-                if item.direction.name == 'Kitobxonlik madaniyati' and item.test_result is not None:
-                    if not obj or not item.direction or not item.direction.test:
-                        return None
-
-                    session = TestSession.objects.filter(student=obj, test=item.direction.test).first()
-
-                    if session and session.correct_answers is not None:
-                        # Har to‘g‘ri javob uchun 0.8 ball (20 / 25)
-                        total += session.correct_answers * 20 / 25
-                    else:
-                        total += 0
-
+                if direction_name == 'Kitobxonlik madaniyati':
+                    if item.test_result is not None:
+                        session = TestSession.objects.filter(student=obj, test=item.direction.test).first()
+                        if session and session.correct_answers is not None:
+                            total += session.correct_answers * 20 / 25
+                        else:
+                            total += 0  # test natija yo‘q
 
                 # GPA ball
-                if item.direction.name == 'Talabaning akademik o‘zlashtirishi':
+                elif direction_name == 'Talabaning akademik o‘zlashtirishi':
                     try:
                         latest_gpa_record = obj.gpa_records.order_by('-created_at').first()
                         if latest_gpa_record:
                             gpa = float(latest_gpa_record.gpa)
                             gpa_score_map = {
-                                5.0: 10.0,
-                                4.9: 9.7,
-                                4.8: 9.3,
-                                4.7: 9.0,
-                                4.6: 8.7,
-                                4.5: 8.3,
-                                4.4: 8.0,
-                                4.3: 7.7,
-                                4.2: 7.3,
-                                4.1: 7.0,
-                                4.0: 6.7,
-                                3.9: 6.3,
-                                3.8: 6.0,
-                                3.7: 5.7,
-                                3.6: 5.3,
-                                3.5: 5.0,
+                                5.0: 10.0, 4.9: 9.7, 4.8: 9.3, 4.7: 9.0,
+                                4.6: 8.7, 4.5: 8.3, 4.4: 8.0, 4.3: 7.7,
+                                4.2: 7.3, 4.1: 7.0, 4.0: 6.7, 3.9: 6.3,
+                                3.8: 6.0, 3.7: 5.7, 3.6: 5.3, 3.5: 5.0,
                             }
                             total += gpa_score_map.get(round(gpa, 1), 0.0)
+                        else:
+                            total += 0
                     except:
-                        pass
+                        total += 0
 
-                # Score ball
+                # Boshqa score itemlar
                 else:
-                    if hasattr(item, "score") and item.score:
-                        total += item.score.value
+                    total += item.score.value if hasattr(item, "score") and item.score else 0
 
         return round(total, 2)
+
 
 
 
