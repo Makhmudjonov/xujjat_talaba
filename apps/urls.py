@@ -67,8 +67,8 @@ router.register(r'admin/students-gpa', AdminStudentListViewSet, basename='studen
 # Barcha URL patternlari
 urlpatterns = [
 
-    path('api/admin/students/scores/', StudentScoreView.as_view(), name='student-scores'),
-    path('api/admin/students/scores/export/', ExportStudentScoreExcelView.as_view(), name='export-student-scores'),
+    path('admin/mandat/', StudentScoreView.as_view(), name='student-scores'),
+    path('admin/mandat/export/', ExportStudentScoreExcelView.as_view(), name='export-student-scores'),
 
     
     # Talaba login qilish uchun API endpointi
