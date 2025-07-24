@@ -5,6 +5,7 @@ from apps.models import Application, ApplicationItem, ApplicationType, Faculty, 
 class StudentFilter(django_filters.FilterSet):
     gender = django_filters.CharFilter(field_name="gender", lookup_expr='iexact')
     university = django_filters.CharFilter(field_name="university", lookup_expr='icontains')
+    full_name = django_filters.CharFilter(field_name="full_name", lookup_expr='icontains')
     faculty = django_filters.NumberFilter(field_name="faculty__id")
     level = django_filters.NumberFilter(field_name="level__id")
 
