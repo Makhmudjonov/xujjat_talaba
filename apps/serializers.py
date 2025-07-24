@@ -353,15 +353,14 @@ class StudentsGpaSerializer(serializers.ModelSerializer):
         ]
 
     def get_last_gpa(self, obj):
-        record = obj.gpa_records.last()
+        record = obj.gpa_records.order_by('-education_year', '-created_at').first()
         if record:
             return GPARecordSerializer(record).data
         return None
-    
 
     def get_gpaball(self, obj):
-        record = obj.gpa_records.last()
-        if record and record.gpa:
+        record = obj.gpa_records.order_by('-education_year', '-created_at').first()
+        if record and record.gpa is not None:
             return round(float(record.gpa) * 16, 2)
         return None
 
