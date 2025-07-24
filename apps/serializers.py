@@ -392,7 +392,7 @@ class StudentCombinedScoreSerializer(serializers.ModelSerializer):
             return round(float(record.gpa) * 16, 2)
         return 0.0
 
-    def get_total_score(self, obj):
+    def get_score_total(self, obj):
         request = self.context.get("request")
         user = request.user if request else None
 
