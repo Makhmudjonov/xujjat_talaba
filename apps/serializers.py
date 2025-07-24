@@ -1081,7 +1081,7 @@ class LeaderBoardSerializer(serializers.Serializer):
             for item in items:
                 # Test ball
                 if item.direction.name == 'Kitobxonlik madaniyati' and item.test_result is not None:
-                    total += float(item.test_result) * 0.2
+                    total += float(item.result_test.score)
 
                 # GPA ball
                 if item.direction.name == 'Talabaning akademik o‘zlashtirishi':
