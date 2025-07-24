@@ -1404,9 +1404,14 @@ class LeaderboardAPIView(APIView):
             openapi.Parameter(
                 'course', openapi.IN_QUERY, description="Kurs (1-5)", type=openapi.TYPE_INTEGER
             ),
+            openapi.Parameter(
+                'page', openapi.IN_QUERY, description="Page number", type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                'page_size', openapi.IN_QUERY, description="Page size", type=openapi.TYPE_INTEGER
+            ),
         ]
     )
-
     def get(self, request):
         students = Student.objects.prefetch_related(
             'applications__items__score',
@@ -1427,8 +1432,11 @@ class LeaderboardAPIView(APIView):
         if course:
             students = students.filter(course=course)
 
-        serializer = LeaderBoardSerializer(students, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        # Qo'lda paginatsiya
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(students, request)
+        serializer = self.serializer_class(page, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
 
 class UpdateToifaAPIView(APIView):
