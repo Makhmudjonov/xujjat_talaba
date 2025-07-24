@@ -73,6 +73,7 @@ class ApplicationFileSerializer(serializers.ModelSerializer):
 
 class ScoreSerializer(serializers.ModelSerializer):
     reviewer2 = serializers.CharField(source='reviewer.full_name')
+    scored_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
 
     def validate(self, data):
         user = self.context["request"].user
