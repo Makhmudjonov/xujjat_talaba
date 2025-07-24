@@ -40,6 +40,8 @@ from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
+from apps.filter.filters import StudentFilter
+from apps.gpaStudent.pagenation import StandardResultsSetPagination
 from apps.pagenation import CustomPagination
 from komissiya.views import StandardResultsIndexSetPagination
 
@@ -1389,7 +1391,10 @@ class GetNextQuestionAPIView(APIView):
     
 class LeaderboardAPIView(APIView):
     permission_classes = [IsAuthenticated]
-    pagination_class = StandardResultsIndexSetPagination
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['faculty', 'level', 'university']
+    filterset_class = StudentFilter
 
     def get(self, request):
         students = Student.objects.prefetch_related(
