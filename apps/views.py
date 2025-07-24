@@ -11,6 +11,7 @@ from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework.decorators import action
+from rest_framework import mixins, viewsets, permissions
 
 from django.utils.timezone import now
 from rest_framework.viewsets import GenericViewSet
@@ -1389,7 +1390,7 @@ class GetNextQuestionAPIView(APIView):
 
         return Response(RandomizedQuestionSerializer(question).data)
     
-class LeaderboardAPIView(APIView):
+class LeaderboardAPIView(mixins.ListModelMixin, viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend]
