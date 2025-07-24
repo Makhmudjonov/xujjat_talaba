@@ -349,6 +349,7 @@ class StudentsGpaSerializer(serializers.ModelSerializer):
     level = LevelSerializer(read_only=True)
     last_gpa = serializers.SerializerMethodField()
     gpaball = serializers.SerializerMethodField()
+    
 
     class Meta:
         model = Student
@@ -363,7 +364,7 @@ class StudentsGpaSerializer(serializers.ModelSerializer):
     def get_last_gpa(self, obj):
         record = obj.gpa_records.order_by('-education_year', '-created_at').first()
         if record:
-            return GPARecordSerializer(record).data
+            return float(record.gpa)
         return None
 
     def get_gpaball(self, obj):
