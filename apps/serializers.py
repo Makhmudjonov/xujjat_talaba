@@ -1081,7 +1081,19 @@ class LeaderBoardSerializer(serializers.Serializer):
             for item in items:
                 # Test ball
                 if item.direction.name == 'Kitobxonlik madaniyati' and item.test_result is not None:
-                    total += float(item.result_test.score)
+                    request = self.context.get("request")
+                    student = getattr(request.user, "student", None)
+                    if not student or not item.direction or not obj.direction.test:
+                        return None
+
+                    session = TestSession.objects.filter(
+                        student=student,
+                        test=obj.direction.test
+                    ).first()
+                    if session and session.score is not None:
+                        total += session.correct_answers * 20 / 25
+                    else:
+                        total += 0
 
                 # GPA ball
                 if item.direction.name == 'Talabaning akademik o‘zlashtirishi':
