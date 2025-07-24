@@ -250,6 +250,7 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
 
 class ApplicationSerializer(serializers.ModelSerializer):
     items = ApplicationItemSerializer(many=True)
+    submitted_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
 
     class Meta:
         model = Application
