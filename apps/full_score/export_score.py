@@ -51,7 +51,7 @@ class ExportStudentScoreExcelView(APIView):
                 row.get('faculty'),
                 row.get('course'),
                 row.get('group'),
-                row.get('toifa'),
+                "Bor" if row.get('toifa') else "Yo‘q",
                 total_score_data.get('gpa', 0),
                 total_score_data.get('score_total', 0),
                 total_score_data.get('total', 0),
