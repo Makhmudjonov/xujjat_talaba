@@ -1,4 +1,5 @@
-from rest_framework import mixins, viewsets, permissions
+from rest_framework import mixins, viewsets, permissions, status  # ✅ status import qilindi
+
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -10,7 +11,7 @@ from django.db.models import Subquery, OuterRef, FloatField
 
 from apps.filter.filters import StudentFilter
 from apps.models import Student, GPARecord
-from apps.serializers import StudentsGpaSerializer
+from apps.serializers import LeaderBoardSerializer, StudentsGpaSerializer
 from komissiya.views import StandardResultsSetPagination
 
 class IsAdminUser(permissions.BasePermission):
@@ -86,3 +87,32 @@ class AdminStudentListViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         response['Content-Disposition'] = 'attachment; filename=studentlar.xlsx'
         wb.save(response)
         return response
+
+class LeaderboardAPIView(mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = [IsAdminUser]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = StudentFilter
+
+    @swagger_auto_schema(
+        operation_summary="Reyting uchun barcha studentlar ro‘yxati (GPA, score va test natijalari bilan)",
+        tags=["Admin - Reyting"],
+        manual_parameters=[
+            openapi.Parameter("university", openapi.IN_QUERY, description="Universitet", type=openapi.TYPE_STRING),
+            openapi.Parameter("level", openapi.IN_QUERY, description="Bosqich", type=openapi.TYPE_STRING),
+            openapi.Parameter("faculty", openapi.IN_QUERY, description="Fakultet", type=openapi.TYPE_STRING),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        students = self.filter_queryset(
+            Student.objects.prefetch_related(
+                'applications__items__score',
+                'applications__items__direction',
+                'gpa_records',
+                'faculty',
+                'level'
+            ).all()
+        )
+
+        serializer = LeaderBoardSerializer(students, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
