@@ -102,8 +102,13 @@ def global_student_filter_level(request):
 @permission_classes([IsAdminUser])
 def global_student_filter_university(request):
     user = request.user
-    universitys = user.university1.object.filter(student__isnull=False).distinct().values("id", "name")
-    return Response({
-        "universitys": list(universitys)
-    })
+    university = user.university1
+
+    if university and university.student_set.exists():
+        return Response({
+            "universitys": [{"id": university.id, "name": university.name}]
+        })
+    else:
+        return Response({"universitys": []})
+
 
