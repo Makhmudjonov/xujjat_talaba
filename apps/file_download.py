@@ -2,8 +2,10 @@
 from django.http import FileResponse, HttpResponseNotFound
 from django.conf import settings
 import os
+from urllib.parse import unquote
 
 def download_file(request, path):
+    decoded_path = unquote(path)  # bu yer muhim
     file_path = os.path.join(settings.MEDIA_ROOT, path)
     if os.path.exists(file_path):
         response = FileResponse(open(file_path, 'rb'))
