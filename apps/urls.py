@@ -1,4 +1,4 @@
-from django.urls import path, include
+from django.urls import path, include, re_path
 from apps.application.applicationExcel import ApplicationExportExcelAPIView
 from apps.changePassword.view import ChangePasswordView
 from apps.file_download import download_file
@@ -129,7 +129,7 @@ urlpatterns = [
     path("admin/student-facultys/", global_student_filter_faculty),
     path("admin/student-universitys/", global_student_filter_university),
 
-    path('admin/download/<path:path>/', download_file, name='download_file'),
+    re_path(r'^admin/download/(?P<path>.+)$', download_file),
 
     
     
