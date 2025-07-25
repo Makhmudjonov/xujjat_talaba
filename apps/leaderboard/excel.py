@@ -93,7 +93,7 @@ class LeaderboardExportAPIView(APIView):
                 student.faculty.name if student.faculty else "",
                 student.level.name if student.level else "",
                 student.group,
-                student.course,
+                # student.level,
                 round(total_score, 2),
                 "Nogiron" if getattr(student, 'toifa', False) else "Oddiy"
             ])
