@@ -13,10 +13,10 @@ def download_file(request, path):
     decoded_path = unquote(path)
 
     # 2. Unicode normalization (o‘, ’ kabi belgilar muammosiz bo‘ladi)
-    normalized_path = unicodedata.normalize("NFC", decoded_path)
+    # normalized_path = unicodedata.normalize("NFC", decoded_path)
 
     # 3. To‘liq fayl yo‘lini hosil qilish
-    file_path = os.path.join(settings.MEDIA_ROOT, normalized_path)
+    file_path = os.path.join(settings.MEDIA_ROOT, path)
 
     # 4. Fayl mavjudligini tekshirish
     if not os.path.exists(file_path):
