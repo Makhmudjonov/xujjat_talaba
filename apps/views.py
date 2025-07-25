@@ -1452,9 +1452,18 @@ class LeaderboardAPIView(APIView):
             students = students.filter(group__icontains=course)
 
 
-        # students = students.annotate(
-        #     score_sum=Coalesce(Sum('applications__items__score__value'), V(0.0), output_field=FloatField())
-        # ).order_by('-score_sum')
+        students = students.prefetch_related(
+            'applications__items__direction',
+            'applications__items__score',
+            'gpa_records',
+        ).select_related('faculty', 'level')
+
+        # Serializatsiya qilmasdan oldin total_score hisoblab tartiblash
+        students = sorted(
+            students,
+            key=lambda s: LeaderBoardSerializer(s, context={'request': request}).get_total_score(s),
+            reverse=True
+        )
 
 
         # Paginatsiya
