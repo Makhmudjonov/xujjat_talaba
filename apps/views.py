@@ -1501,9 +1501,9 @@ class LeaderboardAPIView(APIView):
             # Score hisoblash (misol uchun — GPA + scores)
             total_score = 0
             if hasattr(student, 'gpa_records'):
-                gpas = student.gpa_records.all()
+                gpas = student.gpa_records.first()
                 if gpas:
-                    total_score += sum([g.gpa for g in gpas]) / max(len(gpas), 1)
+                    total_score += gpas.gpa if gpas.gpa else 0
 
             for app in student.applications.all():
                 for item in app.items.all():
