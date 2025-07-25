@@ -82,11 +82,6 @@ class Student(models.Model):
     level = models.ForeignKey(Level, on_delete=models.SET_NULL, null=True, blank=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-
-    telegram_user_id = models.BigIntegerField(null=True, blank=True)
-    telegram_username = models.CharField(max_length=150, blank=True, null=True)
-    is_telegram_connected = models.BooleanField(default=False)
-
     history = HistoricalRecords()
 
 
