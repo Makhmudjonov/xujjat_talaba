@@ -75,16 +75,38 @@ class LeaderboardExportAPIView(APIView):
         ws.append(headers)
 
         for student in students:
-            total_score = 0
-            if hasattr(student, 'gpa_records'):
-                gpas = student.gpa_records.first()
-                if gpas:
-                    total_score += float(gpas.gpa)
+            total_score = 0.0
+
+            # GPA bo'yicha eng oxirgi yozuv
+            latest_gpa = student.gpa_records.order_by('-created_at').first()
+            if latest_gpa:
+                gpa = float(latest_gpa.gpa)
+                gpa_score_map = {
+                    5.0: 10.0, 4.9: 9.7, 4.8: 9.3, 4.7: 9.0,
+                    4.6: 8.7, 4.5: 8.3, 4.4: 8.0, 4.3: 7.7,
+                    4.2: 7.3, 4.1: 7.0, 4.0: 6.7, 3.9: 6.3,
+                    3.8: 6.0, 3.7: 5.7, 3.6: 5.3, 3.5: 5.0,
+                }
+                total_score += gpa_score_map.get(round(gpa, 1), 0.0)
 
             for app in student.applications.all():
                 for item in app.items.all():
-                    if hasattr(item, 'score') and item.score:
-                        total_score += float(item.score.value)
+                    direction_name = item.direction.name if item.direction else ""
+
+                    if direction_name == 'Kitobxonlik madaniyati':
+                        # Kitobxonlik uchun test natijasidan olish
+                        test = getattr(item.direction, 'test', None)
+                        if test:
+                            session = TestSession.objects.filter(student=student, test=test).order_by('-finished_at').first()
+                            if session and session.correct_answers is not None:
+                                total_score += round(session.correct_answers * 20 / 25, 2)
+
+                    elif direction_name == 'Talabaning akademik o‘zlashtirishi':
+                        pass  # oldin GPA dan qo‘shilgan
+
+                    else:
+                        if hasattr(item, 'score') and item.score:
+                            total_score += float(item.score.value)
 
             ws.append([
                 student.id,
@@ -93,7 +115,6 @@ class LeaderboardExportAPIView(APIView):
                 student.faculty.name if student.faculty else "",
                 student.level.name if student.level else "",
                 student.group,
-                # student.level,
                 round(total_score, 2),
                 "Nogiron" if getattr(student, 'toifa', False) else "Oddiy"
             ])
@@ -108,3 +129,4 @@ class LeaderboardExportAPIView(APIView):
         response['Content-Disposition'] = 'attachment; filename=leaderboard.xlsx'
         wb.save(response)
         return response
+

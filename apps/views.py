@@ -1485,53 +1485,6 @@ class LeaderboardAPIView(APIView):
         page = paginator.paginate_queryset(students.distinct(), request)
         serializer = self.serializer_class(page, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
-    
-
-    def export_to_excel(self, students):
-        wb = openpyxl.Workbook()
-        ws = wb.active
-        ws.title = "Leaderboard"
-
-        headers = [
-            "ID", "Full Name", "Universitet", "Fakultet", "Level", "Group", "Course", "Total Score", "Toifa"
-        ]
-        ws.append(headers)
-
-        for student in students:
-            # Score hisoblash (misol uchun — GPA + scores)
-            total_score = 0
-            if hasattr(student, 'gpa_records'):
-                gpas = student.gpa_records.first()
-                if gpas:
-                    total_score += gpas.gpa if gpas.gpa else 0
-
-            for app in student.applications.all():
-                for item in app.items.all():
-                    if hasattr(item, 'score') and item.score:
-                        total_score += item.score.value
-
-            ws.append([
-                student.id,
-                student.full_name,
-                student.university1.name if student.university1 else "",
-                student.faculty.name if student.faculty else "",
-                student.level.name if student.level else "",
-                student.group,
-                student.course,
-                round(total_score, 2),
-                student.toifa if hasattr(student, 'toifa') else False
-            ])
-
-        # Auto column width
-        for col_num, _ in enumerate(ws.columns, 1):
-            ws.column_dimensions[get_column_letter(col_num)].auto_size = True
-
-        response = HttpResponse(
-            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-        response['Content-Disposition'] = 'attachment; filename=leaderboard.xlsx'
-        wb.save(response)
-        return response
 
 
 
