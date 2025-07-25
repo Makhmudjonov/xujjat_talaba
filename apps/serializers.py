@@ -807,7 +807,8 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
 
     def get_test_result(self, obj):
         request = self.context.get("request")
-        student = getattr(request.user, "student", None)
+        
+        student = getattr(obj, "student", None)
         if not student:
             return None
 
