@@ -796,20 +796,27 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
     student = ApplicationStudentSerializer(read_only=True)
     application_type_name = serializers.CharField(source="application_type.title", read_only=True)
     total_score = serializers.SerializerMethodField()
+    test_result = serializers.SerializerMethodField()
 
     class Meta:
         model = Application
-        fields = ("id", "status", "comment", "submitted_at", "application_type_name", "student", "items", "total_score")
+        fields = ("id", "status", "comment", "submitted_at", "application_type_name", "student", "items", "total_score", "test_result")
 
-    def get_items(self, obj):
+    def get_test_result(self, obj):
         request = self.context.get("request")
-        user = request.user if request else None
-        items = obj.items.all()
+        student = getattr(request.user, "student", None)
+        if not student:
+            return None
 
-        if user and user.directions.exists():
-            items = items.filter(direction__in=user.directions.all())
-
-        return ApplicationItemFullSerializer(items, many=True, context=self.context).data
+        session = obj.testsession_set.filter(student=student).first()
+        if session and session.score is not None:
+            return {
+                "score": session.score,
+                "correct": session.correct_answers,
+                "total": session.total_questions,
+                "ball": round(float(session.correct_answer) * 20 / 25, 2)
+            }
+        return None
     
     def get_total_score(self, obj):
         request = self.context.get("request")
@@ -824,8 +831,11 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
             # if item.direction.name == "Talabaning akademik o‘zlashtirishi":
             #     total += item.gpa_ball
             if item.direction.name == 'Kitobxonlik madaniyati':
-                if  item.test_result != None:
-                    total += float(item.test_result) * 0.2 
+                # Shu yo‘ldan test natijasini olish
+                session = obj.testsession_set.filter(student=student).first()
+                if session and session.correct_answers is not None:
+                    ball = round(float(session.correct_answers) * 20 / 25, 2)
+                    total += ball 
             elif item.direction.name == 'Talabaning akademik o‘zlashtirishi':
                 try:
                     student = item.application.student
