@@ -8,6 +8,7 @@ from rest_framework.routers import DefaultRouter
 from apps.full_score.export_score import ExportStudentScoreExcelView
 from apps.full_score.view import StudentScoreView
 from apps.gpaStudent.studentList import AdminStudentListViewSet
+from apps.leaderboard.excel import LeaderboardExportAPIView
 from apps.natija.pdf import ExportStudentPDF
 from .views import (
     AdminAccountAPIView,
@@ -71,7 +72,7 @@ urlpatterns = [
     path('admin/mandat/', StudentScoreView.as_view(), name='student-scores'),
     path('admin/mandat/export/', ExportStudentScoreExcelView.as_view(), name='export-student-scores'),
     path('admin/auth/change-password/', ChangePasswordView.as_view(), name='change_password'),
-    
+
     # Talaba login qilish uchun API endpointi
     path('students/login/', StudentLoginAPIView.as_view(), name='student-login'),
     path('student/profile/pdf/', ExportStudentPDF.as_view(), name='export-student-pdf'),
@@ -106,6 +107,7 @@ urlpatterns = [
     path('admin/applications/<int:pk>/', ApplicationRetrieveView.as_view(), name='admin-application-detail'),
 
     path('admin/leaderboard/', LeaderboardAPIView.as_view(), name='leaderboard'),
+    path('api/leaderboard/export/', LeaderboardExportAPIView.as_view(), name='leaderboard-export'),
 
     path('student/files/<int:pk>/', ApplicationFileUpdateAPIView.as_view()),
 
