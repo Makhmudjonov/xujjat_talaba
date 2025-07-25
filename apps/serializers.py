@@ -1120,7 +1120,7 @@ class LeaderBoardSerializer(serializers.Serializer):
         return obj.toifa if hasattr(obj, 'toifa') else None
     
     def get_university(self, obj):
-        return obj.university.name if obj.university else None
+        return obj.university if obj.university else None
 
     def get_total_score(self, obj):
         request = self.context.get("request")
