@@ -8,7 +8,7 @@ import random
 from django.forms import ValidationError
 import requests
 from django.db.models import Sum
-from django.db.models import Prefetch, Sum, Avg, Q, F, FloatField, Value as V, IntegerField
+from django.db.models import Prefetch, Sum, Avg, F, Q, FloatField, Value as V, IntegerField
 from django.db.models.functions import Coalesce
 import openpyxl
 from openpyxl.utils import get_column_letter
@@ -1453,12 +1453,13 @@ class LeaderboardAPIView(APIView):
 
 
         students = students.annotate(
-            gpa_sum=Coalesce(Sum('gpa_records__gpa'), V(0.0)),
-            gpa_count=Coalesce(Sum(V(1), filter=~Q(gpa_records=None)), V(1)),
-            score_sum=Coalesce(Sum('applications__items__score__value'), V(0.0)),
+            gpa_sum=Coalesce(Sum('gpa_records__gpa'), V(0.0), output_field=FloatField()),
+            gpa_count=Coalesce(Sum(V(1), filter=~Q(gpa_records=None)), V(1), output_field=FloatField()),
+            score_sum=Coalesce(Sum('applications__items__score__value'), V(0.0), output_field=FloatField()),
         ).annotate(
             total_score=(F('gpa_sum') / F('gpa_count')) + F('score_sum')
         ).order_by('-total_score')
+
 
         # Paginatsiya
         paginator = self.pagination_class()
