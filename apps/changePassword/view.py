@@ -18,7 +18,7 @@ class ChangePasswordView(APIView):
             new_password = serializer.validated_data['new_password']
 
             if not user.check_password(old_password):
-                return Response({"old_password": "Eski parol noto‘g‘ri."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Eski parol noto‘g‘ri."}, status=status.HTTP_400_BAD_REQUEST)
 
             user.set_password(new_password)
             user.save()

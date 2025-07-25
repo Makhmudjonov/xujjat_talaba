@@ -161,6 +161,8 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+TELEGRAM_BOT_TOKEN = '8385707411:AAHJyug0nqxCow39yXo6p_q296y0VfSIgpA'
+
 
 # JWT ni default auth qilib qo‘yamiz
 REST_FRAMEWORK = {
