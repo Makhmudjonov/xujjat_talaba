@@ -1452,25 +1452,26 @@ class LeaderboardAPIView(APIView):
             students = students.filter(group__icontains=course)
 
 
+      # oldindan querysetni yuklab olish
         students = students.prefetch_related(
             'applications__items__direction',
             'applications__items__score',
             'gpa_records',
         ).select_related('faculty', 'level')
 
-        # Serializatsiya qilmasdan oldin total_score hisoblab tartiblash
+        # Python darajasida sort qilish
         students = sorted(
             students,
             key=lambda s: LeaderBoardSerializer(s, context={'request': request}).get_total_score(s),
             reverse=True
         )
 
-
-        # Paginatsiya
+        # Paginatsiya (list obyektida distinct yo‘q)
         paginator = self.pagination_class()
-        page = paginator.paginate_queryset(students.distinct(), request)
+        page = paginator.paginate_queryset(students, request)
         serializer = self.serializer_class(page, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
+
     
 
     def export_to_excel(self, students):
