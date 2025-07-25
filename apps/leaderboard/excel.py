@@ -79,12 +79,12 @@ class LeaderboardExportAPIView(APIView):
             if hasattr(student, 'gpa_records'):
                 gpas = student.gpa_records.all()
                 if gpas:
-                    total_score += sum([g.gpa for g in gpas]) / max(len(gpas), 1)
+                    total_score += sum([float(g.gpa) for g in gpas]) / max(len(gpas), 1)
 
             for app in student.applications.all():
                 for item in app.items.all():
                     if hasattr(item, 'score') and item.score:
-                        total_score += item.score.value
+                        total_score += float(item.score.value)
 
             ws.append([
                 student.id,
