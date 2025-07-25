@@ -70,9 +70,7 @@ urlpatterns = [
 
     path('admin/mandat/', StudentScoreView.as_view(), name='student-scores'),
     path('admin/mandat/export/', ExportStudentScoreExcelView.as_view(), name='export-student-scores'),
-
     path('admin/auth/change-password/', ChangePasswordView.as_view(), name='change_password'),
-
     
     # Talaba login qilish uchun API endpointi
     path('students/login/', StudentLoginAPIView.as_view(), name='student-login'),

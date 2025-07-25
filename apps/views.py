@@ -1417,10 +1417,20 @@ class LeaderboardAPIView(APIView):
             openapi.Parameter(
                 'page_size', openapi.IN_QUERY, description="Page size", type=openapi.TYPE_INTEGER
             ),
+            openapi.Parameter(
+                'toifa', openapi.IN_QUERY, description="Faqat toifa (True/False)", type=openapi.TYPE_BOOLEAN
+            ),
         ]
     )
     def get(self, request):
         admin = request.user
+
+        toifa_param = request.GET.get("toifa")
+        if toifa_param is not None:
+            if toifa_param.lower() in ["true", "1"]:
+                students = students.filter(toifa=True)
+            elif toifa_param.lower() in ["false", "0"]:
+                students = students.filter(toifa=False)
 
         students = Student.objects.prefetch_related(
             'applications__items__score',
