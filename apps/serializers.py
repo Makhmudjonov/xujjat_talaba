@@ -371,7 +371,7 @@ class StudentsGpaSerializer(serializers.ModelSerializer):
     def get_gpaball(self, obj):
         record = obj.gpa_records.order_by('-education_year', '-created_at').first()
         if record and record.gpa is not None:
-            return float(record.gpa)
+            return round(float(record.gpa) * 16, 2)
         return None
 
 
@@ -416,7 +416,7 @@ class StudentCombinedScoreSerializer(serializers.ModelSerializer):
     def get_gpaball(self, obj):
         record = obj.gpa_records.order_by('-education_year', '-created_at').first()
         if record and record.gpa is not None:
-            return round(float(record.gpa) * 16, 2)
+            return float(record.gpa)
         return 0.0
 
     def get_score_total(self, obj):
@@ -471,7 +471,7 @@ class StudentCombinedScoreSerializer(serializers.ModelSerializer):
         score_total = self.get_score_total(obj) or 0
         total = round(score_total * 0.2 + gpaball, 2)
         return {
-            "gpa": gpaball,
+            "gpa": round(gpaball * 16, 2),
             "score_total": score_total,
             "total": total
         }
