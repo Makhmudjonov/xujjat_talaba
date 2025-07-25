@@ -811,7 +811,7 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
         if not student:
             return None
 
-        session = obj.testsession_set.filter(student=student).first()
+        session = obj.test_sessions.filter(student=student).first()
         if session and session.score is not None:
             return {
                 "score": session.score,
@@ -835,7 +835,7 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
             direction_name = item.direction.name
 
             if direction_name == 'Kitobxonlik madaniyati':
-                session = obj.testsession_set.filter(student=student).first()
+                session = obj.test_sessions.filter(student=student).first()
                 if session and session.correct_answers is not None:
                     ball = round(float(session.correct_answers) * 20 / 25, 2)
                     total += ball
