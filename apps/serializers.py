@@ -1107,12 +1107,16 @@ class LeaderBoardSerializer(serializers.Serializer):
     course = serializers.SerializerMethodField()
     group = serializers.CharField()
     total_score = serializers.SerializerMethodField()  # <-- Bu yerda o‘zgartirish
+    toifa = serializers.SerializerMethodField()
 
     def get_faculty(self, obj):
         return obj.faculty.name if obj.faculty else None
 
     def get_course(self, obj):
         return obj.level.name if obj.level else None
+    
+    def get_toifa(self, obj):
+        return obj.toifa if hasattr(obj, 'toifa') else None
 
     def get_total_score(self, obj):
         request = self.context.get("request")
