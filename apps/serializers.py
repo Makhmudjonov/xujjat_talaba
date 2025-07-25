@@ -1091,7 +1091,7 @@ class LeaderBoardSerializer(serializers.Serializer):
     faculty = serializers.SerializerMethodField()
     course = serializers.SerializerMethodField()
     group = serializers.CharField()
-    total_score = serializers.SerializerMethodField()
+    total_score = serializers.SerializerMethodField()  # <-- Bu yerda o‘zgartirish
 
     def get_faculty(self, obj):
         return obj.faculty.name if obj.faculty else None
@@ -1113,16 +1113,14 @@ class LeaderBoardSerializer(serializers.Serializer):
             for item in items:
                 direction_name = item.direction.name if item.direction else ""
 
-                # Test ball
                 if direction_name == 'Kitobxonlik madaniyati':
                     if item.test_result is not None:
                         session = TestSession.objects.filter(student=obj, test=item.direction.test).first()
                         if session and session.correct_answers is not None:
                             total += session.correct_answers * 20 / 25
                         else:
-                            total += 0  # test natija yo‘q
+                            total += 0
 
-                # GPA ball
                 elif direction_name == 'Talabaning akademik o‘zlashtirishi':
                     try:
                         latest_gpa_record = obj.gpa_records.order_by('-created_at').first()
@@ -1140,11 +1138,11 @@ class LeaderBoardSerializer(serializers.Serializer):
                     except:
                         total += 0
 
-                # Boshqa score itemlar
                 else:
                     total += item.score.value if hasattr(item, "score") and item.score else 0
 
         return round(total, 2)
+
 
 
 
