@@ -811,8 +811,13 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
         if not student:
             return None
 
-        session = obj.test_sessions.filter(student=student).first()
-        if session and session.score is not None:
+        application_type = obj.application_type
+        test = getattr(application_type, "test", None)  # ApplicationType bilan Test bog‘langan bo‘lishi kerak
+        if not test:
+            return None
+
+        session = test.testsession_set.filter(student=student).first()
+        if session and session.correct_answers is not None:
             return {
                 "score": session.score,
                 "correct": session.correct_answers,
@@ -820,6 +825,7 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
                 "ball": round(float(session.correct_answers) * 20 / 25, 2)
             }
         return None
+
 
     def get_total_score(self, obj):
         request = self.context.get("request")
