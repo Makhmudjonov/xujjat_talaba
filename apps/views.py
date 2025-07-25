@@ -8,7 +8,7 @@ import random
 from django.forms import ValidationError
 import requests
 from django.db.models import Sum
-from django.db.models import Prefetch, Sum, Avg, F, Q, FloatField, Value as V, IntegerField
+from django.db.models import Sum, F, FloatField, Value as V, Q
 from django.db.models.functions import Coalesce
 import openpyxl
 from openpyxl.utils import get_column_letter
@@ -1452,26 +1452,20 @@ class LeaderboardAPIView(APIView):
             students = students.filter(group__icontains=course)
 
 
-      # oldindan querysetni yuklab olish
-        students = students.prefetch_related(
-            # 'applications__items__direction',
-            'applications__items__score',
-            'gpa_records',
-        ).select_related('faculty', 'level')
+        students = students.annotate(
+            gpa_sum=Coalesce(Sum('gpa_records__gpa'), V(0.0), output_field=FloatField()),
+            gpa_count=Coalesce(Sum(V(1), filter=~Q(gpa_records=None)), V(0.0001), output_field=FloatField()),
+            score_sum=Coalesce(Sum('applications__items__score__value'), V(0.0), output_field=FloatField()),
+        ).annotate(
+            total_score=F('gpa_sum') / F('gpa_count') + F('score_sum')
+        ).order_by('-total_score')
 
-        # Python darajasida sort qilish
-        students = sorted(
-            students,
-            key=lambda s: LeaderBoardSerializer(s, context={'request': request}).get_total_score(s),
-            reverse=True
-        )
 
-        # Paginatsiya (list obyektida distinct yo‘q)
+        # Paginatsiya
         paginator = self.pagination_class()
-        page = paginator.paginate_queryset(students, request)
+        page = paginator.paginate_queryset(students.distinct(), request)
         serializer = self.serializer_class(page, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
-
     
 
     def export_to_excel(self, students):
