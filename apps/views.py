@@ -1454,7 +1454,7 @@ class LeaderboardAPIView(APIView):
 
       # oldindan querysetni yuklab olish
         students = students.prefetch_related(
-            'applications__items__direction',
+            # 'applications__items__direction',
             'applications__items__score',
             'gpa_records',
         ).select_related('faculty', 'level')
