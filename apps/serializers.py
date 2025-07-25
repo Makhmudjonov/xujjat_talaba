@@ -835,7 +835,7 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
     def get_total_score(self, obj):
         request = self.context.get("request")
         user = request.user if request else None
-        student = getattr(user, "student", None)
+        student = obj.student
         items = obj.items.all()
 
         if user and hasattr(user, "directions") and user.directions.exists():
@@ -846,13 +846,10 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
             direction_name = item.direction.name
 
             if direction_name == 'Kitobxonlik madaniyati':
-                application_type = obj.application_type
-                test = getattr(application_type, "test", None)
-                if test:
-                    session = test.testsession_set.filter(student=student).first()
-                    if session and session.correct_answers is not None:
-                        ball = round(float(session.correct_answers) * 20 / 25, 2)
-                        total += ball
+                session = TestSession.objects.filter(student=student).first()
+                if session and session.correct_answers is not None:
+                    ball = round(float(session.correct_answers) * 20 / 25, 2)
+                    total += ball
 
             elif direction_name == 'Talabaning akademik o‘zlashtirishi':
                 try:
