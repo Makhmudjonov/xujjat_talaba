@@ -1493,7 +1493,7 @@ class LeaderboardAPIView(APIView):
         ws.title = "Leaderboard"
 
         headers = [
-            "ID", "Full Name", "Faculty", "Level", "Group", "Course", "Total Score", "Toifa"
+            "ID", "Full Name", "Universitet", "Fakultet", "Level", "Group", "Course", "Total Score", "Toifa"
         ]
         ws.append(headers)
 
@@ -1513,6 +1513,7 @@ class LeaderboardAPIView(APIView):
             ws.append([
                 student.id,
                 student.full_name,
+                student.university1.name if student.university1 else "",
                 student.faculty.name if student.faculty else "",
                 student.level.name if student.level else "",
                 student.group,
