@@ -6,7 +6,7 @@ from openpyxl.utils import get_column_letter
 from django.db.models import Sum, FloatField, Q, F, Value as V
 from django.db.models.functions import Coalesce
 
-from apps.models import Student
+from apps.models import Student, TestSession
 
 class LeaderboardExportAPIView(APIView):
     permission_classes = [IsAuthenticated]
