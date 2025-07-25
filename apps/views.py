@@ -1420,6 +1420,9 @@ class LeaderboardAPIView(APIView):
             openapi.Parameter(
                 'toifa', openapi.IN_QUERY, description="Faqat toifa (True/False)", type=openapi.TYPE_BOOLEAN
             ),
+            openapi.Parameter(
+                'university', openapi.IN_QUERY, description="University ID", type=openapi.TYPE_INTEGER
+            ),
         ]
     )
     def get(self, request):
@@ -1455,6 +1458,7 @@ class LeaderboardAPIView(APIView):
         faculty_id = request.GET.get("faculty")
         level_id = request.GET.get("level")
         course = request.GET.get("course")
+        university = request.GET.get("university")
 
         if faculty_id:
             students = students.filter(faculty_id=faculty_id)
@@ -1462,6 +1466,9 @@ class LeaderboardAPIView(APIView):
             students = students.filter(level_id=level_id)
         if course:
             students = students.filter(group__icontains=course)
+        if university:
+            students = students.filter(university1_id=university)
+            
 
 
         students = students.annotate(
