@@ -78,7 +78,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000','http://192.168.137.120:3000','http://localhost:8000', 'https://tanlov.medsfera.uz']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000','http://192.168.137.120:3000','http://localhost:8000', 'https://tanlov.medsfera.uz',]
 
 CORS_ALLOWED_ORIGINS = [
     "https://tanlov.mesfera.uz",

@@ -1,6 +1,7 @@
 from django.urls import path, include
 from apps.application.applicationExcel import ApplicationExportExcelAPIView
 from apps.changePassword.view import ChangePasswordView
+from apps.file_download import download_file
 from apps.filter.filters import global_student_filter_faculty, global_student_filter_level, global_student_filter_university
 from apps.filter.view import ApplicationTypeStatsAPIView, FacultyStudentStatsAPIView, GPAStatsAPIView, PublicStatsAPIView, StudentGenderStatsAPIView, UniversityStudentStatsAPIView
 from rest_framework.routers import DefaultRouter
@@ -127,6 +128,8 @@ urlpatterns = [
     path("admin/student-levels/", global_student_filter_level),
     path("admin/student-facultys/", global_student_filter_faculty),
     path("admin/student-universitys/", global_student_filter_university),
+
+    path('download/<path:path>/', download_file, name='download_file'),
 
     
     
