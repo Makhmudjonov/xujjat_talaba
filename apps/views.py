@@ -1452,9 +1452,9 @@ class LeaderboardAPIView(APIView):
             students = students.filter(group__icontains=course)
 
 
-        students = students.annotate(
-            score_sum=Coalesce(Sum('applications__items__score__value'), V(0.0), output_field=FloatField())
-        ).order_by('-score_sum')
+        # students = students.annotate(
+        #     score_sum=Coalesce(Sum('applications__items__score__value'), V(0.0), output_field=FloatField())
+        # ).order_by('-score_sum')
 
 
         # Paginatsiya
