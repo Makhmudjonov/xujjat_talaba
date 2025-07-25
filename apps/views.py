@@ -1428,12 +1428,7 @@ class LeaderboardAPIView(APIView):
     def get(self, request):
         admin = request.user
 
-        toifa_param = request.GET.get("toifa")
-        if toifa_param is not None:
-            if toifa_param.lower() in ["true", "1"]:
-                students = students.filter(toifa=True)
-            elif toifa_param.lower() in ["false", "0"]:
-                students = students.filter(toifa=False)
+        
 
         students = Student.objects.prefetch_related(
             'applications__items__score',
@@ -1442,6 +1437,13 @@ class LeaderboardAPIView(APIView):
             'faculty',
             'level'
         ).all()
+
+        toifa_param = request.GET.get("toifa")
+        if toifa_param is not None:
+            if toifa_param.lower() in ["true", "1"]:
+                students = students.filter(toifa=True)
+            elif toifa_param.lower() in ["false", "0"]:
+                students = students.filter(toifa=False)
 
         # Admin filtrlar
         if hasattr(admin, "role") and admin.role != "student":
