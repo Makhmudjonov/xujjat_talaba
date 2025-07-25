@@ -9,18 +9,18 @@ import unicodedata
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def download_file(request, path):
-    # 1. URL encodingdan chiqarish
+    # URL'dan dekodlash
     decoded_path = unquote(path)
+    normalized_path = unicodedata.normalize("NFC", decoded_path)
 
-    # 2. Unicode normalization (o‘, ’ kabi belgilar muammosiz bo‘ladi)
-    # normalized_path = unicodedata.normalize("NFC", decoded_path)
+    # To‘liq fayl yo‘li
+    file_path = os.path.join(settings.MEDIA_ROOT, normalized_path)
 
-    # 3. To‘liq fayl yo‘lini hosil qilish
-    file_path = os.path.join(settings.MEDIA_ROOT, path)
-
-    # 4. Fayl mavjudligini tekshirish
+    # Fayl mavjudligini tekshirish
     if not os.path.exists(file_path):
         raise Http404("File not found")
 
-    # 5. Faylni yuborish
-    return FileResponse(open(file_path, 'rb'), as_attachment=True)
+    # Faylni yuborish va fayl nomini headerga qo‘shish
+    response = FileResponse(open(file_path, 'rb'), as_attachment=True)
+    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(normalized_path)}"'
+    return response
