@@ -810,13 +810,13 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
         if not student:
             return None
 
-        application_type = obj.application_type
-        test = getattr(application_type, "test", None)  # ApplicationType bilan Test bog‘langan bo‘lishi kerak
-        if not test:
-            return None
+        # application_type = obj.application_type
+        # test = getattr(application_type, "test", None)  # ApplicationType bilan Test bog‘langan bo‘lishi kerak
+        # if not test:
+        #     return None
 
         # related_name yo‘q bo‘lsa:
-        session = TestSession.objects.filter(test=test, student=student).first()
+        session = TestSession.objects.filter(student=student).first()
 
         # related_name="test_sessions" bo‘lsa:
         # session = test.test_sessions.filter(student=student).first()
