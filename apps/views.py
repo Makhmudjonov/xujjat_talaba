@@ -792,9 +792,11 @@ class ScoreCreateAPIView(CreateAPIView):
         score = serializer.save(reviewer=user)
 
         # Application statusini yangilash
-        application = item.application
+        
                     
         item.status = True
+        item.save()
+        application = item.application
         application.save()
     
     @swagger_auto_schema(
