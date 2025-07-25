@@ -70,16 +70,16 @@ class LeaderboardExportAPIView(APIView):
         ws.title = "Leaderboard"
 
         headers = [
-            "ID", "Full Name", "Universitet", "Fakultet", "Level", "Group", "Course", "Total Score", "Toifa"
+            "ID", "Full Name", "Universitet", "Fakultet", "Level", "Group", "Total Score", "Toifa"
         ]
         ws.append(headers)
 
         for student in students:
             total_score = 0
             if hasattr(student, 'gpa_records'):
-                gpas = student.gpa_records.all()
+                gpas = student.gpa_records.first()
                 if gpas:
-                    total_score += sum([float(g.gpa) for g in gpas]) / max(len(gpas), 1)
+                    total_score += float(gpas.gpa)
 
             for app in student.applications.all():
                 for item in app.items.all():
