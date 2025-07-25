@@ -84,7 +84,10 @@ CORS_ALLOWED_ORIGINS = [
     "https://tanlov.mesfera.uz",
     # agar frontend subdomain bo‘lsa, u ham:
     "https://tg.tashmeduni.uz",
+    "https://admintg.tashmeduni.uz",
 ]
+
+CORS_EXPOSE_HEADERS = ["Content-Disposition"]
 
 CORS_ALLOW_CREDENTIALS = True
 
