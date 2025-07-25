@@ -794,13 +794,13 @@ class ApplicationStudentSerializer(serializers.ModelSerializer):
 class ApplicationFullSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField()
     student = ApplicationStudentSerializer(read_only=True)
-    application_type_name = serializers.CharField(source="application_type.title", read_only=True)
+    application_type_name = serializers.CharField(source="application_type.name", read_only=True)
     total_score = serializers.SerializerMethodField()
     test_result = serializers.SerializerMethodField()
 
     class Meta:
         model = Application
-        fields = ("id", "status", "comment", "submitted_at", "application_type_name", "student", "items", "total_score", "test_result")
+        fields = ("id", "status", "comment", "submitted_at", "application_type_name", "student", "items", "total_score", "test_result",)
 
     def get_items(self, obj):
         return ApplicationItemSerializer(obj.items.all(), many=True, context=self.context).data
