@@ -129,7 +129,7 @@ urlpatterns = [
     path("admin/student-facultys/", global_student_filter_faculty),
     path("admin/student-universitys/", global_student_filter_university),
 
-    re_path(r'^api/download/(?P<path>.+)$', download_file),
+    re_path(r'^download/(?P<path>.+)$', download_file),
 
     
     
