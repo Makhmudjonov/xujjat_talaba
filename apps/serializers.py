@@ -371,7 +371,7 @@ class StudentsGpaSerializer(serializers.ModelSerializer):
     def get_gpaball(self, obj):
         record = obj.gpa_records.order_by('-education_year', '-created_at').first()
         if record and record.gpa is not None:
-            return round(float(record.gpa) * 16, 2)
+            return float(record.gpa)
         return None
 
 
