@@ -806,9 +806,7 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
         return ApplicationItemSerializer(obj.items.all(), many=True, context=self.context).data
 
     def get_test_result(self, obj):
-        request = self.context.get("request")
-        
-        student = getattr(obj, "student", None)
+        student = obj.student
         if not student:
             return None
 
