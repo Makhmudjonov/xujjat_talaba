@@ -802,6 +802,9 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
         model = Application
         fields = ("id", "status", "comment", "submitted_at", "application_type_name", "student", "items", "total_score", "test_result")
 
+    def get_items(self, obj):
+        return ApplicationItemSerializer(obj.items.all(), many=True, context=self.context).data
+
     def get_test_result(self, obj):
         request = self.context.get("request")
         student = getattr(request.user, "student", None)
@@ -814,13 +817,14 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
                 "score": session.score,
                 "correct": session.correct_answers,
                 "total": session.total_questions,
-                "ball": round(float(session.correct_answer) * 20 / 25, 2)
+                "ball": round(float(session.correct_answers) * 20 / 25, 2)
             }
         return None
-    
+
     def get_total_score(self, obj):
         request = self.context.get("request")
         user = request.user if request else None
+        student = getattr(user, "student", None)
         items = obj.items.all()
 
         if user and hasattr(user, "directions") and user.directions.exists():
@@ -828,47 +832,36 @@ class ApplicationFullSerializer(serializers.ModelSerializer):
 
         total = 0.0
         for item in items:
-            # if item.direction.name == "Talabaning akademik o‘zlashtirishi":
-            #     total += item.gpa_ball
-            if item.direction.name == 'Kitobxonlik madaniyati':
-                # Shu yo‘ldan test natijasini olish
+            direction_name = item.direction.name
+
+            if direction_name == 'Kitobxonlik madaniyati':
                 session = obj.testsession_set.filter(student=student).first()
                 if session and session.correct_answers is not None:
                     ball = round(float(session.correct_answers) * 20 / 25, 2)
-                    total += ball 
-            elif item.direction.name == 'Talabaning akademik o‘zlashtirishi':
+                    total += ball
+
+            elif direction_name == 'Talabaning akademik o‘zlashtirishi':
                 try:
                     student = item.application.student
                     latest_gpa_record = student.gpa_records.order_by('-created_at').first()
                     if latest_gpa_record:
                         gpa = float(latest_gpa_record.gpa)
                         gpa_score_map = {
-                            5.0: 10.0,
-                            4.9: 9.7,
-                            4.8: 9.3,
-                            4.7: 9.0,
-                            4.6: 8.7,
-                            4.5: 8.3,
-                            4.4: 8.0,
-                            4.3: 7.7,
-                            4.2: 7.3,
-                            4.1: 7.0,
-                            4.0: 6.7,
-                            3.9: 6.3,
-                            3.8: 6.0,
-                            3.7: 5.7,
-                            3.6: 5.3,
-                            3.5: 5.0,
+                            5.0: 10.0, 4.9: 9.7, 4.8: 9.3, 4.7: 9.0,
+                            4.6: 8.7, 4.5: 8.3, 4.4: 8.0, 4.3: 7.7,
+                            4.2: 7.3, 4.1: 7.0, 4.0: 6.7, 3.9: 6.3,
+                            3.8: 6.0, 3.7: 5.7, 3.6: 5.3, 3.5: 5.0,
                         }
                         total += gpa_score_map.get(round(gpa, 1), 0.0)
                 except:
                     pass
+
             else:
                 if hasattr(item, "score") and item.score:
                     total += item.score.value
 
-
         return round(total, 2)
+
 
 
 
