@@ -2,7 +2,8 @@ from django.contrib import admin
 from django.http import HttpResponse
 import openpyxl
 from simple_history.admin import SimpleHistoryAdmin
-from django.contrib.auth.admin import UserAdmin # Import UserAdmin directly
+from django.contrib.auth.admin import UserAdmin
+import urllib # Import UserAdmin directly
 
 from apps.filter.dublikatfilter import DuplicateApplicationFilter
 from apps.models import (
@@ -147,12 +148,13 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             ])
 
         filename = f"{student.university1.name}-{student.faculty}-{app.application_type}.xlsx".replace("/", "-")
-
+        filename_encoded = urllib.parse.quote(filename)
+        
         # Excel response
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        response['Content-Disposition'] = 'attachment; "{filename}"'.format(filename=filename)
+        response['Content-Disposition'] = 'attachment; "{filename_encoded}"'
         wb.save(response)
         return response
 
