@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.http import HttpResponse
+import openpyxl
 from simple_history.admin import SimpleHistoryAdmin
 from django.contrib.auth.admin import UserAdmin # Import UserAdmin directly
 
@@ -95,6 +97,34 @@ class ApplicationAdmin(SimpleHistoryAdmin):
     list_display = ('student', 'application_type', 'status', 'submitted_at', 'student__university','student__university1', 'student__faculty', 'student__level')
     list_filter = ('status', 'application_type', 'section','student__university', 'student__university1', 'student__faculty', 'student__level',DuplicateApplicationFilter)
     search_fields = ('student__full_name', 'student__student_id_number', 'student__university', 'student__university1', 'student__faculty', 'student__level')  # misol uchun
+    actions = ['export_as_excel']
+    
+    def export_as_excel(self, request, queryset):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Applications"
+
+        # Sarlavhalar
+        ws.append(['Student', 'Application Type', 'Status', 'Submitted At'])
+
+        # Ma'lumotlar
+        for obj in queryset:
+            ws.append([
+                str(obj.student),
+                str(obj.application_type),
+                obj.status,
+                obj.submitted_at.strftime('%Y-%m-%d %H:%M'),
+            ])
+
+        # Javob sifatida yuborish
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename=applications.xlsx'
+        wb.save(response)
+        return response
+
+    export_as_excel.short_description = "Excelga yuklab olish"
 
 @admin.register(ApplicationType)
 class ApplicationTypeAdmin(SimpleHistoryAdmin):
