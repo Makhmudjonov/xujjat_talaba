@@ -132,7 +132,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             ws.append([
                 student.student_id_number,
                 student.full_name,
-                student.university.name if student.university else "",
+                student.university1.name if student.university1 else "",
                 student.faculty.name if student.faculty else "",
                 student.level.name if student.level else "",
                 str(app.application_type),
