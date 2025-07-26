@@ -154,7 +154,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        response['Content-Disposition'] = 'attachment; "{filename_encoded}"'
+        response['Content-Disposition'] = f'attachment; filename="{filename_encoded}"'
         wb.save(response)
         return response
 
