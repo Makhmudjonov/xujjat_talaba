@@ -116,7 +116,7 @@ class SpecialApplicationStudentAdmin(SimpleHistoryAdmin):
 
 @admin.register(ApplicationItem)
 class ApplicationItemAdmin(SimpleHistoryAdmin):
-    list_display = ("id", "get_student_name", "get_level", "direction", "application_file")
+    list_display = ("id", "get_student_name", "get_level", "direction", "file")
     search_fields = ('application__student__full_name',)
 
     
