@@ -104,27 +104,55 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         ws = wb.active
         ws.title = "Applications"
 
-        # Sarlavhalar
-        ws.append(['Student', 'Application Type', 'Status', 'Submitted At'])
+        # Sarlavha ustunlari — kerakli ma'lumotlar
+        ws.append([
+            "Student ID",
+            "Full Name",
+            "University",
+            "Faculty",
+            "Level",
+            "Application Type",
+            "Status",
+            "Submitted At",
+            "GPA",
+            "ApplicationItem(s)",
+            "Comment(s)",
+            "Score(s)",
+        ])
 
-        # Ma'lumotlar
-        for obj in queryset:
+        for app in queryset.select_related("student", "application_type").prefetch_related("items__score"):
+            student = app.student
+            items = app.items.all()
+
+            # Har bir Application uchun ApplicationItemlar ketma-ket yoziladi
+            direction_names = ", ".join(str(item.direction.name) for item in items)
+            comments = ", ".join(item.comment or "-" for item in items)
+            scores = ", ".join(str(item.score.value) if hasattr(item, "score") and item.score else "-" for item in items)
+
             ws.append([
-                str(obj.student),
-                str(obj.application_type),
-                obj.status,
-                obj.submitted_at.strftime('%Y-%m-%d %H:%M'),
+                student.student_id_number,
+                student.full_name,
+                student.university.name if student.university else "",
+                student.faculty.name if student.faculty else "",
+                student.level.name if student.level else "",
+                str(app.application_type),
+                app.status,
+                app.submitted_at.strftime('%Y-%m-%d %H:%M'),
+                student.gpa or "",
+                direction_names,
+                comments,
+                scores,
             ])
 
-        # Javob sifatida yuborish
+        # Excel response
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        response['Content-Disposition'] = 'attachment; filename=applications.xlsx'
+        response['Content-Disposition'] = 'attachment; filename=applications_detailed.xlsx'
         wb.save(response)
         return response
 
-    export_as_excel.short_description = "Excelga yuklab olish"
+    export_as_excel.short_description = "Excelga (barcha tafsilotlar bilan) eksport qilish"
 
 @admin.register(ApplicationType)
 class ApplicationTypeAdmin(SimpleHistoryAdmin):
