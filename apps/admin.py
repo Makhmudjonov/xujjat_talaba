@@ -96,7 +96,7 @@ class ScoreAdmin(SimpleHistoryAdmin):
 class ApplicationAdmin(SimpleHistoryAdmin):
     list_display = ('student', 'application_type', 'status', 'submitted_at', 'student__university','student__university1', 'student__faculty', 'student__level')
     list_filter = ('status', 'application_type', 'section','student__university', 'student__university1', 'student__faculty', 'student__level',DuplicateApplicationFilter)
-    search_fields = ('student__full_name', 'student__student_id_number', 'student__university', 'student__university1', 'student__faculty', 'student__level')  # misol uchun
+    search_fields = ('student__full_name', 'student__student_id_number')  # misol uchun
     actions = ['export_as_excel']
     
     def export_as_excel(self, request, queryset):
