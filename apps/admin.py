@@ -92,8 +92,8 @@ class ScoreAdmin(SimpleHistoryAdmin):
 @admin.register(Application)
 class ApplicationAdmin(SimpleHistoryAdmin):
     list_display = ('student', 'application_type', 'status', 'submitted_at')
-    list_filter = ('status', 'application_type', 'section','student__university')
-    search_fields = ('student__full_name', 'student__student_id_number', 'student__university')  # misol uchun
+    list_filter = ('status', 'application_type', 'section','student__university', , 'student__university1')
+    search_fields = ('student__full_name', 'student__student_id_number', 'student__university', 'student__university1')  # misol uchun
 
 @admin.register(ApplicationType)
 class ApplicationTypeAdmin(SimpleHistoryAdmin):
