@@ -146,11 +146,13 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 scores,
             ])
 
+        filename = f"{student.university1.name}-{student.faculty}-{app.application_type}.xlsx".replace("/", "-")
+
         # Excel response
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-        response['Content-Disposition'] = 'attachment; filename=applications_detailed.xlsx'
+        response['Content-Disposition'] = 'attachment; "{filename}"'.format(filename=filename)
         wb.save(response)
         return response
 
