@@ -117,6 +117,8 @@ class SpecialApplicationStudentAdmin(SimpleHistoryAdmin):
 @admin.register(ApplicationItem)
 class ApplicationItemAdmin(SimpleHistoryAdmin):
     list_display = ("id", "get_student_name", "get_level", "direction")
+    search_fields = ('student',)
+
     
     def get_student_name(self, obj):
         return obj.application.student.full_name
