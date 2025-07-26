@@ -141,7 +141,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 app.status,
                 app.submitted_at.strftime('%Y-%m-%d %H:%M'),
                 student.gpa or "",
-                student.gpa * 16 or "",
+                round(float(student.gpa) * 16, 3) or "",
                 direction_names,
                 comments,
                 scores,
