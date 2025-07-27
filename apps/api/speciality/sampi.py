@@ -21,7 +21,7 @@ class BatchUpdateSpecialtiesSampiAPIView(APIView):
             student_id = student.student_id_number
             url = f"https://student.tashpmi.uz/rest/v1/data/student-list?search={student_id}"
             headers = {
-                "Authorization": "Bearer WKI1_kxxXtK06KdgoP8r75qlByM5G5nh"
+                "Authorization": "Bearer "
             }
 
             try:

@@ -21,7 +21,7 @@ class BatchUpdateSpecialtiesStomAPIView(APIView):
             student_id = student.student_id_number
             url = f"https://student.tsdi.uz/rest/v1/data/student-list?search={student_id}"
             headers = {
-                "Authorization": "Bearer BqJegwTQCKAOldxIh8u0GsoS7IzkxmzQ"
+                "Authorization": "Bearer "
             }
 
             try:
