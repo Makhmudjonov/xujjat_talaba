@@ -97,9 +97,6 @@ class SyncStudentDataStomAPIView(APIView):
                 })
 
 
-            if (idx + 1) % 10 == 0:
-                time.sleep(3)
-
         return Response({
             "updated": updated,
             "skipped": skipped,
