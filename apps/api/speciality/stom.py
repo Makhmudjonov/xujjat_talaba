@@ -86,6 +86,7 @@ class SyncStudentDataStomAPIView(APIView):
                 student.save()
 
                 updated += 1
+                time.sleep(1)
 
             except Exception as e:
                 skipped += 1
