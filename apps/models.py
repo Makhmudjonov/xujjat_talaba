@@ -69,7 +69,7 @@ class Speciality(models.Model):
 
 class GroupHemis(models.Model):
     name = models.CharField(max_length=60)
-    hemis_id = models.CharField(max_length=10,)
+    hemis_id = models.CharField(max_length=10, null=True, blank=True)
     lang = models.CharField(max_length=50)
     university = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
 
@@ -97,6 +97,7 @@ class Student(models.Model):
     level = models.ForeignKey(Level, on_delete=models.SET_NULL, null=True, blank=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     group_hemis = models.ForeignKey(GroupHemis, on_delete=models.SET_NULL, null=True, blank=True)
+    
     history = HistoricalRecords()
 
 
