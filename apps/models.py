@@ -67,7 +67,7 @@ class Speciality(models.Model):
     university = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name} ({self.code})"
 
 
 class GroupHemis(models.Model):
@@ -77,7 +77,7 @@ class GroupHemis(models.Model):
     university = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name} ({self.lang})"
 
 
 # ---------------------------
