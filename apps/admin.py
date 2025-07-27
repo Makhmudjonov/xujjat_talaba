@@ -113,16 +113,13 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             "Faculty",
             "Mutaxasislik",
             "Hemis group",
-            "Ta'lim tili"
+            "Ta'lim tili",
             "Level",
             "Guruh",
             "Application Type",
-            # "Status",
             "Submitted At",
             "GPA",
             "GPA *16"
-            # "ApplicationItem(s)",
-            # "Comment(s)",
             "Score(s)",
         ])
 
@@ -146,12 +143,9 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 student.level.name if student.level else "",
                 student.group if student.group else "",
                 str(app.application_type),
-                # app.status,
                 app.submitted_at.strftime('%Y-%m-%d %H:%M'),
                 student.gpa or "",
                 round(float(student.gpa) * 16, 3) or "",
-                # direction_names,
-                # comments,
                 scores,
             ])
 
