@@ -8,13 +8,12 @@ from rest_framework import status
 from django.db import transaction
 
 from apps.models import GroupHemis, Speciality, Student, University
-from asgiref.sync import sync_to_async
 
 
 class SyncStudentDataStomAPIView(APIView):
     permission_classes = [IsAdminUser]
 
-    @sync_to_async
+
     def get(self, request):
         students = Student.objects.filter(student_id_number__startswith='366')
         updated = 0
