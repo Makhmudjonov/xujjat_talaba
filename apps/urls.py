@@ -134,8 +134,8 @@ urlpatterns = [
 
     re_path(r'^download/(?P<path>.+)$', download_file),
 
-    path('synchron/students/update-specialties-stom/', SyncStudentDataStomAPIView.as_view(), name='batch-update-specialties-tma'),
-    path('synchron/students/update-specialties-tma/', SyncStudentDataTmaAPIView.as_view(), name='batch-update-specialties-stom'),
+    # path('synchron/students/update-specialties-stom/', SyncStudentDataStomAPIView.as_view(), name='batch-update-specialties-tma'),
+    # path('synchron/students/update-specialties-tma/', SyncStudentDataTmaAPIView.as_view(), name='batch-update-specialties-stom'),
     # path('synchron/students/update-specialties/', BatchUpdateSpecialtiesSampiAPIView.as_view(), name='batch-update-specialties-sampi'),
 
     

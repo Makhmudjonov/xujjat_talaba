@@ -20,7 +20,7 @@ class SyncStudentDataStomAPIView(APIView):
         skipped = 0
         errors = []
 
-        token = "BqJegwTQCKAOldxIh8u0GsoS7IzkxmzQ"  # Tokeningizni bu yerga yozing
+        token = ""  # Tokeningizni bu yerga yozing
         headers = {
             "Authorization": f"Bearer {token}"
         }
