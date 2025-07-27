@@ -28,7 +28,7 @@ class SyncStudentDataTmaAPIView(APIView):
         for idx, student in enumerate(students):
             try:
                 url = f"https://student.tma.uz/rest/v1/data/student-list?search={student.student_id_number}"
-                res = requests.get(url, headers=headers)
+                res = requests.get(url, headers=headers, timeout=10)
 
                 if res.status_code != 200:
                     skipped += 1
