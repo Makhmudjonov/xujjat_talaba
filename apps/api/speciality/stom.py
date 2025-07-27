@@ -13,7 +13,7 @@ class SyncStudentDataStomAPIView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        students = Student.objects.filter(student_id_number__startswith='366')
+        students = Student.objects.filter(student_id_number__startswith='3661')
         updated = 0
         skipped = 0
         errors = []

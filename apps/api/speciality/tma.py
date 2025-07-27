@@ -13,7 +13,7 @@ class SyncStudentDataTmaAPIView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        students = Student.objects.filter(student_id_number__startswith='364')
+        students = Student.objects.filter(student_id_number__startswith='3641')
         updated = 0
         skipped = 0
         errors = []
