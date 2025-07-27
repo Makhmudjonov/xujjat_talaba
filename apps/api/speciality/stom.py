@@ -1,3 +1,4 @@
+import time
 import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -22,7 +23,7 @@ class SyncStudentDataStomAPIView(APIView):
             "Authorization": f"Bearer {token}"
         }
 
-        for student in students:
+        for idx, student in enumerate(students):
             try:
                 url = f"https://student.tsdi.uz/rest/v1/data/student-list?search={student.student_id_number}"
                 res = requests.get(url, headers=headers)
@@ -92,6 +93,9 @@ class SyncStudentDataStomAPIView(APIView):
                     "student_id": student.student_id_number,
                     "error": str(e)
                 })
+
+            if (idx + 1) % 10 == 0:
+                time.sleep(3)
 
         return Response({
             "updated": updated,
