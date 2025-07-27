@@ -112,13 +112,14 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             "University",
             "Faculty",
             "Level",
+            "Guruh",
             "Application Type",
-            "Status",
+            # "Status",
             "Submitted At",
             "GPA",
             "GPA *16"
-            "ApplicationItem(s)",
-            "Comment(s)",
+            # "ApplicationItem(s)",
+            # "Comment(s)",
             "Score(s)",
         ])
 
@@ -127,7 +128,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             items = app.items.all()
 
             # Har bir Application uchun ApplicationItemlar ketma-ket yoziladi
-            direction_names = ", ".join(str(item.direction.name) for item in items)
+            # direction_names = ", ".join(str(item.direction.name) for item in items)
             comments = ", ".join(item.reviewer_comment or "-" for item in items)
             scores = ", ".join(str(item.score.value) if hasattr(item, "score") and item.score else "-" for item in items)
 
@@ -137,13 +138,14 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 student.university1.name if student.university1 else "",
                 student.faculty.name if student.faculty else "",
                 student.level.name if student.level else "",
+                student.group if student.group else "",
                 str(app.application_type),
-                app.status,
+                # app.status,
                 app.submitted_at.strftime('%Y-%m-%d %H:%M'),
                 student.gpa or "",
                 round(float(student.gpa) * 16, 3) or "",
-                direction_names,
-                comments,
+                # direction_names,
+                # comments,
                 scores,
             ])
 
