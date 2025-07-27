@@ -26,7 +26,7 @@ class StudentAdmin(SimpleHistoryAdmin):
         'group',
         'level'
     )
-    list_filter = ('faculty', 'level', 'gender', 'university', 'speciality', 'group_hemis',)
+    list_filter = ('faculty', 'level', 'gender', 'university', 'specialty', 'group_hemis',)
     search_fields = ('full_name', 'student_id_number', 'email', 'phone')
     readonly_fields = ('student_id_number', 'full_name', 'email', 'phone')
 
