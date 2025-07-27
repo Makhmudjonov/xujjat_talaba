@@ -8,7 +8,7 @@ import urllib # Import UserAdmin directly
 from apps.filter.dublikatfilter import DuplicateApplicationFilter
 from apps.models import (
     Answer, Application, ApplicationFile, ApplicationItem, ApplicationType, ContractInfo, CustomAdminUser, Direction, Faculty,
-    GPARecord, Level, OdobAxloqStudent, Option, Question, Score, Section, SpecialApplicationStudent, Student, Test, TestSession, University, # Make sure CustomAdminUser is imported
+    GPARecord, GroupHemis, Level, OdobAxloqStudent, Option, Question, Score, Section, SpecialApplicationStudent, Speciality, Student, Test, TestSession, University, # Make sure CustomAdminUser is imported
 )
 
 @admin.register(University)
@@ -166,6 +166,19 @@ class ApplicationAdmin(SimpleHistoryAdmin):
 class ApplicationTypeAdmin(SimpleHistoryAdmin):
     list_display = ('name', 'min_gpa')
     # list_filter = ('access_type',)
+
+
+@admin.register(Speciality)
+class SpecialityAdmin(admin.ModelAdmin):
+    list_display = ('name', 'code', 'hemis_id', 'university')
+    search_fields = ('name', 'code', 'hemis_id')
+    list_filter = ('university',)
+
+@admin.register(GroupHemis)
+class GroupHemisAdmin(admin.ModelAdmin):
+    list_display = ('name', 'hemis_id', 'lang')
+    search_fields = ('name', 'hemis_id', 'lang')
+    list_filter = ('lang',)
 
 
 @admin.register(SpecialApplicationStudent)
