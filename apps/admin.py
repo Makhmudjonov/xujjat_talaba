@@ -100,7 +100,7 @@ class GroupLangFilter(admin.SimpleListFilter):
     def lookups(self, request, model_admin):
         return [
             ('uz', 'O‘zbek'),
-            ('ru', 'Rus'),
+            ('Rus', 'Rus'),
             ('ru', 'Ingliz'),
         ]
 
