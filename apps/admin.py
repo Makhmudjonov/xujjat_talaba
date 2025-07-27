@@ -20,7 +20,7 @@ class StudentAdmin(SimpleHistoryAdmin):
     list_display = (
         'full_name',
         'student_id_number',
-        'speciality',
+        'specialty',
         'group_hemis',
         'faculty',
         'group',
