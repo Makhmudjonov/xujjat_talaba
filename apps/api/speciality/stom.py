@@ -94,6 +94,8 @@ class SyncStudentDataStomAPIView(APIView):
                     "error": str(e)
                 })
 
+                time.sleep(5)
+
             if (idx + 1) % 10 == 0:
                 time.sleep(3)
 
