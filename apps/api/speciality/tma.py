@@ -1,3 +1,4 @@
+import asyncio
 import time
 import requests
 from rest_framework.views import APIView
@@ -12,7 +13,7 @@ from apps.models import GroupHemis, Speciality, Student, University
 class SyncStudentDataTmaAPIView(APIView):
     permission_classes = [IsAdminUser]
 
-    def get(self, request):
+    async def get(self, request):
         students = Student.objects.filter(student_id_number__startswith='364')
         updated = 0
         skipped = 0
@@ -86,7 +87,7 @@ class SyncStudentDataTmaAPIView(APIView):
                 student.save()
 
                 updated += 1
-                time.sleep(1)
+
 
 
             except Exception as e:
@@ -96,7 +97,7 @@ class SyncStudentDataTmaAPIView(APIView):
                     "error": str(e)
                 })
 
-                time.sleep(5)
+                await asyncio.sleep(5)
 
             if (idx + 1) % 10 == 0:
                 time.sleep(3)
