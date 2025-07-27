@@ -47,11 +47,11 @@ class SyncStudentDataTmaAPIView(APIView):
                     })
                     continue
 
-                d = data[0]  # Javoblar ro'yxatidan birinchi element
+                d = data['data']['items'][0]  # Javoblar ro'yxatidan birinchi element
 
                 # University yaratish yoki olish
                 university, _ = University.objects.get_or_create(
-                    name=d["university"]
+                    name=d["university"]['name']
                 )
 
                 # Speciality yaratish yoki yangilash
