@@ -142,7 +142,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 student.faculty.name if student.faculty else "",
                 student.specialty.name if student.specialty else "",
                 student.group_hemis.name if student.group_hemis else "",
-                student.group_hemis.lang if student.group_hemis else "",
+                student.group_hemis.lang if student.hemis_group else "",
                 student.level.name if student.level else "",
                 student.group if student.group else "",
                 str(app.application_type),
@@ -176,15 +176,21 @@ class ApplicationTypeAdmin(SimpleHistoryAdmin):
 
 @admin.register(Speciality)
 class SpecialityAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('name', 'code', 'hemis_id', 'university')
     search_fields = ('name', 'code', 'hemis_id')
     list_filter = ('university',)
 
+    def __str__(self):
+        return f"{self.name}"
+
 @admin.register(GroupHemis)
 class GroupHemisAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('name', 'hemis_id', 'lang')
     search_fields = ('name', 'hemis_id', 'lang')
     list_filter = ('lang',)
+
+    def __str__(self):
+        return f"{self.name}"
 
 
 @admin.register(SpecialApplicationStudent)
