@@ -60,6 +60,18 @@ class Level(models.Model):
         verbose_name = "Kurs / Bosqich"
         verbose_name_plural = "Kurs / Bosqichlar"
 
+class Speciality(models.Model):
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=20)
+    hemis_id = models.CharField(max_length=55)
+    university = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
+
+
+class GroupHemis(models.Model):
+    name = models.CharField(max_length=60)
+    hemis_id = models.CharField(max_length=10,)
+    lang = models.CharField(max_length=50)
+
 
 # ---------------------------
 # STUDENT & ACADEMIC DATA
@@ -76,12 +88,14 @@ class Student(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     university = models.CharField(max_length=255)
+    specialty = models.ForeignKey(Speciality, null=True, blank=True, on_delete=models.SET_NULL)
+
     university1 = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
     faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, blank=True)
     group = models.CharField(max_length=100)
     level = models.ForeignKey(Level, on_delete=models.SET_NULL, null=True, blank=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-
+    group_hemis = models.ForeignKey(GroupHemis, on_delete=models.SET_NULL, null=True, blank=True)
     history = HistoricalRecords()
 
 

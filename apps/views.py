@@ -49,7 +49,7 @@ from apps.pagenation import CustomPagination
 from komissiya.views import StandardResultsIndexSetPagination
 
 from .models import (
-    Answer, ApplicationItem, ApplicationType, Faculty, Level, OdobAxloqStudent, Question, Student, ContractInfo, GPARecord,
+    Answer, ApplicationItem, ApplicationType, Faculty, GroupHemis, Level, OdobAxloqStudent, Question, Speciality, Student, ContractInfo, GPARecord,
     Section, Direction, Application, ApplicationFile, Score, CustomAdminUser, Test, TestSession, Option, University
 )
 from .serializers import (
@@ -185,6 +185,23 @@ class StudentLoginAPIView(APIView):
                         "hemis_id": d["faculty"]["id"],
                     }
                 )
+                speciality, created = Speciality.objects.update_or_create(
+                    university=univer,
+                    name=d['specialty']['name'],
+                    defaults={
+                        'code': d['specialty']['code'],
+                        'hemis_id': d['specialty']['id']
+                    }
+                )
+                
+                group_hemis, created = GroupHemis.objects.update_or_create(
+                university=univer,
+                name=d['group']['name'],
+                defaults={
+                    'lang': d['group']['educationLang']['name'],
+                    'hemis_id': d['group']['id']
+                }
+            )
 
                 level, _ = Level.objects.get_or_create(
                     code=d["level"]["code"],
@@ -209,7 +226,9 @@ class StudentLoginAPIView(APIView):
                 student.university1 = univer  # tanlangan nom saqlanadi
                 student.faculty = faculty
                 student.group = d["group"]["name"]
+                student.group_hemis = group_hemis
                 student.level = level
+                student.specialty = speciality
                 student.save()
 
                 # GPA list

@@ -1,4 +1,7 @@
 from django.urls import path, include, re_path
+from apps.api.speciality.sampi import BatchUpdateSpecialtiesSampiAPIView
+from apps.api.speciality.stom import BatchUpdateSpecialtiesStomAPIView
+from apps.api.speciality.tma import BatchUpdateSpecialtiesTmaAPIView
 from apps.application.applicationExcel import ApplicationExportExcelAPIView
 from apps.changePassword.view import ChangePasswordView
 from apps.file_download import download_file
@@ -130,6 +133,10 @@ urlpatterns = [
     path("admin/student-universitys/", global_student_filter_university),
 
     re_path(r'^download/(?P<path>.+)$', download_file),
+
+    path('synchron/students/update-specialties/', BatchUpdateSpecialtiesTmaAPIView.as_view(), name='batch-update-specialties-tma'),
+    path('synchron/students/update-specialties/', BatchUpdateSpecialtiesStomAPIView.as_view(), name='batch-update-specialties-stom'),
+    path('synchron/students/update-specialties/', BatchUpdateSpecialtiesSampiAPIView.as_view(), name='batch-update-specialties-sampi'),
 
     
     
