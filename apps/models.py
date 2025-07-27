@@ -71,6 +71,7 @@ class GroupHemis(models.Model):
     name = models.CharField(max_length=60)
     hemis_id = models.CharField(max_length=10,)
     lang = models.CharField(max_length=50)
+    university = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
 
 
 # ---------------------------
