@@ -10,7 +10,7 @@ from django.utils import timezone
 from komissiya.serializers import StudentSerializer
 from .models import (
     ApplicationItem, ApplicationType, Faculty, Level, Question, Section, Direction, Application, ApplicationFile,
-    Score, CustomAdminUser, Student, GPARecord, Test, TestSession, Option
+    Score, CustomAdminUser, Speciality, Student, GPARecord, Test, TestSession, Option
 )
 
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -1174,3 +1174,10 @@ class StudentToifaUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = ['toifa']
+
+
+
+class SpecialitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Speciality
+        fields = ['id', 'name']  # faqat kerakli maydonlarni yuboring
