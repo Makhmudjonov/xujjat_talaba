@@ -142,7 +142,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 student.faculty.name if student.faculty else "",
                 student.specialty.name if student.specialty else "",
                 student.group_hemis.name if student.group_hemis else "",
-                student.group_hemis.lang if student.hemis_group else "",
+                student.group_hemis.lang if student.group_hemis else "",
                 student.level.name if student.level else "",
                 student.group if student.group else "",
                 str(app.application_type),
