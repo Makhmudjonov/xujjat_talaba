@@ -8,12 +8,14 @@ from rest_framework import status
 from django.db import transaction
 
 from apps.models import GroupHemis, Speciality, Student, University
+from asgiref.sync import sync_to_async
 
 
 class SyncStudentDataTmaAPIView(APIView):
     permission_classes = [IsAdminUser]
 
-    async def get(self, request):
+    @sync_to_async
+    def get(self, request):
         students = Student.objects.filter(student_id_number__startswith='364')
         updated = 0
         skipped = 0
@@ -96,8 +98,6 @@ class SyncStudentDataTmaAPIView(APIView):
                     "student_id": student.student_id_number,
                     "error": str(e)
                 })
-
-                await asyncio.sleep(5)
 
             if (idx + 1) % 10 == 0:
                 time.sleep(3)
