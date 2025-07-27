@@ -66,12 +66,18 @@ class Speciality(models.Model):
     hemis_id = models.CharField(max_length=55)
     university = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.name} ({self.hemis_id})"
+
 
 class GroupHemis(models.Model):
     name = models.CharField(max_length=60)
     hemis_id = models.CharField(max_length=10, null=True, blank=True)
     lang = models.CharField(max_length=50)
     university = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.name} ({self.hemis_id})"
 
 
 # ---------------------------
