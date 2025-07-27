@@ -167,7 +167,11 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 scores,
             ])
 
-        filename = f"{student.university1.name}-{student.faculty}-{app.application_type}.xlsx".replace("/", "-")
+        selected_lang = request.GET.get("group_lang")
+        lang_part = f"-{selected_lang}" if selected_lang else ""
+
+        # Fayl nomini yasash
+        filename = f"{student.university1.name}-{student.faculty}-{lang_part}-{app.application_type}.xlsx".replace("/", "-")
         filename_encoded = urllib.parse.quote(filename)
         
         # Excel response
