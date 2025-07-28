@@ -14,6 +14,7 @@ from apps.full_score.view import StudentScoreView
 from apps.gpaStudent.studentList import AdminStudentListViewSet
 from apps.leaderboard.excel import LeaderboardExportAPIView
 from apps.natija.pdf import ExportStudentPDF
+from apps.testmagistr import MagistrStudentApplicationTypeListAPIView, MagistrStudentApplicationViewSet
 from .views import (
     AdminAccountAPIView,
     AdminLoginAPIView,
@@ -63,6 +64,7 @@ router.register(r'student/application-items', ApplicationItemViewSet, basename='
 
 router.register(r"directions", DirectionViewSet, basename="direction")
 router.register("student/applications", StudentApplicationViewSet, basename="student-applications")
+router.register("magistr/applications", MagistrStudentApplicationViewSet, basename="student-applications")
 router.register(r'tests', TestViewSet, basename='test')
 router.register(r'admin/students-gpa', AdminStudentListViewSet, basename='student')
 
@@ -99,6 +101,7 @@ urlpatterns = [
 
     path("student/account/", StudentAccountAPIView.as_view(), name="student-account"),
     path('student/application-types/', StudentApplicationTypeListAPIView.as_view(), name='student-application-types'),
+    path('magistr/application-types/', MagistrStudentApplicationTypeListAPIView.as_view(), name='student-application-types'),
     # path('student/application-types/', StudentApplicationTypeListAPIView.as_view(), name='student-application-types'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh uchun
     #admins api 
