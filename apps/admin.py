@@ -228,18 +228,19 @@ from urllib.parse import urljoin
 import openpyxl
 from django.http import HttpResponse
 
-from django.utils.html import escape
+
+import zipfile
+import io
+import os
+from django.utils.text import slugify
 from django.conf import settings
-from urllib.parse import urljoin
-import openpyxl
-from django.http import HttpResponse
 
 @admin.register(ApplicationItem)
 class ApplicationItemAdmin(SimpleHistoryAdmin):
     list_display = ("id", "get_student_name", "get_level", "file", "direction")
     search_fields = ('application__student__full_name',)
     list_filter = ('direction', 'application__student__level', 'application__student__faculty')
-    actions = ["export_as_excel"]
+    actions = ["export_as_excel", "download_all_files_as_zip"]
 
     def get_student_name(self, obj):
         return obj.application.student.full_name
@@ -265,13 +266,8 @@ class ApplicationItemAdmin(SimpleHistoryAdmin):
             "Main Fayl (nomi)",
             "Main Fayl (havola)",
             "Talaba izohi",
-            "Tekshiruvchi izohi",
-            "GPA",
-            "GPA ball",
-            "Test natijasi",
-            "Status",
-            "Yaratilgan sana",
-            "Qo‘shimcha Fayl (section)",
+            "Arizani topshirish vaqti",
+            "O'quv yili",
             "Qo‘shimcha Fayl (havola)",
             "Qo‘shimcha Fayl izohi",
             "Yuklangan vaqti",
@@ -299,12 +295,6 @@ class ApplicationItemAdmin(SimpleHistoryAdmin):
                     main_file_name,
                     main_file_url,
                     item.student_comment or '',
-                    item.reviewer_comment or '',
-                    item.gpa or '',
-                    item.gpa_score or '',
-                    item.test_result or '',
-                    "Tasdiqlangan" if item.status else "Tasdiqlanmagan",
-                    item.application.submitted_at.strftime('%Y-%m-%d %H:%M') if item.application.submitted_at else '',
                     '', '', '', ''
                 ])
             else:
@@ -323,11 +313,6 @@ class ApplicationItemAdmin(SimpleHistoryAdmin):
                         main_file_name,
                         main_file_url,
                         item.student_comment or '',
-                        item.reviewer_comment or '',
-                        item.gpa or '',
-                        item.gpa_score or '',
-                        item.test_result or '',
-                        "Tasdiqlangan" if item.status else "Tasdiqlanmagan",
                         item.application.submitted_at.strftime('%Y-%m-%d %H:%M') if item.application.submitted_at else '',
                         f.section.name if f.section else '',
                         file_url,
@@ -343,6 +328,42 @@ class ApplicationItemAdmin(SimpleHistoryAdmin):
         return response
 
     export_as_excel.short_description = "Excelga yuklab olish (fayllar bilan)"
+
+    def download_all_files_as_zip(self, request, queryset):
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for item in queryset.prefetch_related("files").select_related("application__student"):
+                student = item.application.student
+                student_name = slugify(student.full_name)
+                item_folder = f"{student_name}_{item.id}/"
+
+                # Asosiy fayl
+                if item.file:
+                    main_file_path = item.file.path
+                    if os.path.exists(main_file_path):
+                        zip_file.write(
+                            main_file_path,
+                            arcname=os.path.join(item_folder, os.path.basename(main_file_path))
+                        )
+
+                # Qo‘shimcha fayllar (ApplicationFile)
+                for f in item.files.all():
+                    if f.file:
+                        extra_file_path = f.file.path
+                        if os.path.exists(extra_file_path):
+                            section_name = slugify(f.section.name) if f.section else "unknown_section"
+                            filename = f"{section_name}_{os.path.basename(f.file.name)}"
+                            zip_file.write(
+                                extra_file_path,
+                                arcname=os.path.join(item_folder, "extra_files", filename)
+                            )
+
+        zip_buffer.seek(0)
+        response = HttpResponse(zip_buffer, content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename=application_items_files.zip'
+        return response
+
+    download_all_files_as_zip.short_description = "Tanlangan fayllarni ZIP qilib yuklab olish"
 
 
 
