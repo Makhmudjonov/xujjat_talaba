@@ -255,9 +255,9 @@ class MagistrStudentApplicationViewSet(viewsets.ViewSet):
         except ApplicationItem.DoesNotExist:
             return Response({"detail": "Ariza topilmadi yoki sizga tegishli emas."}, status=status.HTTP_404_NOT_FOUND)
         
-         # 🔒 Ariza topshirish muddati tekshiruvi
-        if not app_item.application.application_type.is_active():
-            return Response({"error": "Ariza topshirish muddati tugagan"}, status=status.HTTP_403_FORBIDDEN)
+        #  # 🔒 Ariza topshirish muddati tekshiruvi
+        # if not app_item.application.application_type.is_active():
+        #     return Response({"error": "Ariza topshirish muddati tugagan"}, status=status.HTTP_403_FORBIDDEN)
 
         upload = request.FILES.get("file")
         if not upload:
