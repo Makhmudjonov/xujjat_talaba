@@ -269,7 +269,7 @@ class ApplicationItemAdmin(SimpleHistoryAdmin):
 
         for item in queryset.select_related("application__student", "direction", "application__student__level", "application__student__faculty"):
             student = item.application.student
-            file_name = item.file.name if item.file else ''
+            file_name = item.file.file if item.file else ''
             file_url = urljoin(
                 request.build_absolute_uri('/'),
                 f"{settings.MEDIA_URL}{file_name}"
