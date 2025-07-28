@@ -77,7 +77,7 @@ class ApplicationExportExcelAPIView(APIView):
                 app.student.full_name,
                 app.student.faculty.name if app.student.faculty else "",
                 app.student.level.name if app.student.level else "",
-                app.application_type.title,
+                app.application_type.name if app.application_type else "Unknown",
                 app.status if app.status else "Unknown",
                 directions if directions else "-",
                 # scores if scores else "-", 
