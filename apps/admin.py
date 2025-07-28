@@ -172,7 +172,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         lang_part = f"-{selected_lang}" if selected_lang else ""
 
         # Fayl nomini yasash
-        filename = f"{student.university1.name}-{student.specialty.name}-{lang_part}-{student.specialty.code}.xlsx".replace("/", "-")
+        filename = f"{student.university1.name}-{student.faculty.name}-{lang_part}.xlsx".replace("/", "-")
         filename_encoded = urllib.parse.quote(filename)
         
         # Excel response
