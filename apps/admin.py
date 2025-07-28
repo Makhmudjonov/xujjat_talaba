@@ -228,6 +228,12 @@ from urllib.parse import urljoin
 import openpyxl
 from django.http import HttpResponse
 
+from django.utils.html import escape
+from django.conf import settings
+from urllib.parse import urljoin
+import openpyxl
+from django.http import HttpResponse
+
 @admin.register(ApplicationItem)
 class ApplicationItemAdmin(SimpleHistoryAdmin):
     list_display = ("id", "get_student_name", "get_level", "file", "direction")
@@ -256,8 +262,8 @@ class ApplicationItemAdmin(SimpleHistoryAdmin):
             "Fakultet",
             "Yo'nalish",
             "Sarlavha",
-            "Fayl nomi",
-            "Fayl havolasi",
+            "Main Fayl (nomi)",
+            "Main Fayl (havola)",
             "Talaba izohi",
             "Tekshiruvchi izohi",
             "GPA",
@@ -265,33 +271,69 @@ class ApplicationItemAdmin(SimpleHistoryAdmin):
             "Test natijasi",
             "Status",
             "Yaratilgan sana",
+            "Qo‘shimcha Fayl (section)",
+            "Qo‘shimcha Fayl (havola)",
+            "Qo‘shimcha Fayl izohi",
+            "Yuklangan vaqti",
         ])
 
-        for item in queryset.select_related("application__student", "direction", "application__student__level", "application__student__faculty"):
+        for item in queryset.select_related("application__student", "direction", "application__student__level", "application__student__faculty").prefetch_related("files"):
             student = item.application.student
-            file_name = item.file.file if item.file else ''
-            file_url = urljoin(
-                request.build_absolute_uri('/'),
-                f"{settings.MEDIA_URL}{file_name}"
-            ) if file_name else ''
 
-            ws.append([
-                item.id,
-                student.full_name,
-                student.level.name if student.level else '',
-                student.faculty.name if student.faculty else '',
-                item.direction.name,
-                item.title,
-                file_name,
-                file_url,
-                item.student_comment or '',
-                item.reviewer_comment or '',
-                item.gpa or '',
-                item.gpa_score or '',
-                item.test_result or '',
-                "Tasdiqlangan" if item.status else "Tasdiqlanmagan",
-                item.application.submitted_at.strftime('%Y-%m-%d %H:%M') if item.application.submitted_at else '',
-            ])
+            main_file_name = item.file.name if item.file else ''
+            main_file_url = urljoin(
+                request.build_absolute_uri('/'),
+                f"{settings.MEDIA_URL}{main_file_name}"
+            ) if main_file_name else ''
+
+            # Agar hech qanday ApplicationFile bo‘lmasa, hech bo‘lmasa bitta qator chiqsin
+            related_files = list(item.files.all())
+            if not related_files:
+                ws.append([
+                    item.id,
+                    student.full_name,
+                    student.level.name if student.level else '',
+                    student.faculty.name if student.faculty else '',
+                    item.direction.name,
+                    item.title,
+                    main_file_name,
+                    main_file_url,
+                    item.student_comment or '',
+                    item.reviewer_comment or '',
+                    item.gpa or '',
+                    item.gpa_score or '',
+                    item.test_result or '',
+                    "Tasdiqlangan" if item.status else "Tasdiqlanmagan",
+                    item.application.submitted_at.strftime('%Y-%m-%d %H:%M') if item.application.submitted_at else '',
+                    '', '', '', ''
+                ])
+            else:
+                for f in related_files:
+                    file_url = urljoin(
+                        request.build_absolute_uri('/'),
+                        f"{settings.MEDIA_URL}{f.file.name}"
+                    ) if f.file else ''
+                    ws.append([
+                        item.id,
+                        student.full_name,
+                        student.level.name if student.level else '',
+                        student.faculty.name if student.faculty else '',
+                        item.direction.name,
+                        item.title,
+                        main_file_name,
+                        main_file_url,
+                        item.student_comment or '',
+                        item.reviewer_comment or '',
+                        item.gpa or '',
+                        item.gpa_score or '',
+                        item.test_result or '',
+                        "Tasdiqlangan" if item.status else "Tasdiqlanmagan",
+                        item.application.submitted_at.strftime('%Y-%m-%d %H:%M') if item.application.submitted_at else '',
+                        f.section.name if f.section else '',
+                        file_url,
+                        f.comment or '',
+                        f.uploaded_at.strftime('%Y-%m-%d %H:%M'),
+                    ])
 
         response = HttpResponse(
             content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -300,7 +342,8 @@ class ApplicationItemAdmin(SimpleHistoryAdmin):
         wb.save(response)
         return response
 
-    export_as_excel.short_description = "Tanlanganlarni Excelga eksport qilish"
+    export_as_excel.short_description = "Excelga yuklab olish (fayllar bilan)"
+
 
 
     
