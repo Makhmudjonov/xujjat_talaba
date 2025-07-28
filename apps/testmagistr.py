@@ -2,7 +2,8 @@ from datetime import timezone
 import json
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from requests import Response
+from rest_framework.response import Response
+from rest_framework import status
 from apps.models import Application, ApplicationFile, ApplicationItem, ApplicationType, Direction, OdobAxloqStudent, Score
 from rest_framework.permissions import IsAdminUser
 
@@ -10,7 +11,6 @@ from apps.serializers import ApplicationTypeSerializer
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.views import APIView
-from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework import status, viewsets, permissions, generics,parsers
 
