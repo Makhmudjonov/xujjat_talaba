@@ -222,13 +222,19 @@ class SpecialApplicationStudentAdmin(SimpleHistoryAdmin):
 #     search_fields = ('hemis_id', 'last_name')
 
 
+from django.utils.html import escape
+from django.conf import settings
+from urllib.parse import urljoin
+import openpyxl
+from django.http import HttpResponse
+
 @admin.register(ApplicationItem)
 class ApplicationItemAdmin(SimpleHistoryAdmin):
-    list_display = ("id", "get_student_name", "get_level","file", "direction")
+    list_display = ("id", "get_student_name", "get_level", "file", "direction")
     search_fields = ('application__student__full_name',)
     list_filter = ('direction', 'application__student__level', 'application__student__faculty')
+    actions = ["export_as_excel"]
 
-    
     def get_student_name(self, obj):
         return obj.application.student.full_name
     get_student_name.short_description = "Talaba"
@@ -236,6 +242,66 @@ class ApplicationItemAdmin(SimpleHistoryAdmin):
     def get_level(self, obj):
         return obj.application.student.level.name
     get_level.short_description = "Bosqich (Level)"
+
+    def export_as_excel(self, request, queryset):
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Application Items"
+
+        # Excel ustun sarlavhalari
+        ws.append([
+            "ID",
+            "Talaba",
+            "Bosqich",
+            "Fakultet",
+            "Yo'nalish",
+            "Sarlavha",
+            "Fayl nomi",
+            "Fayl havolasi",
+            "Talaba izohi",
+            "Tekshiruvchi izohi",
+            "GPA",
+            "GPA ball",
+            "Test natijasi",
+            "Status",
+            "Yaratilgan sana",
+        ])
+
+        for item in queryset.select_related("application__student", "direction", "application__student__level", "application__student__faculty"):
+            student = item.application.student
+            file_name = item.file.name if item.file else ''
+            file_url = urljoin(
+                request.build_absolute_uri('/'),
+                f"{settings.MEDIA_URL}{file_name}"
+            ) if file_name else ''
+
+            ws.append([
+                item.id,
+                student.full_name,
+                student.level.name if student.level else '',
+                student.faculty.name if student.faculty else '',
+                item.direction.name,
+                item.title,
+                file_name,
+                file_url,
+                item.student_comment or '',
+                item.reviewer_comment or '',
+                item.gpa or '',
+                item.gpa_score or '',
+                item.test_result or '',
+                "Tasdiqlangan" if item.status else "Tasdiqlanmagan",
+                item.application.submitted_at.strftime('%Y-%m-%d %H:%M') if item.application.submitted_at else '',
+            ])
+
+        response = HttpResponse(
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response["Content-Disposition"] = "attachment; filename=application_items.xlsx"
+        wb.save(response)
+        return response
+
+    export_as_excel.short_description = "Tanlanganlarni Excelga eksport qilish"
+
 
     
 
