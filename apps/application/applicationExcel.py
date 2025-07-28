@@ -78,10 +78,10 @@ class ApplicationExportExcelAPIView(APIView):
                 app.student.faculty.name if app.student.faculty else "",
                 app.student.level.name if app.student.level else "",
                 app.application_type.title,
-                app.status,
-                directions,
-                scores,
-                comments
+                app.status if app.status else "Unknown",
+                directions if directions else "-",
+                scores if scores else "-", 
+                comments if comments else ""
             ])
 
         # Auto-width
