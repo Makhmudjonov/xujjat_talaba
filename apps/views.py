@@ -474,8 +474,8 @@ class ApplicationItemViewSet(viewsets.ModelViewSet):
             logger.error(f"ApplicationItem with ID {pk} not found or not associated with student.")
             return Response({"detail": "Ariza topilmadi yoki sizga tegishli emas."}, status=status.HTTP_404_NOT_FOUND)
         
-        if not app_item.application.application_type.is_active():
-            return Response({"detail": "Fayl yuklash muddati tugagan."}, status=status.HTTP_403_FORBIDDEN)
+        # if not app_item.application.application_type.is_active():
+        #     return Response({"detail": "Fayl yuklash muddati tugagan."}, status=status.HTTP_403_FORBIDDEN)
 
 
         upload = request.FILES.get("file")
