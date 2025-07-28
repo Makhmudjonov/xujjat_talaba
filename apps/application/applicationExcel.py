@@ -69,7 +69,7 @@ class ApplicationExportExcelAPIView(APIView):
 
         for app in queryset:
             directions = ", ".join(item.direction.name for item in app.items.all())
-            scores = ", ".join(str(item.score.value if item.score else "-") for item in app.items.all())
+            # scores = ", ".join(str(item.score.value if item.score else "-") for item in app.items.all())
             comments = ", ".join(item.reviewer_comment or "" for item in app.items.all())
 
             ws.append([
@@ -80,7 +80,7 @@ class ApplicationExportExcelAPIView(APIView):
                 app.application_type.title,
                 app.status if app.status else "Unknown",
                 directions if directions else "-",
-                scores if scores else "-", 
+                # scores if scores else "-", 
                 comments if comments else ""
             ])
 
