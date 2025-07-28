@@ -816,6 +816,18 @@ class ScoreCreateAPIView(CreateAPIView):
         item.status = True
         item.save()
         application = item.application
+        
+        neaktiv = False
+        for item in application.items.all():
+            if item.status:
+                continue
+            else:
+                neaktiv = True
+
+            
+        if not neaktiv:
+            application.status = Application.STATUS_ACCEPTED 
+
         application.save()
     
     @swagger_auto_schema(
