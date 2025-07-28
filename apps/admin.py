@@ -226,7 +226,7 @@ class SpecialApplicationStudentAdmin(SimpleHistoryAdmin):
 class ApplicationItemAdmin(SimpleHistoryAdmin):
     list_display = ("id", "get_student_name", "get_level","file", "direction")
     search_fields = ('application__student__full_name',)
-    list_filter = ('direction', 'application__student__level')
+    list_filter = ('direction', 'application__student__level', 'application__student__faculty')
 
     
     def get_student_name(self, obj):
