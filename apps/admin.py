@@ -223,7 +223,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
 
         ws.append(headers)
 
-        for app in queryset.select_related("student", "application_type").prefetch_related("items__score"):
+        for app in queryset.select_related("student", "application_type").prefetch_related("items__score", "student__gpa_records"):
             student = app.student
             items = app.items.all()
 

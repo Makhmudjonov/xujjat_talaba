@@ -115,10 +115,7 @@ class Student(models.Model):
     
     def get_latest_gpa(self):
         latest = self.gpa_records.order_by("-education_year", "-created_at").first()
-        try:
-            return float(latest.gpa) if latest else None
-        except (ValueError, TypeError):
-            return None
+        return latest.gpa if latest else None
 
     def __str__(self):
         return self.full_name
