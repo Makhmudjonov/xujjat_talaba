@@ -238,9 +238,13 @@ class ApplicationAdmin(SimpleHistoryAdmin):
 
                 dir_name = item.direction.name.lower()
                 if dir_name == "kitobxonlik madaniyati":
-                    if hasattr(item, "score") and item.score:
-                        score_map[item.direction.name] = round(item.score.value * 0.2, 2)
+                    
+                    try:
+                        test = TestSession.objects.get(student=student)
+                        score_map[item.direction.name] = round(test.score * 0.2, 2)
                         total_score += round(item.score.value * 0.2, 2)
+                    except:
+                        total_score += 0
                     else:
                         score_map[item.direction.name] = "-"
                 elif dir_name == "talabaning akademik o‘zlashtirishi":
