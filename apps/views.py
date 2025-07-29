@@ -994,9 +994,9 @@ class StartTestAPIView(APIView):
             logger.info(f"Resuming existing session {existing_session.id} for student {student.id}")
             return Response(TestResumeSerializer(existing_session, context={'request': request}).data)
 
-        # if test.start_time and timezone.now() < test.start_time:
-        #     return Response({"detail": f"Test {test.start_time.strftime('%Y-%m-%d %H:%M')} dan keyin boshlanadi."},
-        #                     status=status.HTTP_400_BAD_REQUEST)
+        if test.start_time and timezone.now() < test.start_time:
+            return Response({"detail": f"Test {test.start_time.strftime('%Y-%m-%d %H:%M')} dan keyin boshlanadi."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         questions = list(test.questions.all())
         if len(questions) < test.question_count:
