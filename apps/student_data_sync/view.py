@@ -30,7 +30,6 @@ class SyncStudentDataAPIView(APIView):
                 response = requests.get(
                     f"https://student.tma.uz/rest/v1/data/student-list?search={student.student_id_number}",
                     headers={
-                        "Authorization": "Bearer WKI1_kxxXtK06KdgoP8r75qlByM5G5nh",
                         "Content-Type": "application/json"
                     }
                 )
@@ -69,69 +68,7 @@ class SyncGPAAPIView(APIView):
         success_count = 0
         error_logs = []
 
-        problematic_ids = [
-    "364241100677",
-    "364241101971",
-    "364241100878",
-    "364241101343",
-    "364241100839",
-    "364241100555",
-    "364241100537",
-    "364241100765",
-    "364241101676",
-    "364241101501",
-    "364241101882",
-    "364241101091",
-    "364241101702",
-    "364241100738",
-    "364241101234",
-    "364241101553",
-    "364241101490",
-    "364241101416",
-    "364241101678",
-    "364241100653",
-    "364241100571",
-    "364241100667",
-    "364241100881",
-    "364241101073",
-    "364241101263",
-    "364241101502",
-    "364241101484",
-    "364241101539",
-    "364241101563",
-    "364241101654",
-    "364241101755",
-    "364241101507",
-    "364241100907",
-    "364241101079",
-    "364241100567",
-    "364241101799",
-    "364241101498",
-    "364241100691",
-    "364241101606",
-    "364241101892",
-    "364241101561",
-    "364241101758",
-    "364241101592",
-    "364241101186",
-    "364241101098",
-    "364241100816",
-    "364241101231",
-    "364241101905",
-    "364241101706",
-    "364241100782",
-    "364241101468",
-    "364241101372",
-    "364241101100",
-    "364241100879",
-    "364241100781",
-    "364241101615",
-    "364241101507",  # takrorlanmoqda
-    "364241100666",
-    "364241100677",  # takrorlanmoqda
-    "364241101912"
-]
-
+        
 
 
         students = Student.objects.filter(student_id_number__in=problematic_ids).exclude(hemis_data_id__isnull=True).exclude(hemis_data_id='')
@@ -140,7 +77,6 @@ class SyncGPAAPIView(APIView):
             try:
                 url = f"https://student.tma.uz/rest/v1/data/student-gpa-list?_student={student.hemis_data_id}"
                 response = requests.get(url,headers={
-                        "Authorization": "Bearer WKI1_kxxXtK06KdgoP8r75qlByM5G5nh",
                         "Content-Type": "application/json"
                     })
                 data = response.json()
