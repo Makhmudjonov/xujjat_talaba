@@ -189,6 +189,10 @@ class ApplicationAdmin(SimpleHistoryAdmin):
 
 
     def ijtimoiy_export_as_excel(self, request, queryset):
+        import openpyxl
+        from django.http import HttpResponse
+        import urllib.parse
+        from apps.models import Direction  # direction modeli kerak bo‘ladi
 
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -267,7 +271,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
 
     
 
-    ijtimoiy_export_as_excel.short_description = "Excelga (barcha tafsilotlar bilan) eksport qilish"
+    ijtimoiy_export_as_excel.short_description = "2222"
 
 @admin.register(ApplicationType)
 class ApplicationTypeAdmin(SimpleHistoryAdmin):
