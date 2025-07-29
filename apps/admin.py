@@ -244,7 +244,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                         total_score += round(float(test.score) * 0.2, 2)
                     except:
                         total_score += 0
-                        score_map[item.direction.name] = "yoq"
+                        score_map[item.direction.name] = "Mavjud emas"
                 elif dir_name == "talabaning akademik o‘zlashtirishi":
                     def get_gpa_score(gpa):
                         if gpa is None:
