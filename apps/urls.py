@@ -14,6 +14,7 @@ from apps.full_score.view import StudentScoreView
 from apps.gpaStudent.studentList import AdminStudentListViewSet
 from apps.leaderboard.excel import LeaderboardExportAPIView
 from apps.natija.pdf import ExportStudentPDF
+from apps.student_data_sync.view import SyncStudentDataAPIView
 from apps.testmagistr import MagistrStudentApplicationTypeListAPIView, MagistrStudentApplicationViewSet
 from .views import (
     AdminAccountAPIView,
@@ -140,6 +141,9 @@ urlpatterns = [
     # path('synchron/students/update-specialties-stom/', SyncStudentDataStomAPIView.as_view(), name='batch-update-specialties-tma'),
     # path('synchron/students/update-specialties-tma/', SyncStudentDataTmaAPIView.as_view(), name='batch-update-specialties-stom'),
     # path('synchron/students/update-specialties/', BatchUpdateSpecialtiesSampiAPIView.as_view(), name='batch-update-specialties-sampi'),
+
+    #Synchronizatsiya uchun API endpointi
+    path('sync/student-data/', SyncStudentDataAPIView.as_view()),
 
     
     

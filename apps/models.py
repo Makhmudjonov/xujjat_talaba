@@ -84,6 +84,7 @@ class GroupHemis(models.Model):
 # STUDENT & ACADEMIC DATA
 # ---------------------------
 class Student(models.Model):
+    hemis_data_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
     toifa = models.BooleanField(default=False)
     student_id_number = models.CharField(max_length=20, unique=True)
     full_name = models.CharField(max_length=255)
