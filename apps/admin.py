@@ -183,7 +183,91 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         wb.save(response)
         return response
 
+    
+
     export_as_excel.short_description = "Excelga (barcha tafsilotlar bilan) eksport qilish"
+
+
+    def ijtimoiy_export_as_excel(self, request, queryset):
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Applications"
+
+        # 1. Barcha directionlar ro‘yxatini olish (sorted to make consistent columns)
+        directions = list(Direction.objects.all().order_by("name"))
+
+        # 2. Sarlavhalar
+        header = [
+            "Student ID",
+            "Full Name",
+            "University",
+            "Faculty",
+            "Mutaxassislik",
+            "Ta'lim shifri",
+            "Hemis group",
+            "Ta'lim tili",
+            "Level",
+            "Guruh",
+            "Grant turi",
+            "Topshirilgan sana",
+            "GPA",
+            "GPA *16"
+        ]
+
+        # 3. Har bir direction uchun alohida ustun qo‘shamiz
+        for direction in directions:
+            header.append(direction.name)
+
+        ws.append(header)
+
+        # 4. Har bir application bo‘yicha qiymatlar
+        for app in queryset.select_related("student", "application_type").prefetch_related("items__score", "items__direction"):
+            student = app.student
+            items = app.items.all()
+
+            row = [
+                student.student_id_number,
+                student.full_name,
+                student.university1.name if student.university1 else "",
+                student.faculty.name if student.faculty else "",
+                student.specialty.name if student.specialty else "",
+                student.specialty.code if student.specialty else "",
+                student.group_hemis.name if student.group_hemis else "",
+                student.group_hemis.lang if student.group_hemis else "",
+                student.level.name if student.level else "",
+                student.group if student.group else "",
+                str(app.application_type),
+                app.submitted_at.strftime('%Y-%m-%d %H:%M'),
+                student.gpa or "",
+                round(float(student.gpa) * 16, 3) if student.gpa else "",
+            ]
+
+            # 5. Har bir direction uchun score topiladi
+            direction_score_map = {item.direction.id: item.score.value if item.score else "-" for item in items}
+            for direction in directions:
+                row.append(direction_score_map.get(direction.id, "-"))
+
+            ws.append(row)
+
+        # 6. Fayl nomini yasash
+        selected_lang = request.GET.get("group_lang")
+        lang_part = f"-{selected_lang}" if selected_lang else ""
+        filename = f"{student.university1.name}-{student.specialty.name}-{lang_part}-{student.specialty.code}-{app.application_type}.xlsx".replace("/", "-")
+        filename_encoded = urllib.parse.quote(filename)
+
+        # 7. Response qaytarish
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = f'attachment; filename="{filename_encoded}"'
+        wb.save(response)
+        return response
+
+
+    
+
+    ijtimoiy_export_as_excel.short_description = "Excelga (barcha tafsilotlar bilan) eksport qilish"
 
 @admin.register(ApplicationType)
 class ApplicationTypeAdmin(SimpleHistoryAdmin):
