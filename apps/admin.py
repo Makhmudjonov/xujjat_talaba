@@ -229,11 +229,22 @@ class ApplicationAdmin(SimpleHistoryAdmin):
 
             # Har bir Application uchun ApplicationItemlar ketma-ket yoziladi
             # direction_names = ", ".join(str(item.direction.name) for item in items)
-            score_map = {
-                item.direction.name: round(item.score.value * 0.2, 2) if item.direction.name.lower() == "Kitobxonlik madaniyati" and hasattr(item, "score") and item.score
-                else (item.score.value if hasattr(item, "score") and item.score else "-")
-                for item in items if item.direction
-            }
+            score_map = {}
+            for item in items:
+                if not item.direction:
+                    continue
+
+                dir_name = item.direction.name.lower()
+                if dir_name == "kitobxonlik madaniyati":
+                    if hasattr(item, "score") and item.score:
+                        score_map[item.direction.name] = round(item.score.value * 0.2, 2)
+                    else:
+                        score_map[item.direction.name] = "-"
+                elif dir_name == "Talabaning akademik o‘zlashtirishi":
+                    gpa = item.application.student.get_latest_gpa()
+                    score_map[item.direction.name] = round(float(gpa), 2) if gpa else "-"
+                else:
+                    score_map[item.direction.name] = item.score.value if hasattr(item, "score") and item.score else "-"
 
             row = [
                 student.student_id_number,
@@ -259,13 +270,46 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             total_score = 0
             for dir_name in direction_names:
                 value = score_map.get(dir_name, 0)
-                if value == "-" or value == "" or value is None:
+                if value in ("-", "", None):
                     continue
                 try:
                     value = float(value)
-                    # if dir_name.lower() == "Kitobxonlik madaniyati":
-                    #     value *= 0.2
+                    if dir_name.lower() == "Kitobxonlik madaniyati":
+                        value *= 0.2
                     total_score += value
+                except ValueError:
+                    continue
+
+            
+            def get_gpa_score(gpa):
+                    if gpa is None:
+                        return 0.0  # yoki None, yoki istalgan default qiymat
+                    gpa_score_map = {
+                        5.0: 10.0,
+                        4.9: 9.7,
+                        4.8: 9.3,
+                        4.7: 9.0,
+                        4.6: 8.7,
+                        4.5: 8.3,
+                        4.4: 8.0,
+                        4.3: 7.7,
+                        4.2: 7.3,
+                        4.1: 7.0,
+                        4.0: 6.7,
+                        3.9: 6.3,
+                        3.8: 6.0,
+                        3.7: 5.7,
+                        3.6: 5.3,
+                        3.5: 5.0,
+                    }
+                    return gpa_score_map.get(round(gpa, 2), 0.0)
+            
+            gpa_score  = get_gpa_score(float(student.gpa) if student.gpa else None)
+
+            # Talabaning GPA yoki o‘zlashtirishi qo‘shiladi
+            if hasattr(student, "gpa") and student.gpa:
+                try:
+                    total_score += gpa_score
                 except ValueError:
                     pass
 
