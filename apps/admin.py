@@ -198,7 +198,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             for item in app.items.all():
                 if item.direction:
                     direction_names.add(item.direction.name)
-            direction_names.add("Jami ball")
+        direction_names.add("Jami ball")
                 
         direction_names = sorted(direction_names)  # for consistent order
 
