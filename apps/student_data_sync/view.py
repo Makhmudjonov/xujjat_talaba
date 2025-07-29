@@ -72,7 +72,10 @@ class SyncGPAAPIView(APIView):
         for student in students:
             try:
                 url = f"https://student.tma.uz/rest/v1/data/student-gpa-list?_student={student.hemis_data_id}"
-                response = requests.get(url)
+                response = requests.get(url,headers={
+                        "Authorization": "Bearer WKI1_kxxXtK06KdgoP8r75qlByM5G5nh",
+                        "Content-Type": "application/json"
+                    })
                 data = response.json()
 
                 if data.get("success") and data.get("data", {}).get("items"):
