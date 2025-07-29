@@ -227,6 +227,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         for app in queryset.select_related("student", "application_type").prefetch_related("items__score", "student__gpa_records"):
             student = app.student
             items = app.items.all()
+            total_score = 0
 
             # Har bir Application uchun ApplicationItemlar ketma-ket yoziladi
             # direction_names = ", ".join(str(item.direction.name) for item in items)
@@ -239,6 +240,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 if dir_name == "kitobxonlik madaniyati":
                     if hasattr(item, "score") and item.score:
                         score_map[item.direction.name] = round(item.score.value * 0.2, 2)
+                        total_score += round(item.score.value * 0.2, 2)
                     else:
                         score_map[item.direction.name] = "-"
                 elif dir_name == "talabaning akademik o‘zlashtirishi":
@@ -266,8 +268,10 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                         return gpa_score_map.get(round(gpa, 2), 0.0)
                     gpa_score  = get_gpa_score(round(float(student.gpa), 1) if student.gpa else 0)
                     score_map[item.direction.name] = gpa_score if gpa_score else "-"
+                    total_score += gpa_score if gpa_score else 0
                 else:
                     score_map[item.direction.name] = item.score.value if hasattr(item, "score") and item.score else "-"
+                    total_score += item.score.value if hasattr(item, "score") and item.score else 0
 
             row = [
                 student.student_id_number,
@@ -290,46 +294,50 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             for dir_name in direction_names:
                 row.append(score_map.get(dir_name, "-"))
             
-            total_score = 0
-            for dir_name in direction_names:
-                value = score_map.get(dir_name, 0)
-                if value in ("-", "", None):
-                    continue
-                try:
-                    value = float(value)
-                    # Kitobxonlik balli allaqachon *0.2 qilingan score_map da
-                    total_score += value
-                except ValueError:
-                    continue
+            # total_score = 0
+            # for dir_name in direction_names:
+            #     value = score_map.get(dir_name, 0)
+            #     if value in ("-", "", None):
+            #         continue
+            #     try:
+            #         value = float(value)
+            #         # Kitobxonlik balli allaqachon *0.2 qilingan score_map da
+            #         total_score += value
+            #     except ValueError:
+            #         continue
 
 
             
-            def get_gpa_score(gpa):
-                    if gpa is None:
-                        return 0.0  # yoki None, yoki istalgan default qiymat
-                    gpa_score_map = {
-                        5.0: 10.0,
-                        4.9: 9.7,
-                        4.8: 9.3,
-                        4.7: 9.0,
-                        4.6: 8.7,
-                        4.5: 8.3,
-                        4.4: 8.0,
-                        4.3: 7.7,
-                        4.2: 7.3,
-                        4.1: 7.0,
-                        4.0: 6.7,
-                        3.9: 6.3,
-                        3.8: 6.0,
-                        3.7: 5.7,
-                        3.6: 5.3,
-                        3.5: 5.0,
-                    }
-                    return gpa_score_map.get(round(gpa, 2), 0.0)
-            gpa_score  = get_gpa_score(round(float(student.gpa), 1) if student.gpa else 0)
+            # def get_gpa_score(gpa):
+            #         if gpa is None:
+            #             return 0.0  # yoki None, yoki istalgan default qiymat
+            #         gpa_score_map = {
+            #             5.0: 10.0,
+            #             4.9: 9.7,
+            #             4.8: 9.3,
+            #             4.7: 9.0,
+            #             4.6: 8.7,
+            #             4.5: 8.3,
+            #             4.4: 8.0,
+            #             4.3: 7.7,
+            #             4.2: 7.3,
+            #             4.1: 7.0,
+            #             4.0: 6.7,
+            #             3.9: 6.3,
+            #             3.8: 6.0,
+            #             3.7: 5.7,
+            #             3.6: 5.3,
+            #             3.5: 5.0,
+            #         }
+            #         return gpa_score_map.get(round(gpa, 2), 0.0)
+            # gpa_score  = get_gpa_score(round(float(student.gpa), 1) if student.gpa else 0)
 
             # Talabaning GPA yoki o‘zlashtirishi qo‘shiladi
-            total_score += gpa_score
+            # if hasattr(student, "gpa") and student.gpa:
+            #     try:
+            #         total_score += gpa_score
+            #     except ValueError:
+            #         pass
 
             row.append(round(total_score, 2))  # yoki butun son bo‘lsa: int(total_score)
 
