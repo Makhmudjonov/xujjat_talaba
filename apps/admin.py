@@ -220,7 +220,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             "Submitted At",
             "GPA",
             "GPA *16",
-        ] + direction_names  # dynamically add direction columns
+        ] + direction_names + 'Jami ball' # dynamically add direction columns
 
         ws.append(headers)
 
