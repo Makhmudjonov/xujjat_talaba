@@ -298,8 +298,8 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 try:
                     value = float(value)
                     if dir_name.lower() == "kitobxonlik madaniyati":
-                        value *= 0.2
-                    total_score += value
+                        # value *= 0.2
+                        total_score += value
                 except ValueError:
                     continue
 
