@@ -193,33 +193,47 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         ws = wb.active
         ws.title = "Applications"
 
-        # Barcha direction'larni topamiz (sarlavha qilish uchun)
-        all_directions = Direction.objects.all()
-        direction_names = [direction.name for direction in all_directions]
+        direction_names = set()
+        for app in queryset.prefetch_related("items__direction"):
+            for item in app.items.all():
+                if item.direction:
+                    direction_names.add(item.direction.name)
 
-        # Sarlavha ustunlari — umumiy ma'lumotlar + har bir direction
+        direction_names = sorted(direction_names)  # for consistent order
+
+        # Sarlavha ustunlari — kerakli ma'lumotlar
+        # 2. Header row
         headers = [
-            "Student ID", "Full Name", "University", "Faculty", "Mutaxasislik",
-            "Ta'lim shifri", "Hemis group", "Ta'lim tili", "Level", "Guruh",
-            "Application Type", "Submitted At", "GPA", "GPA *16"
-        ] + direction_names
+            "Student ID",
+            "Full Name",
+            "University",
+            "Faculty",
+            "Mutaxasislik",
+            "Ta'lim shifri",
+            "Hemis group",
+            "Ta'lim tili",
+            "Level",
+            "Guruh",
+            "Application Type",
+            "Submitted At",
+            "GPA",
+            "GPA *16",
+        ] + direction_names  # dynamically add direction columns
 
         ws.append(headers)
 
-        # Application queryset orqali yurib chiqamiz
-        for app in queryset.select_related("student", "application_type").prefetch_related("items__score", "items__direction"):
+        for app in queryset.select_related("student", "application_type").prefetch_related("items__score"):
             student = app.student
             items = app.items.all()
 
-            # Direction ID dan score.value ni mapping qilamiz
-            item_score_map = {item.direction_id: (item.score.value if item.score else "") for item in items}
+            # Har bir Application uchun ApplicationItemlar ketma-ket yoziladi
+            # direction_names = ", ".join(str(item.direction.name) for item in items)
+            score_map = {
+                item.direction.name: item.score.value if hasattr(item, "score") and item.score else "-"
+                for item in items if item.direction
+            }
 
-            # Har bir direction uchun alohida ustun
-            direction_scores = [
-                item_score_map.get(direction.id, "") for direction in all_directions
-            ]
-
-            ws.append([
+            row = [
                 student.student_id_number,
                 student.full_name,
                 student.university1.name if student.university1 else "",
@@ -234,7 +248,13 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 app.submitted_at.strftime('%Y-%m-%d %H:%M') if app.submitted_at else "",
                 student.gpa or "",
                 round(float(student.gpa) * 16, 3) if student.gpa else "",
-            ] + direction_scores)
+            ]
+
+            # Append score values in the correct column order
+            for dir_name in direction_names:
+                row.append(score_map.get(dir_name, "-"))
+
+            ws.append(row)
 
         selected_lang = request.GET.get("group_lang")
         lang_part = f"-{selected_lang}" if selected_lang else ""
@@ -242,7 +262,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         # Fayl nomini yasash
         filename = f"{student.university1.name}-{student.specialty.name}-{lang_part}-{student.specialty.code}-{app.application_type}.xlsx".replace("/", "-")
         filename_encoded = urllib.parse.quote(filename)
-
+        
         # Excel response
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
