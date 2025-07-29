@@ -194,7 +194,13 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         ws.title = "Applications"
 
         direction_names = set()
-        
+        for app in queryset.prefetch_related("items__direction"):
+            for item in app.items.all():
+                if item.direction:
+                    direction_names.add(item.direction.name)
+            direction_names.add("Jami ball")
+                
+        direction_names = sorted(direction_names)  # for consistent order
 
         # Sarlavha ustunlari — kerakli ma'lumotlar
         # 2. Header row
@@ -214,14 +220,6 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             "GPA",
             "GPA *16",
         ] + direction_names  # dynamically add direction columns
-
-        for app in queryset.prefetch_related("items__direction"):
-            for item in app.items.all():
-                if item.direction:
-                    direction_names.add(item.direction.name)
-            direction_names.add("Jami ball")
-                
-        direction_names = sorted(direction_names)  # for consistent order
 
         ws.append(headers)
 
