@@ -235,7 +235,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                     continue
 
                 dir_name = item.direction.name.lower()
-                if dir_name == "kitobxonlik madaniyati":
+                if dir_name == "Kitobxonlik madaniyati":
                     if hasattr(item, "score") and item.score:
                         score_map[item.direction.name] = round(item.score.value * 0.2, 2)
                     else:
@@ -282,7 +282,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 str(app.application_type),
                 app.submitted_at.strftime('%Y-%m-%d %H:%M') if app.submitted_at else "",
                 student.gpa or "",
-                round(float(student.gpa) * 16, 3) if student.gpa else "",
+                round(float(student.gpa) * 16, 2) if student.gpa else "",
             ]
 
             # Append score values in the correct column order
@@ -325,7 +325,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                         3.5: 5.0,
                     }
                     return gpa_score_map.get(round(gpa, 2), 0.0)
-            gpa_score  = get_gpa_score(float(student.gpa) if student.gpa else 0)
+            gpa_score  = get_gpa_score(round(float(student.gpa), 1) if student.gpa else 0)
 
             # Talabaning GPA yoki o‘zlashtirishi qo‘shiladi
             if hasattr(student, "gpa") and student.gpa:
