@@ -25,7 +25,11 @@ class SyncStudentDataAPIView(APIView):
 
             try:
                 response = requests.get(
-                    f"https://student.tma.uz/rest/v1/data/student-list?search={student.student_id_number}"
+                    f"https://student.tma.uz/rest/v1/data/student-list?search={student.student_id_number}",
+                    headers={
+                        "Authorization": "Bearer WKI1_kxxXtK06KdgoP8r75qlByM5G5nh",
+                        "Content-Type": "application/json"
+                    }
                 )
                 if response.status_code == 200:
                     data = response.json()
