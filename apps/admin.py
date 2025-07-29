@@ -241,8 +241,8 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                     
                     try:
                         test = TestSession.objects.filter(student=student).first()
-                        score_map[item.direction.name] = round(test.score * 0.2, 2)
-                        total_score += round(item.score.value * 0.2, 2)
+                        score_map[item.direction.name] = round(float(test.score) * 0.2, 2)
+                        total_score += round(float(test.score) * 0.2, 2)
                     except:
                         total_score += 0
                     else:
