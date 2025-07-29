@@ -39,8 +39,8 @@ class FacultyAdmin(SimpleHistoryAdmin):
 
 @admin.register(GPARecord)
 class GPARecordAdmin(SimpleHistoryAdmin):
-    list_display = ("student", "education_year", "level", "gpa", "credit_sum", "subjects", "debt_subjects")
-    list_filter = ("education_year", "level", "can_transfer")
+    list_display = ("student", "education_year", "Kurs", "gpa", "credit_sum", "subjects", "debt_subjects")
+    list_filter = ("education_year", "Kurs", "can_transfer")
     search_fields = ("student__full_name",)
 
 @admin.register(ContractInfo)
@@ -124,18 +124,18 @@ class ApplicationAdmin(SimpleHistoryAdmin):
 
         # Sarlavha ustunlari — kerakli ma'lumotlar
         ws.append([
-            "Student ID",
-            "Full Name",
-            "University",
-            "Faculty",
+            "Hemis ID",
+            "FISH",
+            "OTM",
+            "Fakultet",
             "Mutaxasislik",
             "Ta'lim shifri",
-            "Hemis group",
-            "Ta'lim tili",
-            "Level",
             "Guruh",
-            "Application Type",
-            "Submitted At",
+            "Ta'lim tili",
+            "Kurs",
+            "Guruh",
+            "Grant turi",
+            "Ariza yuborilgan sana",
             "GPA",
             "GPA *16"
             "Score(s)",
@@ -206,20 +206,20 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         # Sarlavha ustunlari — kerakli ma'lumotlar
         # 2. Header row
         headers = [
-            "Student ID",
-            "Full Name",
-            "University",
-            "Faculty",
+            "Hemis ID",
+            "FISH",
+            "OTM",
+            "Fakultet",
             "Mutaxasislik",
             "Ta'lim shifri",
-            "Hemis group",
-            "Ta'lim tili",
-            "Level",
             "Guruh",
-            "Application Type",
-            "Submitted At",
-            "GPA",
-            "GPA *16",
+            "Ta'lim tili",
+            "Kurs",
+            "Guruh",
+            "Grant turi",
+            "Ariza yuborilgan sana",
+            # "GPA",
+            # "GPA *16",
         ] + direction_names + ['Jami ball'] # dynamically add direction columns
 
         ws.append(headers)
@@ -286,59 +286,14 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 student.group if student.group else "",
                 str(app.application_type),
                 app.submitted_at.strftime('%Y-%m-%d %H:%M') if app.submitted_at else "",
-                student.gpa or "",
-                round(float(student.gpa) * 16, 2) if student.gpa else "",
+                # student.gpa or "",
+                # round(float(student.gpa) * 16, 2) if student.gpa else "",
             ]
 
             # Append score values in the correct column order
             for dir_name in direction_names:
                 row.append(score_map.get(dir_name, "-"))
             
-            # total_score = 0
-            # for dir_name in direction_names:
-            #     value = score_map.get(dir_name, 0)
-            #     if value in ("-", "", None):
-            #         continue
-            #     try:
-            #         value = float(value)
-            #         # Kitobxonlik balli allaqachon *0.2 qilingan score_map da
-            #         total_score += value
-            #     except ValueError:
-            #         continue
-
-
-            
-            # def get_gpa_score(gpa):
-            #         if gpa is None:
-            #             return 0.0  # yoki None, yoki istalgan default qiymat
-            #         gpa_score_map = {
-            #             5.0: 10.0,
-            #             4.9: 9.7,
-            #             4.8: 9.3,
-            #             4.7: 9.0,
-            #             4.6: 8.7,
-            #             4.5: 8.3,
-            #             4.4: 8.0,
-            #             4.3: 7.7,
-            #             4.2: 7.3,
-            #             4.1: 7.0,
-            #             4.0: 6.7,
-            #             3.9: 6.3,
-            #             3.8: 6.0,
-            #             3.7: 5.7,
-            #             3.6: 5.3,
-            #             3.5: 5.0,
-            #         }
-            #         return gpa_score_map.get(round(gpa, 2), 0.0)
-            # gpa_score  = get_gpa_score(round(float(student.gpa), 1) if student.gpa else 0)
-
-            # Talabaning GPA yoki o‘zlashtirishi qo‘shiladi
-            # if hasattr(student, "gpa") and student.gpa:
-            #     try:
-            #         total_score += gpa_score
-            #     except ValueError:
-            #         pass
-
             row.append(round(total_score, 2))  # yoki butun son bo‘lsa: int(total_score)
 
             ws.append(row)
