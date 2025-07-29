@@ -303,8 +303,8 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                         3.5: 5.0,
                     }
                     return gpa_score_map.get(round(gpa, 2), 0.0)
-            
-            gpa_score  = get_gpa_score(float(student.gpa) if student.gpa else None)
+            gpa = item.application.student.get_latest_gpa()
+            gpa_score  = get_gpa_score(float(gpa) if gpa else 0)
 
             # Talabaning GPA yoki o‘zlashtirishi qo‘shiladi
             if hasattr(student, "gpa") and student.gpa:
