@@ -14,7 +14,7 @@ from apps.full_score.view import StudentScoreView
 from apps.gpaStudent.studentList import AdminStudentListViewSet
 from apps.leaderboard.excel import LeaderboardExportAPIView
 from apps.natija.pdf import ExportStudentPDF
-from apps.student_data_sync.view import SyncStudentDataAPIView
+from apps.student_data_sync.view import SyncGPAAPIView, SyncStudentDataAPIView
 from apps.testmagistr import MagistrStudentApplicationTypeListAPIView, MagistrStudentApplicationViewSet
 from .views import (
     AdminAccountAPIView,
@@ -144,6 +144,7 @@ urlpatterns = [
 
     #Synchronizatsiya uchun API endpointi
     path('sync/student-data/', SyncStudentDataAPIView.as_view()),
+    path('sync/sync-gpa/', SyncGPAAPIView.as_view(), name='sync-gpa'),
 
     
     

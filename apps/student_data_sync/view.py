@@ -1,3 +1,4 @@
+import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
@@ -5,7 +6,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 import requests
 
-from apps.models import Student
+from apps.models import GPARecord, Student
 
 
 class SyncStudentDataAPIView(APIView):
@@ -55,4 +56,55 @@ class SyncStudentDataAPIView(APIView):
             "updated_count": updated_count,
             "not_found": not_found,
             "errors": errors
+        })
+
+
+
+class SyncGPAAPIView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        success_count = 0
+        error_logs = []
+
+        students = Student.objects.filter(student_id_number__startswith="364").exclude(hemis_data_id__isnull=True).exclude(hemis_data_id='')
+
+        for student in students:
+            try:
+                url = f"https://student.tma.uz/rest/v1/data/student-gpa-list?_student={student.hemis_data_id}"
+                response = requests.get(url)
+                data = response.json()
+
+                if data.get("success") and data.get("data", {}).get("items"):
+                    for item in data["data"]["items"]:
+                        hemis_data_id = item["id"]
+
+                        gpa_record, created = GPARecord.objects.get_or_create(
+                            hemis_data_id=hemis_data_id,
+                            defaults={
+                                "student": student,
+                                "education_year": item["educationYear"]["name"],
+                                "level": item["level"]["name"],
+                                "gpa": item["gpa"],
+                                "credit_sum": float(item["credit_sum"]),
+                                "subjects": item["subjects"],
+                                "debt_subjects": item["debt_subjects"],
+                                "can_transfer": item["can_transfer"],
+                                "method": item["method"],
+                                "created_at": datetime.fromtimestamp(item["created_at"]),
+                            }
+                        )
+
+                        if created:
+                            success_count += 1
+
+                else:
+                    error_logs.append(f"No GPA data for student {student.full_name} ({student.student_id_number})")
+
+            except Exception as e:
+                error_logs.append(f"Error syncing student {student.full_name} ({student.student_id_number}): {str(e)}")
+
+        return Response({
+            "message": f"{success_count} new GPA records added.",
+            "errors": error_logs
         })

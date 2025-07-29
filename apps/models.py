@@ -121,6 +121,7 @@ class Student(models.Model):
         return self.full_name
 
 class GPARecord(models.Model):
+    hemis_data_id = models.CharField(max_length=20, null=True, blank=True)
     student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='gpa_records')
     education_year = models.CharField(max_length=20)
     level = models.CharField(max_length=50)
