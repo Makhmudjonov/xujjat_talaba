@@ -329,11 +329,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             gpa_score  = get_gpa_score(round(float(student.gpa), 1) if student.gpa else 0)
 
             # Talabaning GPA yoki o‘zlashtirishi qo‘shiladi
-            if hasattr(student, "gpa") and student.gpa:
-                try:
-                    total_score += gpa_score
-                except ValueError:
-                    pass
+            total_score += gpa_score
 
             row.append(round(total_score, 2))  # yoki butun son bo‘lsa: int(total_score)
 
