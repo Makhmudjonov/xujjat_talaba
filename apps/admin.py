@@ -240,7 +240,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 if dir_name == "kitobxonlik madaniyati":
                     
                     try:
-                        test = TestSession.objects.get(student=student)
+                        test = TestSession.objects.filter(student=student).first()
                         score_map[item.direction.name] = round(test.score * 0.2, 2)
                         total_score += round(item.score.value * 0.2, 2)
                     except:
