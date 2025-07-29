@@ -193,17 +193,15 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         ws = wb.active
         ws.title = "Applications"
 
-        direction_names = []
-        seen_directions = set()
+        direction_names = set()
         for app in queryset.prefetch_related("items__direction"):
             for item in app.items.all():
-                if item.direction and item.direction.name not in seen_directions:
-                    direction_names.append(item.direction.name)
-                    seen_directions.add(item.direction.name)
-
-        direction_names.append("Jami ball")  # Oxiridan qo‘shiladi
+                if item.direction:
+                    direction_names.add(item.direction.name)
+        
                 
         direction_names = sorted(direction_names)  # for consistent order
+        direction_names.add("Jami ball")
 
         # Sarlavha ustunlari — kerakli ma'lumotlar
         # 2. Header row
