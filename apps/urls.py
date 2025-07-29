@@ -64,7 +64,7 @@ router.register(r'student/application-items', ApplicationItemViewSet, basename='
 
 router.register(r"directions", DirectionViewSet, basename="direction")
 router.register("student/applications", StudentApplicationViewSet, basename="student-applications")
-router.register("magistr/applications", MagistrStudentApplicationViewSet, basename="magistr-applications")
+# router.register("magistr/applications", MagistrStudentApplicationViewSet, basename="magistr-applications")
 router.register(r'tests', TestViewSet, basename='test')
 router.register(r'admin/students-gpa', AdminStudentListViewSet, basename='student')
 
@@ -101,7 +101,7 @@ urlpatterns = [
 
     path("student/account/", StudentAccountAPIView.as_view(), name="student-account"),
     path('student/application-types/', StudentApplicationTypeListAPIView.as_view(), name='student-application-types'),
-    path('magistr/application-types/', MagistrStudentApplicationTypeListAPIView.as_view(), name='magistr-application-types'),
+    # path('magistr/application-types/', MagistrStudentApplicationTypeListAPIView.as_view(), name='magistr-application-types'),
     path('student/application-types/', StudentApplicationTypeListAPIView.as_view(), name='student-application-types'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),  # Refresh uchun
     #admins api 
