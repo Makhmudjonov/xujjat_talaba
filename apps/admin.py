@@ -192,16 +192,16 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         import openpyxl
         from django.http import HttpResponse
         import urllib.parse
-        from apps.models import Direction  # direction modeli kerak bo‘ladi
+        from apps.models import Direction  # kerakli joydan import bo'lishi kerak
 
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Applications"
 
-        # 1. Barcha directionlar ro‘yxatini olish (sorted to make consistent columns)
+        # 1. Barcha directionlar (sarlavha uchun kerak)
         directions = list(Direction.objects.all().order_by("name"))
 
-        # 2. Sarlavhalar
+        # 2. Sarlavha ustunlari
         header = [
             "Student ID",
             "Full Name",
@@ -213,19 +213,17 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             "Ta'lim tili",
             "Level",
             "Guruh",
-            "Grant turi",
-            "Topshirilgan sana",
+            "Application Type",
+            "Submitted At",
             "GPA",
             "GPA *16"
         ]
-
-        # 3. Har bir direction uchun alohida ustun qo‘shamiz
         for direction in directions:
-            header.append(direction.name)
+            header.append(direction.name)  # direction nomlarini ustun sifatida qo‘shamiz
 
         ws.append(header)
 
-        # 4. Har bir application bo‘yicha qiymatlar
+        # 3. Har bir Application bo‘yicha qatorlarni yozamiz
         for app in queryset.select_related("student", "application_type").prefetch_related("items__score", "items__direction"):
             student = app.student
             items = app.items.all()
@@ -247,26 +245,30 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 round(float(student.gpa) * 16, 3) if student.gpa else "",
             ]
 
-            # 5. Har bir direction uchun score topiladi
-            direction_score_map = {item.direction.id: item.score.value if item.score else "-" for item in items}
+            # 4. Direction ID => Score mapping (None bo‘lsa "-")
+            direction_score_map = {
+                item.direction.id: getattr(item.score, "value", "-") for item in items
+            }
+
             for direction in directions:
                 row.append(direction_score_map.get(direction.id, "-"))
 
             ws.append(row)
 
-        # 6. Fayl nomini yasash
+        # 5. Fayl nomi
         selected_lang = request.GET.get("group_lang")
         lang_part = f"-{selected_lang}" if selected_lang else ""
         filename = f"{student.university1.name}-{student.specialty.name}-{lang_part}-{student.specialty.code}-{app.application_type}.xlsx".replace("/", "-")
         filename_encoded = urllib.parse.quote(filename)
 
-        # 7. Response qaytarish
+        # 6. Javob
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
         response['Content-Disposition'] = f'attachment; filename="{filename_encoded}"'
         wb.save(response)
         return response
+
 
 
     
