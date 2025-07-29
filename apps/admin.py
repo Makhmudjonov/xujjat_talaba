@@ -193,7 +193,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         ws = wb.active
         ws.title = "Applications"
 
-        ddirection_names = []
+        direction_names = []
         seen_directions = set()
         for app in queryset.prefetch_related("items__direction"):
             for item in app.items.all():
