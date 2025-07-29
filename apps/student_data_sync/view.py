@@ -80,14 +80,14 @@ class SyncGPAAPIView(APIView):
 
                 if data.get("success") and data.get("data", {}).get("items"):
                     for item in data["data"]["items"]:
-                        hemis_data_id = item["id"]
+                        # hemis_data_id = item["id"]
 
-                        gpa_record, created = GPARecord.objects.get_or_create(
-                            hemis_data_id=hemis_data_id,
+                        gpa_record, created = GPARecord.objects.update_or_create(
+                            student=student,
+                            level=item["level"]["name"],
                             defaults={
-                                "student": student,
+                                "hemis_data_id": item["id"],
                                 "education_year": item["educationYear"]["name"],
-                                "level": item["level"]["name"],
                                 "gpa": item["gpa"],
                                 "credit_sum": float(item["credit_sum"]),
                                 "subjects": item["subjects"],
@@ -97,6 +97,7 @@ class SyncGPAAPIView(APIView):
                                 "created_at": datetime.fromtimestamp(item["created_at"]),
                             }
                         )
+
 
                         if created:
                             success_count += 1
