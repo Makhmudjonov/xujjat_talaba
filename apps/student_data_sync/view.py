@@ -5,6 +5,8 @@ from rest_framework.permissions import IsAdminUser
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 import requests
+from django.utils.timezone import make_aware
+
 
 from apps.models import GPARecord, Student
 
@@ -94,7 +96,7 @@ class SyncGPAAPIView(APIView):
                                 "debt_subjects": item["debt_subjects"],
                                 "can_transfer": item["can_transfer"],
                                 "method": item["method"],
-                                "created_at": datetime.fromtimestamp(item["created_at"]),
+                                "created_at": make_aware(datetime.fromtimestamp(item["created_at"]))
                             }
                         )
 
