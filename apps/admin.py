@@ -189,46 +189,37 @@ class ApplicationAdmin(SimpleHistoryAdmin):
 
 
     def ijtimoiy_export_as_excel(self, request, queryset):
-        import openpyxl
-        from django.http import HttpResponse
-        import urllib.parse
-        from apps.models import Direction  # kerakli joydan import bo'lishi kerak
-
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Applications"
 
-        # 1. Barcha directionlar (sarlavha uchun kerak)
-        directions = list(Direction.objects.all().order_by("name"))
+        # Barcha direction'larni topamiz (sarlavha qilish uchun)
+        all_directions = Direction.objects.all()
+        direction_names = [direction.name for direction in all_directions]
 
-        # 2. Sarlavha ustunlari
-        header = [
-            "Student ID",
-            "Full Name",
-            "University",
-            "Faculty",
-            "Mutaxassislik",
-            "Ta'lim shifri",
-            "Hemis group",
-            "Ta'lim tili",
-            "Level",
-            "Guruh",
-            "Application Type",
-            "Submitted At",
-            "GPA",
-            "GPA *16"
-        ]
-        for direction in directions:
-            header.append(direction.name)  # direction nomlarini ustun sifatida qo‘shamiz
+        # Sarlavha ustunlari — umumiy ma'lumotlar + har bir direction
+        headers = [
+            "Student ID", "Full Name", "University", "Faculty", "Mutaxasislik",
+            "Ta'lim shifri", "Hemis group", "Ta'lim tili", "Level", "Guruh",
+            "Application Type", "Submitted At", "GPA", "GPA *16"
+        ] + direction_names
 
-        ws.append(header)
+        ws.append(headers)
 
-        # 3. Har bir Application bo‘yicha qatorlarni yozamiz
+        # Application queryset orqali yurib chiqamiz
         for app in queryset.select_related("student", "application_type").prefetch_related("items__score", "items__direction"):
             student = app.student
             items = app.items.all()
 
-            row = [
+            # Direction ID dan score.value ni mapping qilamiz
+            item_score_map = {item.direction_id: (item.score.value if item.score else "") for item in items}
+
+            # Har bir direction uchun alohida ustun
+            direction_scores = [
+                item_score_map.get(direction.id, "") for direction in all_directions
+            ]
+
+            ws.append([
                 student.student_id_number,
                 student.full_name,
                 student.university1.name if student.university1 else "",
@@ -240,28 +231,19 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 student.level.name if student.level else "",
                 student.group if student.group else "",
                 str(app.application_type),
-                app.submitted_at.strftime('%Y-%m-%d %H:%M'),
+                app.submitted_at.strftime('%Y-%m-%d %H:%M') if app.submitted_at else "",
                 student.gpa or "",
                 round(float(student.gpa) * 16, 3) if student.gpa else "",
-            ]
+            ] + direction_scores)
 
-            # 4. Direction ID => Score mapping (None bo‘lsa "-")
-            direction_score_map = {
-                item.direction.id: getattr(item.score, "value", "-") for item in items
-            }
-
-            for direction in directions:
-                row.append(direction_score_map.get(direction.id, "-"))
-
-            ws.append(row)
-
-        # 5. Fayl nomi
         selected_lang = request.GET.get("group_lang")
         lang_part = f"-{selected_lang}" if selected_lang else ""
+
+        # Fayl nomini yasash
         filename = f"{student.university1.name}-{student.specialty.name}-{lang_part}-{student.specialty.code}-{app.application_type}.xlsx".replace("/", "-")
         filename_encoded = urllib.parse.quote(filename)
 
-        # 6. Javob
+        # Excel response
         response = HttpResponse(
             content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
@@ -269,9 +251,6 @@ class ApplicationAdmin(SimpleHistoryAdmin):
         wb.save(response)
         return response
 
-
-
-    
 
     ijtimoiy_export_as_excel.short_description = "Ijtimoiy Excel (barcha tafsilotlar bilan) eksport qilish"
 
