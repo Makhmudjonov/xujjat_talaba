@@ -235,12 +235,12 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                     continue
 
                 dir_name = item.direction.name.lower()
-                if dir_name == "Kitobxonlik madaniyati":
+                if dir_name == "kitobxonlik madaniyati":
                     if hasattr(item, "score") and item.score:
                         score_map[item.direction.name] = round(item.score.value * 0.2, 2)
                     else:
                         score_map[item.direction.name] = "-"
-                elif dir_name == "Talabaning akademik o‘zlashtirishi":
+                elif dir_name == "talabaning akademik o‘zlashtirishi":
                     def get_gpa_score(gpa):
                         if gpa is None:
                             return 0.0  # yoki None, yoki istalgan default qiymat
