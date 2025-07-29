@@ -200,8 +200,8 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                     direction_names.add(item.direction.name)
         
                 
-        # direction_names = sorted(direction_names)  # for consistent order
-        direction_names.add("Jami ball")
+        direction_names = sorted(direction_names)  # for consistent order
+        
 
         # Sarlavha ustunlari — kerakli ma'lumotlar
         # 2. Header row
