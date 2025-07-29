@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
@@ -78,7 +78,7 @@ class SyncGPAAPIView(APIView):
                     })
                 data = response.json()
 
-                if data.get("success") and data.get("data", {}).get("items"):
+                if data.get("data") and data["data"].get("items"):
                     for item in data["data"]["items"]:
                         # hemis_data_id = item["id"]
 
