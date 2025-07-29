@@ -189,10 +189,6 @@ class ApplicationAdmin(SimpleHistoryAdmin):
 
 
     def ijtimoiy_export_as_excel(self, request, queryset):
-        import openpyxl
-        from django.http import HttpResponse
-        import urllib.parse
-        from apps.models import Direction  # direction modeli kerak bo‘ladi
 
         wb = openpyxl.Workbook()
         ws = wb.active
