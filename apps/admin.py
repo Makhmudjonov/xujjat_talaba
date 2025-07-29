@@ -241,7 +241,8 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                     else:
                         score_map[item.direction.name] = "-"
                 elif dir_name == "Talabaning akademik o‘zlashtirishi":
-                    gpa = item.application.student.get_latest_gpa()
+                    gpa_record = GPARecord.objects.filter(student=item.application.student).order_by("-created_at").first()
+                    gpa = gpa_record.gpa if gpa_record else None
                     score_map[item.direction.name] = round(float(gpa), 2) if gpa else "-"
                 else:
                     score_map[item.direction.name] = item.score.value if hasattr(item, "score") and item.score else "-"
