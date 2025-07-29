@@ -238,15 +238,13 @@ class ApplicationAdmin(SimpleHistoryAdmin):
 
                 dir_name = item.direction.name.lower()
                 if dir_name == "kitobxonlik madaniyati":
-                    
                     try:
                         test = TestSession.objects.filter(student=student).first()
                         score_map[item.direction.name] = round(float(test.score) * 0.2, 2)
                         total_score += round(float(test.score) * 0.2, 2)
                     except:
                         total_score += 0
-                    else:
-                        score_map[item.direction.name] = "-"
+                        score_map[item.direction.name] = "yoq"
                 elif dir_name == "talabaning akademik o‘zlashtirishi":
                     def get_gpa_score(gpa):
                         if gpa is None:
