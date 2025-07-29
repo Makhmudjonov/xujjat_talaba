@@ -198,7 +198,8 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             for item in app.items.all():
                 if item.direction:
                     direction_names.add(item.direction.name)
-
+                direction_names.add("Jami ball")
+                
         direction_names = sorted(direction_names)  # for consistent order
 
         # Sarlavha ustunlari — kerakli ma'lumotlar
@@ -229,7 +230,8 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             # Har bir Application uchun ApplicationItemlar ketma-ket yoziladi
             # direction_names = ", ".join(str(item.direction.name) for item in items)
             score_map = {
-                item.direction.name: item.score.value if hasattr(item, "score") and item.score else "-"
+                item.direction.name: round(item.score.value * 0.2, 2) if item.direction.name.lower() == "Kitobxonlik madaniyati" and hasattr(item, "score") and item.score
+                else (item.score.value if hasattr(item, "score") and item.score else "-")
                 for item in items if item.direction
             }
 
@@ -253,6 +255,21 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             # Append score values in the correct column order
             for dir_name in direction_names:
                 row.append(score_map.get(dir_name, "-"))
+            
+            total_score = 0
+            for dir_name in direction_names:
+                value = score_map.get(dir_name, 0)
+                if value == "-" or value == "" or value is None:
+                    continue
+                try:
+                    value = float(value)
+                    # if dir_name.lower() == "Kitobxonlik madaniyati":
+                    #     value *= 0.2
+                    total_score += value
+                except ValueError:
+                    pass
+
+            row.append(round(total_score, 2))  # yoki butun son bo‘lsa: int(total_score)
 
             ws.append(row)
 
