@@ -241,9 +241,30 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                     else:
                         score_map[item.direction.name] = "-"
                 elif dir_name == "Talabaning akademik o‘zlashtirishi":
-                    gpa_record = GPARecord.objects.filter(student=item.application.student).order_by("-created_at").first()
-                    gpa = gpa_record.gpa if gpa_record else None
-                    score_map[item.direction.name] = round(float(gpa), 2) if gpa else "-"
+                    def get_gpa_score(gpa):
+                        if gpa is None:
+                            return 0.0  # yoki None, yoki istalgan default qiymat
+                        gpa_score_map = {
+                            5.0: 10.0,
+                            4.9: 9.7,
+                            4.8: 9.3,
+                            4.7: 9.0,
+                            4.6: 8.7,
+                            4.5: 8.3,
+                            4.4: 8.0,
+                            4.3: 7.7,
+                            4.2: 7.3,
+                            4.1: 7.0,
+                            4.0: 6.7,
+                            3.9: 6.3,
+                            3.8: 6.0,
+                            3.7: 5.7,
+                            3.6: 5.3,
+                            3.5: 5.0,
+                        }
+                        return gpa_score_map.get(round(gpa, 2), 0.0)
+                    gpa_score  = get_gpa_score(float(student.gpa) if student.gpa else 0)
+                    score_map[item.direction.name] = gpa_score if gpa_score else "-"
                 else:
                     score_map[item.direction.name] = item.score.value if hasattr(item, "score") and item.score else "-"
 
@@ -304,8 +325,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                         3.5: 5.0,
                     }
                     return gpa_score_map.get(round(gpa, 2), 0.0)
-            gpa = item.application.student.get_latest_gpa()
-            gpa_score  = get_gpa_score(float(gpa) if gpa else 0)
+            gpa_score  = get_gpa_score(float(student.gpa) if student.gpa else 0)
 
             # Talabaning GPA yoki o‘zlashtirishi qo‘shiladi
             if hasattr(student, "gpa") and student.gpa:
