@@ -263,7 +263,8 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                             3.5: 5.0,
                         }
                         return gpa_score_map.get(round(gpa, 2), 0.0)
-                    gpa_score  = get_gpa_score(float(student.gpa) if student.gpa else 0)
+                    gpa_float = float(student.gpa) if student not in [None, ""] else None
+                    gpa_score  = get_gpa_score(gpa_float)
                     score_map[item.direction.name] = gpa_score if gpa_score else "-"
                 else:
                     score_map[item.direction.name] = item.score.value if hasattr(item, "score") and item.score else "-"
@@ -296,7 +297,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                     continue
                 try:
                     value = float(value)
-                    if dir_name.lower() == "Kitobxonlik madaniyati":
+                    if dir_name.lower() == "kitobxonlik madaniyati":
                         value *= 0.2
                     total_score += value
                 except ValueError:
