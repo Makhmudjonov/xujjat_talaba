@@ -326,14 +326,14 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                         3.5: 5.0,
                     }
                     return gpa_score_map.get(round(gpa, 2), 0.0)
-            gpa_score  = get_gpa_score(round(float(student.gpa), 1) if student.gpa else 0)
+            # gpa_score  = get_gpa_score(round(float(student.gpa), 1) if student.gpa else 0)
 
-            # Talabaning GPA yoki o‘zlashtirishi qo‘shiladi
-            if hasattr(student, "gpa") and student.gpa:
-                try:
-                    total_score += gpa_score
-                except ValueError:
-                    pass
+            # # Talabaning GPA yoki o‘zlashtirishi qo‘shiladi
+            # if hasattr(student, "gpa") and student.gpa:
+            #     try:
+            #         total_score += gpa_score
+            #     except ValueError:
+            #         pass
 
             row.append(round(total_score, 2))  # yoki butun son bo‘lsa: int(total_score)
 
