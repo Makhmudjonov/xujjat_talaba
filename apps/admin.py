@@ -221,7 +221,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
             "Ariza yuborilgan sana",
             # "GPA",
             # "GPA *16",
-        ] + direction_names + ['Jami ball'] # dynamically add direction columns
+        ] + direction_names + ['Jami ball', "Jami ball * 0.2"] # dynamically add direction columns
 
         ws.append(headers)
 
@@ -298,6 +298,7 @@ class ApplicationAdmin(SimpleHistoryAdmin):
                 row.append(score_map.get(dir_name, "-"))
             
             row.append(round(total_score, 2))  # yoki butun son bo‘lsa: int(total_score)
+            row.append(round(total_score * 0.2, 2))  # Jami ball * 0.2
 
             ws.append(row)
 
