@@ -39,7 +39,7 @@ class FacultyAdmin(SimpleHistoryAdmin):
 
 @admin.register(GPARecord)
 class GPARecordAdmin(SimpleHistoryAdmin):
-    list_display = ("student", "education_year", "Kurs", "gpa", "credit_sum", "subjects", "debt_subjects")
+    list_display = ("student", "education_year", "gpa", "credit_sum", "subjects", "debt_subjects")
     list_filter = ("education_year", "Kurs", "can_transfer")
     search_fields = ("student__full_name",)
 
