@@ -40,7 +40,7 @@ class FacultyAdmin(SimpleHistoryAdmin):
 @admin.register(GPARecord)
 class GPARecordAdmin(SimpleHistoryAdmin):
     list_display = ("student", "education_year", "gpa", "credit_sum", "subjects", "debt_subjects")
-    list_filter = ("education_year", "Kurs", "can_transfer")
+    list_filter = ("education_year", "can_transfer")
     search_fields = ("student__full_name",)
 
 @admin.register(ContractInfo)
@@ -238,11 +238,13 @@ class ApplicationAdmin(SimpleHistoryAdmin):
 
                 dir_name = item.direction.name.lower()
                 if dir_name == "kitobxonlik madaniyati":
-                    if hasattr(item, "score") and item.score:
-                        score_map[item.direction.name] = round(item.score.value * 0.2, 2)
-                        total_score += round(item.score.value * 0.2, 2)
-                    else:
-                        score_map[item.direction.name] = "-"
+                    try:
+                        test = TestSession.objects.filter(student=student).first()
+                        score_map[item.direction.name] = round(float(test.score) * 0.2, 2)
+                        total_score += round(float(test.score) * 0.2, 2)
+                    except:
+                        total_score += 0
+                        score_map[item.direction.name] = "Mavjud emas"
                 elif dir_name == "talabaning akademik o‘zlashtirishi":
                     def get_gpa_score(gpa):
                         if gpa is None:
