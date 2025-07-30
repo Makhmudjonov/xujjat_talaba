@@ -332,7 +332,7 @@ class SpecialityAdmin(admin.ModelAdmin):
     list_filter = ('university',)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name} + {self.code} ({self.university.name})"
 
 @admin.register(GroupHemis)
 class GroupHemisAdmin(admin.ModelAdmin):
