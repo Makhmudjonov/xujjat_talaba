@@ -254,7 +254,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Application
-        fields = ['id', 'student', 'application_type', 'submitted_at', 'status', 'comment', 'items']
+        fields = ['id', 'student', 'application_type', 'submitted_at', 'status', 'comment', 'items', 'student__gpa']
 
     def create(self, validated_data):
         items_data = validated_data.pop("items", [])
