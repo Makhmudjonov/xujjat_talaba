@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from io import BytesIO
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+import urllib
 
 from apps.gpaStudent.studentList import IsAdminUser
 from apps.models import Application, TestSession
