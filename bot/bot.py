@@ -1,12 +1,11 @@
+# bot/bot.py
+
 import asyncio
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from telegram.error import BadRequest
 from telegram import Update
 
-
-
-
-TOKEN = '8385707411:AAFFDH_7ixyPRQ0zLKsw_uG7M8_osxGQW0I'
+TOKEN = '8385707411:AAH1JCAJ1E0LcIKBgXgs5m-Jt73RVD5NirM'
 CHANNEL_ID = "@tsmuuz"
 
 async def check_subscription(user_id, application):
@@ -15,26 +14,14 @@ async def check_subscription(user_id, application):
         return member.status in ["member", "administrator", "creator"]
     except BadRequest:
         return False
-    
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    from apps.models import TelegramUser
-    user = update.effective_user
-    user_id = user.id
-    is_member = await check_subscription(user_id, context.application)
 
-    # Bazaga yozish yoki yangilash
-    TelegramUser.objects.update_or_create(
-        user_id=user_id,
-        defaults={
-            "username": user.username,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "is_member": is_member,
-        }
-    )
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    is_member = await check_subscription(user_id, context.application)
 
     if is_member:
         await update.message.reply_text("🎉 Kanalga obuna bo‘lgansiz! Xush kelibsiz!")
+        # bu yerda student_id so‘rashingiz mumkin
     else:
         invite_link = f"https://t.me/{CHANNEL_ID.lstrip('@')}"
         await update.message.reply_text(
@@ -47,7 +34,5 @@ async def run_bot():
 
     await app.initialize()
     await app.start()
-    asyncio.create_task(app.updater.start_polling())
-
-
-
+    print("🤖 Telegram bot ishga tushdi...")
+    await app.updater.start_polling()
