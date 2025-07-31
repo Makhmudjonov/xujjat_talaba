@@ -30,7 +30,7 @@ class StudentAdmin(SimpleHistoryAdmin):
     list_filter = ('faculty', 'level', 'gender', 'university', 'specialty', 'group_hemis','toifa')
     search_fields = ('full_name', 'student_id_number', 'email', 'phone')
     readonly_fields = ('student_id_number', 'full_name', 'email', 'phone')
-    autocomplete_fields = ('specialty', 'group_hemis', 'faculty', 'level', 'university1')
+    autocomplete_fields = ('specialty', 'group_hemis', 'faculty', 'level')
 
  
 @admin.register(Faculty)
