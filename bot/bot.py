@@ -3,7 +3,7 @@ import django
 import os
 import sys
 
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters
 from telegram import Update
 from telegram.ext import CallbackContext
 
@@ -63,7 +63,7 @@ def run_bot():
     dp = updater.dispatcher
 
     dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_message))
+    dp.add_handler(MessageHandler(filters.text & ~filters.command, handle_message))
 
     print("🤖 Bot ishga tushdi...")
     updater.start_polling()
