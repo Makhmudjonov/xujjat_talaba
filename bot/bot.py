@@ -12,7 +12,7 @@ django.setup()
 
 from apps.models import Student, Application, ApplicationItem, TestSession
 
-TELEGRAM_TOKEN = "BOT_TOKEN_HERE"
+TELEGRAM_TOKEN = "8385707411:AAEeDTBEBrm3bv6Hi1zHoIvJAOLZFVVgTIQ"
 CHANNEL_USERNAME = "@TSMUUZ"
 
 user_verified = set()  # Tasdiqlangan foydalanuvchilarni saqlash
