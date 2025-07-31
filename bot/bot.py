@@ -3,7 +3,7 @@ from telegram.ext import Updater, CommandHandler
 import time
 
 TELEGRAM_TOKEN = "8385707411:AAEeDTBEBrm3bv6Hi1zHoIvJAOLZFVVgTIQ"  # .env fayldan olish tavsiya etiladi
-CHANNEL_USERNAME = "@TSMUU"
+CHANNEL_USERNAME = "@TSMUUz"
 
 def start(update, context):
     user_id = update.effective_user.id
