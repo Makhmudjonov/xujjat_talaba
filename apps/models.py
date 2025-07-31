@@ -71,7 +71,7 @@ class Speciality(models.Model):
 
 
 class GroupHemis(models.Model):
-    name = models.CharField(max_length=60)
+    name = models.CharField(max_length=255)
     hemis_id = models.CharField(max_length=10, null=True, blank=True)
     lang = models.CharField(max_length=50)
     university = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
