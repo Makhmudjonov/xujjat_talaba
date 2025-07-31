@@ -30,7 +30,6 @@ def handle_message(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     text = update.message.text.strip()
 
-    # HEMIS ID kutilayotgan holatda
     if user_states.get(user_id) == "waiting_for_hemis":
         student = Student.objects.filter(student_id_number=text).first()
         if not student:
@@ -40,15 +39,20 @@ def handle_message(update: Update, context: CallbackContext):
         gpa = GPARecord.objects.filter(student=student).order_by("-year", "-semester").first()
         scores = Score.objects.filter(application_item__application__student=student)
 
-        gpa_str = f"GPA: {gpa.gpa}" if gpa else "GPA topilmadi"
-        scores_str = "\n".join(
-            f"📌 {score.application_item.direction.name} → {score.score}" for score in scores
-        ) or "Ballar topilmadi"
+        response = f"👤 {student.full_name}\n"
+        response += f"🎓 GPA: {gpa.gpa if gpa else 'Topilmadi'}\n\n📊 Ballar:\n"
 
-        update.message.reply_text(f"👤 {student.full_name}\n🎓 {gpa_str}\n\n📊 Ballar:\n{scores_str}")
-        user_states.pop(user_id, None)  # holatni tozalash
+        if scores.exists():
+            for score in scores:
+                response += f"📌 {score.application_item.direction.name} → {score.score}\n"
+        else:
+            response += "Hech qanday ball topilmadi."
+
+        update.message.reply_text(response)
+        user_states.pop(user_id, None)
     else:
-        update.message.reply_text("Iltimos, /start buyrug'idan boshlang.")
+        update.message.reply_text("Iltimos, avval /start buyrug'ini bering.")
+
 
 def run_bot():
     updater = Updater(TELEGRAM_TOKEN, use_context=True)
