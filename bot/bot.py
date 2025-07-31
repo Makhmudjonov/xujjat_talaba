@@ -1,5 +1,6 @@
 # bot/bot.py
 from telegram.ext import Updater, CommandHandler
+import time
 
 TELEGRAM_TOKEN = "8385707411:AAEeDTBEBrm3bv6Hi1zHoIvJAOLZFVVgTIQ"  # .env fayldan olish tavsiya etiladi
 
@@ -14,4 +15,7 @@ def run_bot():
 
     print("Telegram bot ishga tushdi...")
     updater.start_polling()
-    updater.idle()
+
+    # updater.idle() O‘RNIGA bu ishlatiladi
+    while True:
+        time.sleep(10)
