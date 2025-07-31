@@ -37,13 +37,13 @@ class Faculty(models.Model):
 
 
     
-class Universitya(models.Model):
-    name = models.CharField(max_length=255)
+# class Universitya(models.Model):
+#     name = models.CharField(max_length=255)
 
-    history = HistoricalRecords()
+#     history = HistoricalRecords()
 
-    def __str__(self):
-        return self.name
+#     def __str__(self):
+#         return self.name
 
 
 class Level(models.Model):
