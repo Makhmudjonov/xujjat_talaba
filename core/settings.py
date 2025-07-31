@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'simple_history',
     'drf_yasg',
+    'bot',
     'rest_framework',
     'rest_framework.authtoken',  # 💡 Mana bu qatorni qo‘shing
     'rest_framework_simplejwt',
