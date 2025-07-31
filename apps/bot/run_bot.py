@@ -1,11 +1,13 @@
 import logging
-import asyncio
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+import asyncio
 from apps.models import Student
 
-logging.basicConfig(level=logging.INFO)
+TOKEN = "8385707411:AAERO_nVYkVU6Y_3QOjN-ilgWP6c-jV16zQ"
 CHANNEL_ID = "@tsmuuz"
+
+logging.basicConfig(level=logging.INFO)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -31,12 +33,11 @@ async def handle_id(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Student.DoesNotExist:
         await update.message.reply_text("❌ Talaba topilmadi.")
 
-async def main():
-    application = ApplicationBuilder().token("8385707411:AAERO_nVYkVU6Y_3QOjN-ilgWP6c-jV16zQ").build()
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_id))
-    await application.run_polling()
+async def run():
+    app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), handle_id))
+    await app.run_polling()
 
-# 🔽 Bu funksiya Django `ready()` orqali chaqiriladi
-def run_bot():
-    asyncio.run(main())
+def start_bot():
+    asyncio.run(run())
