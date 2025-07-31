@@ -562,3 +562,13 @@ class OdobAxloqStudent(models.Model):
 
     def __str__(self):
         return f"{self.hemis_id} ({self.sabab})"
+
+class TelegramUser(models.Model):
+    hemis_id = models.CharField(max_length=20, unique=True)
+    full_name = models.CharField(max_length=255)
+    telegram_id = models.BigIntegerField(unique=True)
+
+    history = HistoricalRecords()
+
+    def __str__(self):
+        return f"{self.full_name} ({self.telegram_id})"
