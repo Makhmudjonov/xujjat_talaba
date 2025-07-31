@@ -59,7 +59,7 @@ def run_bot():
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", start))
 
-    dp.add_handler(MessageHandler(filters.text & ~filters.command, handle_message))
+    # dp.add_handler(MessageHandler(filters.text & ~filters.command, handle_message))
 
     print("Bot ishga tushdi...")
     updater.start_polling()
