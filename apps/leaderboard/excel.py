@@ -116,7 +116,7 @@ class LeaderboardExportAPIView(APIView):
                 student.level.name if student.level else "",
                 student.group,
                 round(total_score, 2),
-                "Nogiron" if getattr(student, 'toifa', False) else "Oddiy"
+                "Bor" if getattr(student, 'toifa', False) else "Yo'q"
             ])
 
         # Auto column width
