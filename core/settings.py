@@ -122,16 +122,16 @@ DATABASES = {
     }
 }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'tanlov',
-        'USER': 'miraziz',
-        'PASSWORD': '123',
-        'HOST': 'localhost',
-        'PORT': '5432', # PostgreSQL uchun standart port
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'tanlov',
+#         'USER': 'miraziz',
+#         'PASSWORD': '123',
+#         'HOST': 'localhost',
+#         'PORT': '5432', # PostgreSQL uchun standart port
+#     }
+# }
 
 
 # Password validation
