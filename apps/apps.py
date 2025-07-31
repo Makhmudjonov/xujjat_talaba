@@ -10,5 +10,5 @@ class AppsConfig(AppConfig):
         if 'runserver' not in sys.argv:
             return
 
-        from . import bot  # bot.py faylingiz
-        threading.Thread(target=bot.run, daemon=True).start()
+        from apps.management.commands import run_bot  # bot.py faylingiz
+        threading.Thread(target=run_bot.run, daemon=True).start()
