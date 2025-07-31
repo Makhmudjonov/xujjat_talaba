@@ -84,15 +84,15 @@ class GroupHemis(models.Model):
 # STUDENT & ACADEMIC DATA
 # ---------------------------
 class Student(models.Model):
-    hemis_data_id = models.CharField(max_length=20, unique=True, null=True, blank=True)
+    hemis_data_id = models.CharField(max_length=255, unique=True, null=True, blank=True)
     toifa = models.BooleanField(default=False)
-    student_id_number = models.CharField(max_length=20, unique=True)
+    student_id_number = models.CharField(max_length=255, unique=True)
     full_name = models.CharField(max_length=255)
     short_name = models.CharField(max_length=255)
     email = models.EmailField(null=True, blank=True)
-    phone = models.CharField(max_length=20, null=True, blank=True)
+    phone = models.CharField(max_length=255, null=True, blank=True)
     image = models.URLField(null=True, blank=True)
-    gender = models.CharField(max_length=10)
+    gender = models.CharField(max_length=255)
     birth_date = models.DateField(null=True, blank=True)
     address = models.TextField(null=True, blank=True)
     university = models.CharField(max_length=255)
@@ -100,7 +100,7 @@ class Student(models.Model):
 
     university1 = models.ForeignKey(University, null=True, on_delete=models.CASCADE)
     faculty = models.ForeignKey(Faculty, on_delete=models.SET_NULL, null=True, blank=True)
-    group = models.CharField(max_length=100)
+    group = models.CharField(max_length=255)
     level = models.ForeignKey(Level, on_delete=models.SET_NULL, null=True, blank=True)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     group_hemis = models.ForeignKey(GroupHemis, on_delete=models.SET_NULL, null=True, blank=True)
