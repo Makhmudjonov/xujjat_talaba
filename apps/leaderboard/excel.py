@@ -70,7 +70,7 @@ class LeaderboardExportAPIView(APIView):
         ws.title = "Leaderboard"
 
         headers = [
-            "ID", "Full Name", "Universitet", "Fakultet", "Level", "Group", "Total Score", "Toifa"
+            "ID", "Full Name", "Universitet", "Fakultet", "Level", "Group", "Total Score"
         ]
         ws.append(headers)
 
@@ -116,7 +116,7 @@ class LeaderboardExportAPIView(APIView):
                 student.level.name if student.level else "",
                 student.group,
                 round(total_score, 2),
-                "Bor" if getattr(student, 'toifa', False) else "Yo'q"
+                # "Bor" if getattr(student, 'toifa', False) else "Yo'q"
             ])
 
         # Auto column width
