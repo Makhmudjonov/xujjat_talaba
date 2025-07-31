@@ -8,5 +8,5 @@ class AppsConfig(AppConfig):
 
     def ready(self):
         if 'runserver' in sys.argv:
-            from apps.bot import run_bot
-            threading.Thread(target=run_bot.start_bot, daemon=True).start()
+            from django.core.management import call_command
+            threading.Thread(target=lambda: call_command('run_bot'), daemon=True).start()
