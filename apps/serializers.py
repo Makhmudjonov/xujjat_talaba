@@ -251,15 +251,25 @@ class ApplicationItemSerializer(serializers.ModelSerializer):
 class ApplicationSerializer(serializers.ModelSerializer):
     items = ApplicationItemSerializer(many=True)
     submitted_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+    student_gpa = serializers.SerializerMethodField()
+    student_toifa = serializers.SerializerMethodField()
 
     class Meta:
         model = Application
-        fields = ['id', 'student', 'application_type', 'submitted_at', 'status', 'comment', 'items', 'student__gpa', 'student__toifa']
+        fields = [
+            'id', 'student', 'application_type', 'submitted_at', 'status',
+            'comment', 'items', 'student_gpa', 'student_toifa'
+        ]
+
+    def get_student_gpa(self, obj):
+        # GPAni olish usuli sizning GPA model tuzilishingizga bog'liq
+        return getattr(obj.student, 'gpa', None)
+
+    def get_student_toifa(self, obj):
+        return getattr(obj.student, 'toifa', None)
 
     def create(self, validated_data):
         items_data = validated_data.pop("items", [])
-        request = self.context.get("request")
-
         application = Application.objects.create(**validated_data)
 
         for item_data in items_data:
@@ -267,9 +277,14 @@ class ApplicationSerializer(serializers.ModelSerializer):
             item = ApplicationItem.objects.create(application=application, **item_data)
 
             for file in files_data:
-                ApplicationFile.objects.create(item=item, comment=file.get("comment", ""), section_id=file["section"])
+                ApplicationFile.objects.create(
+                    item=item,
+                    comment=file.get("comment", ""),
+                    section_id=file["section"]
+                )
 
         return application
+
 
 
 class ApplicationNestedSerializer(serializers.ModelSerializer):

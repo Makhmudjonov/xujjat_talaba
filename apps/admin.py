@@ -11,9 +11,9 @@ from apps.models import (
     GPARecord, GroupHemis, Level, OdobAxloqStudent, Option, Question, Score, Section, SpecialApplicationStudent, Speciality, Student, Test, TestSession, University, # Make sure CustomAdminUser is imported
 )
 
-# @admin.register(University)
-# class UniversityAdmin(SimpleHistoryAdmin):
-#     list_display = ('name',)
+@admin.register(University)
+class UniversityAdmin(SimpleHistoryAdmin):
+    list_display = ('name',)
 
 @admin.register(Student)
 class StudentAdmin(SimpleHistoryAdmin):

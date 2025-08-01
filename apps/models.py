@@ -282,6 +282,8 @@ class Application(models.Model):
     # class Meta:
     #     unique_together = ('student', 'application_type')  # ✅ faqat 1 marta topshiradi
 
+    
+
 
 
 def application_file_upload_path(instance, filename):
@@ -338,6 +340,12 @@ class ApplicationItem(models.Model):
     
     class Meta:
         unique_together = ('application', 'direction')
+
+    def get_total_score(self):
+        score_value = self.score.value if hasattr(self, 'score') and self.score else 0
+        gpa_value = self.gpa if self.gpa else 0
+        test_value = self.test_result if self.test_result else 0
+        return score_value + gpa_value + test_value
 
 class ApplicationFile(models.Model):
     item = models.ForeignKey(ApplicationItem, on_delete=models.CASCADE, related_name='files')

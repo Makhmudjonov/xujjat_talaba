@@ -3,6 +3,7 @@ from apps.api.speciality.sampi import BatchUpdateSpecialtiesSampiAPIView
 from apps.api.speciality.stom import  SyncStudentDataStomAPIView
 from apps.api.speciality.tma import  SyncStudentDataTmaAPIView
 from apps.application.applicationExcel import ApplicationExportExcelAPIView
+from apps.bot_api.view import student_full_info
 from apps.changePassword.view import ChangePasswordView
 from apps.file_download import download_file
 from apps.filter.filters import global_student_filter_faculty, global_student_filter_level, global_student_filter_university
@@ -145,6 +146,8 @@ urlpatterns = [
     #Synchronizatsiya uchun API endpointi
     # path('sync/student-data/', SyncStudentDataAPIView.as_view()),
     # path('sync/sync-gpa/', SyncGPAAPIView.as_view(), name='sync-gpa'),
+
+    path('student-info/<str:student_id_number>/', student_full_info),
 
     
     
