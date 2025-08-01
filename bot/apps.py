@@ -1,16 +1,15 @@
-# bot/apps.py
-import os
-import asyncio
+import sys
 from django.apps import AppConfig
-from bot.bot import run_bot
+import threading
+
 
 class BotConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'bot'
 
     def ready(self):
-        if os.environ.get("RUN_MAIN") != "true":
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            loop.create_task(run_bot())
-            loop.run_forever()
+        from .bot_runner import run_bot
+        if 'runserver' in sys.argv:  # faqat runserver bo‘lsa
+            thread = threading.Thread(target=run_bot, name="TelegramBot")
+            thread.daemon = True
+            thread.start()
