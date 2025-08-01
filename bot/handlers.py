@@ -52,33 +52,48 @@ def get_student_by_hemis_id(hemis_id):
 
 @sync_to_async(thread_sensitive=False)
 def get_student_applications(student):
-    return student.applications.order_by('-submitted_at').first()
-
-@sync_to_async(thread_sensitive=False)
-def get_test_session(student):
-    return TestSession.objects.filter(student=student).first()
+    logger.info(f"Querying applications for student: {student}")
+    return student.applications.select_related('application_type').order_by('-submitted_at').first()
 
 @sync_to_async(thread_sensitive=False)
 def get_application_items(application):
-    return list(application.items.select_related('score', 'direction').all())
+    logger.info("Querying application items")
+    return list(application.items.select_related('direction').all())
 
 @sync_to_async(thread_sensitive=False)
 def get_direction_name(item):
-    return safe_getattr(item.direction, 'name')
+    dir_name = safe_getattr(item.direction, 'name')
+    logger.info(f"Direction name: {dir_name}")
+    return dir_name
 
 @sync_to_async(thread_sensitive=False)
-def get_score_value(item):
-    return item.score.value if item.score else 0.0
+def get_test_result(item):
+    result = item.test_result if item.test_result is not None else 0.0
+    logger.info(f"Test result: {result}")
+    return float(result)
+
+@sync_to_async(thread_sensitive=False)
+def get_gpa_score(item):
+    score = item.gpa_score if item.gpa_score is not None else 0.0
+    logger.info(f"GPA score: {score}")
+    return float(score)
 
 @sync_to_async(thread_sensitive=False)
 def get_gpa(student):
-    return float(student.gpa) if student.gpa else 0.0
+    gpa = float(student.gpa) if student.gpa else 0.0
+    logger.info(f"Student GPA: {gpa}")
+    return gpa
 
 @sync_to_async(thread_sensitive=False)
 def get_application_type(application):
-    app_type = safe_getattr(application, 'application_type', 'Unknown')
-    logger.info(f"Application type: {app_type} (type: {type(app_type)})")
+    app_type = safe_getattr(application, 'application_type')
+    logger.info(f"Raw application type: {app_type} (type: {type(app_type)})")
     return str(app_type) if app_type is not None else 'Unknown'
+
+@sync_to_async(thread_sensitive=False)
+def get_submitted_at(application):
+    logger.info(f"Accessing submitted_at for application: {application}")
+    return application.submitted_at.strftime('%Y-%m-%d %H:%M') if application.submitted_at else ''
 
 # FSM for handling HEMIS ID input
 class HEMISForm(StatesGroup):
@@ -146,61 +161,78 @@ async def receive_hemis_id(message: types.Message, state: FSMContext):
         # Fetch student with related data
         student = await get_student_by_hemis_id(hemis_id)
 
+        # Fetch student fields
+        full_name = await safe_getattr(student, 'full_name')
+        university_name = await safe_getattr(student.university1, 'name')
+        faculty_name = await safe_getattr(student.faculty, 'name')
+        specialty_name = await safe_getattr(student.specialty, 'name')
+        specialty_code = await safe_getattr(student.specialty, 'code')
+        group_hemis_name = await safe_getattr(student.group_hemis, 'name')
+        group_hemis_lang = await safe_getattr(student.group_hemis, 'lang')
+        level_name = await safe_getattr(student.level, 'name')
+        group = await safe_getattr(student, 'group')
+
         # Get latest application
         logger.info(f"Fetching latest application for student: {student.full_name}")
-        # application = await get_student_applications(student)
-        # if not application:
-        #     await message.answer("Sizning arizangiz topilmadi.")
-        #     await state.clear()
-        #     return
 
-        # Fetch application type
-        # application_type = await get_application_type(application)
+        application = await get_student_applications(student)
+        if not application:
+            logger.warning("No application found for student")
+            await message.answer("Sizning arizangiz topilmadi.")
+            await state.clear()
+            return
+        
+        # Fetch application fields
+        application_type = await get_application_type(application)
+        submitted_at = await get_submitted_at(application)
 
-        # Build response
         response_text = (
-            f"<b>FISH:</b> {html.escape(student.full_name)}\n"
-            f"<b>OTM:</b> {html.escape(safe_getattr(student.university1, 'name'))}\n"
-            f"<b>Fakultet:</b> {html.escape(safe_getattr(student.faculty, 'name'))}\n"
-            f"<b>Mutaxassislik:</b> {html.escape(safe_getattr(student.specialty, 'name'))}\n"
-            f"<b>Guruh:</b> {html.escape(safe_getattr(student.group_hemis, 'name'))}\n"
-            f"<b>Kurs:</b> {html.escape(safe_getattr(student.level, 'name'))}\n"
-            # f"<b>Grant turi:</b> {html.escape(application_type)}\n"
-            # f"<b>Yuborilgan sana:</b> {application.submitted_at.strftime('%Y-%m-%d %H:%M') if application.submitted_at else ''}\n\n"
+            f"<b>FISH:</b> {html.escape(full_name)}\n"
+            f"<b>OTM:</b> {html.escape(university_name)}\n"
+            f"<b>Fakultet:</b> {html.escape(faculty_name)}\n"
+            f"<b>Mutaxassislik:</b> {html.escape(specialty_name)}\n"
+            f"<b>Ta'lim shifri:</b> {html.escape(specialty_code)}\n"
+            f"<b>Guruh:</b> {html.escape(group_hemis_name)}\n"
+            f"<b>Ta'lim tili:</b> {html.escape(group_hemis_lang)}\n"
+            f"<b>Kurs:</b> {html.escape(level_name)}\n"
+            f"<b>Guruh (qo'shimcha):</b> {html.escape(group)}\n"
+            f"<b>Grant turi:</b> {html.escape(application_type)}\n"
+            f"<b>Yuborilgan sana:</b> {html.escape(submitted_at)}\n\n"
         )
 
         total_score = 0.0
         scores_text = "<b>Ballar:</b>\n"
-        logger.info("Fetching application items")
-        # items = await get_application_items(application)
+        items = await get_application_items(application)
 
-        # for item in items:
-        #     # Fetch direction name
-        #     dir_name = await get_direction_name(item)
-        #     if not dir_name:
-        #         continue
-        #     dir_name_lower = dir_name.lower()
+        for item in items:
+            dir_name = await get_direction_name(item)
+            if not dir_name:
+                continue
+            dir_name_lower = dir_name.lower()
 
-        #     if dir_name_lower == "kitobxonlik madaniyati":
-        #         logger.info(f"Fetching test session for student: {student.full_name}")
-        #         test = await get_test_session(student)
-        #         if test:
-        #             score = await sync_to_async(lambda: round(float(test.score) * 0.2, 2))()
-        #             scores_text += f"{html.escape(dir_name)}: {score} (test * 0.2)\n"
-        #             total_score += score
-        #         else:
-        #             scores_text += f"{html.escape(dir_name)}: Mavjud emas\n"
-
-        #     elif dir_name_lower == "talabaning akademik o‘zlashtirishi":
-        #         gpa = await get_gpa(student)
-        #         gpa_score = GPA_MAP.get(round(gpa, 1), 0.0)
-        #         scores_text += f"{html.escape(dir_name)}: {gpa_score} (GPA asosida)\n"
-        #         total_score += gpa_score
-        #     else:
-        #         score = await get_score_value(item)
-        #         scores_text += f"{html.escape(dir_name)}: {score}\n"
-        #         if isinstance(score, (int, float)):
-        #             total_score += score
+            if dir_name_lower == "kitobxonlik madaniyati":
+                score = await get_test_result(item)
+                if score:
+                    score = round(score * 0.2, 2)
+                    scores_text += f"{html.escape(dir_name)}: {score} (test * 0.2)\n"
+                    total_score += score
+                else:
+                    scores_text += f"{html.escape(dir_name)}: Mavjud emas\n"
+            elif dir_name_lower == "talabaning akademik o‘zlashtirishi":
+                score = await get_gpa_score(item)
+                if score:
+                    scores_text += f"{html.escape(dir_name)}: {score} (GPA asosida)\n"
+                    total_score += score
+                else:
+                    gpa = await get_gpa(student)
+                    gpa_score = GPA_MAP.get(round(gpa, 1), 0.0)
+                    scores_text += f"{html.escape(dir_name)}: {gpa_score} (GPA asosida)\n"
+                    total_score += gpa_score
+            else:
+                score = await get_test_result(item)
+                scores_text += f"{html.escape(dir_name)}: {score if score else '-'}\n"
+                if isinstance(score, (int, float)) and score:
+                    total_score += score
 
         response_text += scores_text
         response_text += f"\n<b>Jami ball:</b> {round(total_score, 2)}\n"
